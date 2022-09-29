@@ -1,66 +1,54 @@
-package handlers
+package appliedgoParser
 
 import (
-	"fmt"
-	"github.com/gocolly/colly"
-	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"encoding/json"
+	"github.com/gocolly/colly/v2"
 	"strings"
 	"sync"
-	"time"
 )
+
+type Article struct {
+	Name        string
+	Date        string
+	Description string
+	Link        string
+}
 
 // Returns the slice of json-marshalled structs "Article{ Name, Description, Date, Link string }"
 // containing data about articles from appliedgo.net
-func parseAppliedGo() []core.Article {
-	var lArticlesMutex sync.Mutex
-	var lArticlesList []core.Article
+func parseAppliedGo() [][]byte {
+	var listMutex sync.Mutex
+	var articlesList [][]byte
 
 	// This parser is used to scrap the data from every article's personal page
-	lArticleParser := colly.NewCollector(colly.Async(true))
-	lArticleParser.OnHTML("head", func(e *colly.HTMLElement) {
-		aName := e.ChildAttr("meta[property=\"og:title\"]", "content")
-		aDescription := e.ChildAttr("meta[name=\"description\"]", "content")
-		aUrl := e.ChildAttr("meta[property=\"og:url\"]", "content")
-		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
-		aPublicationDate := parseDate(strings.TrimSpace(aPublicationDateStr))
-		lNewArticle := core.Article{
-			Title:       aName,
-			Description: aDescription,
-			Link:        aUrl,
-			PublishDate: aPublicationDate,
+	articleParser := colly.NewCollector()
+	articleParser.OnHTML("head", func(e *colly.HTMLElement) {
+		name := e.ChildAttr("meta[property=\"og:title\"]", "content")
+		descr := e.ChildAttr("meta[name=\"description\"]", "content")
+		url := e.ChildAttr("meta[property=\"og:url\"]", "content")
+		publicationTimeStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
+		newArticle := Article{
+			Name:        name,
+			Description: descr,
+			Link:        url,
+			Date:        strings.TrimSpace(publicationTimeStr),
 		}
+		// will add handling the error after getting known how we will handle mistakes
+		newArticleJSON, _ := json.Marshal(&newArticle)
 
-		// Because of async usage of gocolly, I put a mutex here to prevent data race
-		lArticlesMutex.Lock()
-		lArticlesList = append(lArticlesList, lNewArticle)
-		lArticlesMutex.Unlock()
+		// In case of async usage of gocolly, I put a mutex here to prevent data race
+		listMutex.Lock()
+		articlesList = append(articlesList, newArticleJSON)
+		listMutex.Unlock()
 	})
 
 	// This parser is used to scrap all the articles from the page with list of them
-	lArticleCollector := colly.NewCollector(colly.Async(true))
-	lArticleCollector.OnHTML("header[class=\"article-header\"] > a", func(e *colly.HTMLElement) {
+	articleCollector := colly.NewCollector()
+	articleCollector.OnHTML("header[class=\"article-header\"] > a", func(e *colly.HTMLElement) {
 		// hasn't made error handling in func Visit yet, because don't know what to do with this mistakes
-		lErr := lArticleParser.Visit(e.Attr("href"))
-		if lErr != nil {
-			fmt.Printf("Error: %s\n\n", lErr.Error())
-		}
+		articleParser.Visit(e.Attr("href"))
 	})
 
-	lErr := lArticleCollector.Visit("https://appliedgo.net/")
-	if lErr != nil {
-		fmt.Printf("Error: %s\n\n", lErr.Error())
-	}
-	lArticleCollector.Wait()
-	lArticleParser.Wait()
-	return lArticlesList
-}
-
-func parseDate(dateStr string) time.Time {
-	lDate, lErr := time.Parse(time.RFC3339, dateStr)
-	if lErr != nil {
-		fmt.Printf("Error: %s\n\n", lErr.Error())
-		lDate = time.Now()
-	}
-
-	return lDate.UTC()
+	articleCollector.Visit("https://appliedgo.net/")
+	return articlesList
 }
