@@ -1,24 +1,24 @@
-package appliedgoParser
+package handlers
 
 import (
-	"encoding/json"
 	"github.com/gocolly/colly/v2"
 	"strings"
 	"sync"
 )
 
 type Article struct {
-	Name        string
-	Date        string
+	Title       string
+	PublishDate string
 	Description string
 	Link        string
+	Author      string
 }
 
 // Returns the slice of json-marshalled structs "Article{ Name, Description, Date, Link string }"
 // containing data about articles from appliedgo.net
-func parseAppliedGo() [][]byte {
+func parseAppliedGo() []Article {
 	var listMutex sync.Mutex
-	var articlesList [][]byte
+	var articlesList []Article
 
 	// This parser is used to scrap the data from every article's personal page
 	articleParser := colly.NewCollector()
@@ -28,17 +28,15 @@ func parseAppliedGo() [][]byte {
 		url := e.ChildAttr("meta[property=\"og:url\"]", "content")
 		publicationTimeStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
 		newArticle := Article{
-			Name:        name,
+			Title:       name,
 			Description: descr,
 			Link:        url,
-			Date:        strings.TrimSpace(publicationTimeStr),
+			PublishDate: strings.TrimSpace(publicationTimeStr),
 		}
-		// will add handling the error after getting known how we will handle mistakes
-		newArticleJSON, _ := json.Marshal(&newArticle)
 
 		// In case of async usage of gocolly, I put a mutex here to prevent data race
 		listMutex.Lock()
-		articlesList = append(articlesList, newArticleJSON)
+		articlesList = append(articlesList, newArticle)
 		listMutex.Unlock()
 	})
 
