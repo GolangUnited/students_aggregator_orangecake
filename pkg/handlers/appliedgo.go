@@ -4,11 +4,12 @@ import (
 	"github.com/gocolly/colly/v2"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Article struct {
 	Caption     string
-	PublishDate string
+	PublishDate time.Time
 	Description string
 	Link        string
 	Author      string
@@ -27,12 +28,13 @@ func parseAppliedGo() []Article {
 		aName := e.ChildAttr("meta[property=\"og:title\"]", "content")
 		aDescr := e.ChildAttr("meta[name=\"description\"]", "content")
 		aUrl := e.ChildAttr("meta[property=\"og:url\"]", "content")
-		aPublicationTimeStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
+		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
+		aPublicationDate := parseDate(strings.TrimSpace(aPublicationDateStr))
 		lNewArticle := Article{
 			Caption:     aName,
 			Description: aDescr,
 			Link:        aUrl,
-			PublishDate: strings.TrimSpace(aPublicationTimeStr),
+			PublishDate: aPublicationDate,
 		}
 
 		// Because of async usage of gocolly, I put a mutex here to prevent data race
@@ -52,4 +54,13 @@ func parseAppliedGo() []Article {
 	lArticleCollector.Wait()
 	lArticleParser.Wait()
 	return lArticlesList
+}
+
+func parseDate(dateStr string) time.Time {
+	lDate, lErr := time.Parse(time.RFC3339, dateStr)
+	if lErr != nil {
+		lDate = time.Now()
+	}
+
+	return lDate.UTC()
 }
