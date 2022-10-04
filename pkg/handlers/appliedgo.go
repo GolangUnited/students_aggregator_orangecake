@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/gocolly/colly/v2"
 	"strings"
 	"sync"
@@ -15,7 +16,6 @@ type Article struct {
 	Author      string
 }
 
-// fmt.Printf("Error: %s\n\n", lErr.Error())
 // Returns the slice of json-marshalled structs "Article{ Name, Description, Date, Link string }"
 // containing data about articles from appliedgo.net
 func parseAppliedGo() []Article {
@@ -26,13 +26,13 @@ func parseAppliedGo() []Article {
 	lArticleParser := colly.NewCollector(colly.Async(true))
 	lArticleParser.OnHTML("head", func(e *colly.HTMLElement) {
 		aName := e.ChildAttr("meta[property=\"og:title\"]", "content")
-		aDescr := e.ChildAttr("meta[name=\"description\"]", "content")
+		aDescription := e.ChildAttr("meta[name=\"description\"]", "content")
 		aUrl := e.ChildAttr("meta[property=\"og:url\"]", "content")
 		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
 		aPublicationDate := parseDate(strings.TrimSpace(aPublicationDateStr))
 		lNewArticle := Article{
 			Caption:     aName,
-			Description: aDescr,
+			Description: aDescription,
 			Link:        aUrl,
 			PublishDate: aPublicationDate,
 		}
@@ -47,10 +47,16 @@ func parseAppliedGo() []Article {
 	lArticleCollector := colly.NewCollector(colly.Async(true))
 	lArticleCollector.OnHTML("header[class=\"article-header\"] > a", func(e *colly.HTMLElement) {
 		// hasn't made error handling in func Visit yet, because don't know what to do with this mistakes
-		lArticleParser.Visit(e.Attr("href"))
+		lErr := lArticleParser.Visit(e.Attr("href"))
+		if lErr != nil {
+			fmt.Printf("Error: %s\n\n", lErr.Error())
+		}
 	})
 
-	lArticleCollector.Visit("https://appliedgo.net/")
+	lErr := lArticleCollector.Visit("https://appliedgo.net/")
+	if lErr != nil {
+		fmt.Printf("Error: %s\n\n", lErr.Error())
+	}
 	lArticleCollector.Wait()
 	lArticleParser.Wait()
 	return lArticlesList
@@ -59,6 +65,7 @@ func parseAppliedGo() []Article {
 func parseDate(dateStr string) time.Time {
 	lDate, lErr := time.Parse(time.RFC3339, dateStr)
 	if lErr != nil {
+		fmt.Printf("Error: %s\n\n", lErr.Error())
 		lDate = time.Now()
 	}
 
