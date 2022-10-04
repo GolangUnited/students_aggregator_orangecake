@@ -14,39 +14,42 @@ type Article struct {
 	Author      string
 }
 
+// fmt.Printf("Error: %s\n\n", lErr.Error())
 // Returns the slice of json-marshalled structs "Article{ Name, Description, Date, Link string }"
 // containing data about articles from appliedgo.net
 func parseAppliedGo() []Article {
-	var listMutex sync.Mutex
-	var articlesList []Article
+	var lArticlesMutex sync.Mutex
+	var lArticlesList []Article
 
 	// This parser is used to scrap the data from every article's personal page
-	articleParser := colly.NewCollector(colly.Async(true))
-	articleParser.OnHTML("head", func(e *colly.HTMLElement) {
-		name := e.ChildAttr("meta[property=\"og:title\"]", "content")
-		descr := e.ChildAttr("meta[name=\"description\"]", "content")
-		url := e.ChildAttr("meta[property=\"og:url\"]", "content")
-		publicationTimeStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
-		newArticle := Article{
-			Caption:     name,
-			Description: descr,
-			Link:        url,
-			PublishDate: strings.TrimSpace(publicationTimeStr),
+	lArticleParser := colly.NewCollector(colly.Async(true))
+	lArticleParser.OnHTML("head", func(e *colly.HTMLElement) {
+		aName := e.ChildAttr("meta[property=\"og:title\"]", "content")
+		aDescr := e.ChildAttr("meta[name=\"description\"]", "content")
+		aUrl := e.ChildAttr("meta[property=\"og:url\"]", "content")
+		aPublicationTimeStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
+		lNewArticle := Article{
+			Caption:     aName,
+			Description: aDescr,
+			Link:        aUrl,
+			PublishDate: strings.TrimSpace(aPublicationTimeStr),
 		}
 
 		// Because of async usage of gocolly, I put a mutex here to prevent data race
-		listMutex.Lock()
-		articlesList = append(articlesList, newArticle)
-		listMutex.Unlock()
+		lArticlesMutex.Lock()
+		lArticlesList = append(lArticlesList, lNewArticle)
+		lArticlesMutex.Unlock()
 	})
 
 	// This parser is used to scrap all the articles from the page with list of them
-	articleCollector := colly.NewCollector(colly.Async(true))
-	articleCollector.OnHTML("header[class=\"article-header\"] > a", func(e *colly.HTMLElement) {
+	lArticleCollector := colly.NewCollector(colly.Async(true))
+	lArticleCollector.OnHTML("header[class=\"article-header\"] > a", func(e *colly.HTMLElement) {
 		// hasn't made error handling in func Visit yet, because don't know what to do with this mistakes
-		articleParser.Visit(e.Attr("href"))
+		lArticleParser.Visit(e.Attr("href"))
 	})
 
-	articleCollector.Visit("https://appliedgo.net/")
-	return articlesList
+	lArticleCollector.Visit("https://appliedgo.net/")
+	lArticleCollector.Wait()
+	lArticleParser.Wait()
+	return lArticlesList
 }
