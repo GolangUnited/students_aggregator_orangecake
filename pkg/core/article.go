@@ -3,7 +3,7 @@ package core
 import "time"
 
 type Article struct {
-	Caption     string
+	Title       string
 	Author      string
 	Link        string
 	PublishDate time.Time
