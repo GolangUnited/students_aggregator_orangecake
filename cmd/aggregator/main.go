@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	_ "github.com/PuerkitoBio/goquery" // temporary import to init go.mod and go.sum and avoid compiler errors
-	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"github.com/indikator/aggregator_orange_cake/pkg/handlers"
 )
 
 func main() {
-	var lArticles []core.Article
+	var lArticles = handlers.Run()
 
 	for i, lArticle := range lArticles {
 		fmt.Printf("Node %d: %s\n", i, lArticle.Title)
