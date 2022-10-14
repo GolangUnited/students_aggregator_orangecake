@@ -9,24 +9,33 @@ import (
 	"github.com/gocolly/colly"
 )
 
+func parseDate(s string) time.Time {
+	// try parse date or use Now if failed
+	lDate, lErr := time.Parse("Jan _2, 2006", s)
+	if lErr != nil {
+		lDate = time.Now()
+	}
+
+	return time.Date(lDate.Year(), lDate.Month(), lDate.Day(), 0, 0, 0, 0, time.UTC)
+}
+
 type hashnodeScraper struct {
 	Articles []core.Article
+	URL      string
 }
 
 //create Hashnode scrapper struct
 func NewHashnodeScraper() *hashnodeScraper {
 	return &hashnodeScraper{
 		Articles: []core.Article{},
+		URL:      "https://hashnode.com/n/go",
 	}
 }
 
-//srappin url https://hashnode.com/n/go
+//srappin url
 func (h *hashnodeScraper) ScrapUrl() error {
 
-	lUrl := "https://hashnode.com/n/go"
-	lDomains := []string{"www.hashnode.com", "hashnode.com"}
-
-	lC := colly.NewCollector(colly.AllowedDomains(lDomains...))
+	lC := colly.NewCollector()
 
 	lC.OnHTML("div.css-4gdbui", func(el *colly.HTMLElement) {
 
@@ -48,18 +57,13 @@ func (h *hashnodeScraper) ScrapUrl() error {
 
 		lDate := lDOM.Find("div.css-dxz0om div.css-tel74u div.css-2wkyxu div.css-1n08q4e a.css-1u6dh35")
 
-		lDateTime, err := time.Parse("Jan _2, 2006", lDate.Text())
-		if err != nil {
-			fmt.Println(err)
-			lDateTime = time.Now()
-		}
-		lArticle.PublishDate = lDateTime
+		lArticle.PublishDate = parseDate(lDate.Text())
 
 		h.Articles = append(h.Articles, lArticle)
 
 	})
 
-	err := lC.Visit(lUrl)
+	err := lC.Visit(h.URL)
 	if err != nil {
 		return fmt.Errorf("visit error %w", err)
 	}
