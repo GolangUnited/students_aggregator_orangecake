@@ -44,7 +44,7 @@ func TestArticleScraping(t *testing.T) {
 		aDescription := e.ChildAttr("meta[name=\"description\"]", "content")
 		aUrl := e.ChildAttr("meta[property=\"og:url\"]", "content")
 		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
-		aPublicationDate := parseDateRFC3339(strings.TrimSpace(aPublicationDateStr))
+		aPublicationDate, _ := core.ParseDate(time.RFC3339, strings.TrimSpace(aPublicationDateStr))
 		lNewArticle := core.Article{
 			Title:       aName,
 			Description: aDescription,

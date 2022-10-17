@@ -9,9 +9,9 @@ import (
 	"time"
 )
 
-// Returns the slice of json-marshalled structs "Article{ Name, Description, Date, Link string }"
+// ParseAppliedGo returns the slice of json-marshalled structs "Article{ Name, Description, Date, Link string }"
 // containing data about articles from appliedgo.net
-func parseAppliedGo() []core.Article {
+func ParseAppliedGo() []core.Article {
 	var lArticlesMutex sync.Mutex
 	var lArticlesList []core.Article
 
@@ -22,7 +22,10 @@ func parseAppliedGo() []core.Article {
 		aDescription := e.ChildAttr("meta[name=\"description\"]", "content")
 		aUrl := e.ChildAttr("meta[property=\"og:url\"]", "content")
 		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
-		aPublicationDate := parseDateRFC3339(strings.TrimSpace(aPublicationDateStr))
+		aPublicationDate, lErr := core.ParseDate(time.RFC3339, strings.TrimSpace(aPublicationDateStr))
+		if lErr != nil {
+			fmt.Printf("Error: %s\n\n", lErr.Error())
+		}
 		lNewArticle := core.Article{
 			Title:       aName,
 			Description: aDescription,
@@ -53,16 +56,4 @@ func parseAppliedGo() []core.Article {
 	lArticleCollector.Wait()
 	lArticleParser.Wait()
 	return lArticlesList
-}
-
-// Takes the string with datetime in 2006-01-02T15:04:05Z07:00 format
-// and returns time.Time of this string in UTC format
-func parseDateRFC3339(dateStr string) time.Time {
-	lDate, lErr := time.Parse(time.RFC3339, dateStr)
-	if lErr != nil {
-		fmt.Printf("Error: %s\n\n", lErr.Error())
-		lDate = time.Now()
-	}
-
-	return lDate.UTC()
 }
