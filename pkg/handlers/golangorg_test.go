@@ -3,16 +3,34 @@ package handlers
 import (
 	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
 )
 
+const (
+	TestDataFolder = "./test_data"
+	File           = "/golangorg.html"
+)
+
+var lGotErr error
+
+// newTestServer create a new server
+func newTestServer() *httptest.Server {
+	mux := http.NewServeMux()
+	fServer := http.FileServer(http.Dir(TestDataFolder))
+	mux.Handle("/", fServer)
+	return httptest.NewServer(mux)
+}
+
 func TestGolangorg(t *testing.T) {
 
-	var lGotErr error
-	URL_TEST := "http://185.46.10.177/golangorg.html"
+	testServer := newTestServer()
+	defer testServer.Close()
 
+	// create expected data
 	lExpectedData := []core.Article{
 		{
 			Title:  "Go runtime: 4 years later",
@@ -66,7 +84,7 @@ func TestGolangorg(t *testing.T) {
 		},
 	}
 
-	lGot, lErr := Scraping(URL_TEST)
+	lGot, lErr := Scraping(testServer.URL + File)
 	if lErr != nil {
 		fmt.Println("function Scraping return the error: ", lErr)
 		lGotErr = lErr
@@ -74,10 +92,12 @@ func TestGolangorg(t *testing.T) {
 
 	lWant := lExpectedData
 
+	//compare data
 	if !reflect.DeepEqual(lGot, lWant) {
 		t.Errorf("Mismatch between expected and actual data")
 	}
 
+	//compare errors
 	if lErr != lGotErr {
 		t.Errorf("Mismatch between expected and actual errors")
 	}
