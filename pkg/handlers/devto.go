@@ -3,14 +3,13 @@ package handlers
 import (
     "fmt"
     "time"
-    "net/http"
 
     "github.com/gocolly/colly"
     "github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
 const Go_URL = "https://dev.to/t/go"
-var Devto_URL = "https://dev.to"
+var Devto_URL = "https://dev.to" // To be able to redefine later for testing purposes
 
 const Substories_class = "div.substories"
 const Story_class = "div.crayons-story"
@@ -27,19 +26,6 @@ type DevtoHandler struct {
 func NewHandler(aURL string) DevtoHandler {
 
     return DevtoHandler{URL: aURL, Articles: make([]core.Article, 0), Colly: colly.NewCollector()}
-}
-
-func NewTestHandler(aURL string) DevtoHandler {
-    
-    Devto_URL = ""
-
-    lScrapper := colly.NewCollector()
-
-    lTransport := &http.Transport{}
-    lTransport.RegisterProtocol("file", http.NewFileTransport(http.Dir("./test_data/")))
-    lScrapper.WithTransport(lTransport)
-
-    return DevtoHandler{URL: aURL, Articles: make([]core.Article, 0), Colly: lScrapper}
 }
 
 func Run() []core.Article {
@@ -64,6 +50,7 @@ func (aHandler DevtoHandler) Scrap() []core.Article {
             lDate := h.ChildAttr("time", "datetime")
             lArticle.PublishDate = parseDateDevto(lDate)
 
+            // Following link to an Article itself to get the description
             aHandler.Colly.Visit(e.Request.AbsoluteURL(lArticle.Link))
 
             aHandler.Articles = append(aHandler.Articles, lArticle)
@@ -71,6 +58,7 @@ func (aHandler DevtoHandler) Scrap() []core.Article {
 
     })
 
+    // Scrapping Artile.Description from the first paragraph of text
     aHandler.Colly.OnHTML(Article_class, func(e *colly.HTMLElement) {
         lArticle.Description = e.Text
     })

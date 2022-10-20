@@ -10,12 +10,21 @@ import (
     "github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
-func TestGetArticlesListAppliedGo(t *testing.T) {
+func NewTestHandler(aURL string) DevtoHandler {
+    // We don't need to add anything to link during tests
+    Devto_URL = ""
+
+    lScrapper := colly.NewCollector()
+
+    // Switching Colly's data source from network to local files
     lTransport := &http.Transport{}
     lTransport.RegisterProtocol("file", http.NewFileTransport(http.Dir("./test_data/")))
+    lScrapper.WithTransport(lTransport)
 
-    lArticleCollectorTester := colly.NewCollector()
-    lArticleCollectorTester.WithTransport(lTransport)
+    return DevtoHandler{URL: aURL, Articles: make([]core.Article, 0), Colly: lScrapper}
+}
+
+func TestGetArticlesListAppliedGo(t *testing.T) {
 
     handle := NewTestHandler("file://./Devto.html")
 
