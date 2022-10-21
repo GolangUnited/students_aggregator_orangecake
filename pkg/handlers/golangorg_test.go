@@ -84,7 +84,7 @@ func TestGolangorg(t *testing.T) {
 		},
 	}
 
-	lGot, lErr := Scraping(testServer.URL + File)
+	lGot, lErr := golangorgScraper(testServer.URL + File)
 	if lErr != nil {
 		fmt.Println("function Scraping return the error: ", lErr)
 		lGotErr = lErr

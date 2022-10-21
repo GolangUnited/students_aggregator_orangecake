@@ -15,7 +15,7 @@ const (
 )
 
 // Scraping takes data from tip.golang.com/blog/all and converts it into a structure of json.
-func Scraping(aURL string) ([]core.Article, error) {
+func golangorgScraper(aURL string) ([]core.Article, error) {
 
 	lArticles := make([]core.Article, 0, 0)
 	lDescriptions := make([]string, 0, 0)
