@@ -17,10 +17,13 @@ type hashnodeScraper struct {
 }
 
 // create Hashnode scrapper struct for "https://hashnode.com/n/go"
-func NewHashnodeScraper(url string, log *log.Logger) *hashnodeScraper {
+
+const HASHNODE_URL = "https://hashnode.com/n/go"
+
+func NewHashnodeScraper(log *log.Logger) *hashnodeScraper {
 	return &hashnodeScraper{
 		Articles: []core.Article{},
-		URL:      url,
+		URL:      HASHNODE_URL,
 		Log:      log,
 	}
 }
