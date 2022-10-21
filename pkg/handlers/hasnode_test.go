@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -12,10 +14,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func NewTestServer() *httptest.Server {
+func NewTestServer(data string) *httptest.Server {
 	lServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		io.WriteString(w, test.HashnodeTestData)
+		io.WriteString(w, data)
 	}))
 
 	return lServer
@@ -23,27 +25,36 @@ func NewTestServer() *httptest.Server {
 
 func TestScrapUrl(t *testing.T) {
 
-	lServer := NewTestServer()
+	lServer := NewTestServer(test.HashnodeOkTestData)
 	defer lServer.Close()
 
 	lTestCases := []core.Article{
 		{
-			Title:       "Working with strings effectively with Golang",
-			Author:      "Ayomide Ayanwola",
-			Link:        "https://thecodeway.hashnode.dev/working-with-strings-effectively-with-golang",
+			Title:       "Title 1",
+			Author:      "Author 1",
+			Link:        "Link 1",
 			PublishDate: time.Date(2022, time.October, 9, 0, 0, 0, 0, time.UTC),
-			Description: "What are Strings? The way strings is stored in memory makes them immutable, making it difficult to perform simple operations like changing the value of an index in a string. For example you can't perform an index assignment operation on …",
+			Description: "Text 1…",
 		},
 		{
-			Title:       "How to create a static GO-lang server",
-			Author:      "Ayush Bajpai",
-			Link:        "https://gitayush.hashnode.dev/how-to-create-a-static-go-lang-server",
-			PublishDate: time.Date(2022, time.September, 11, 0, 0, 0, 0, time.UTC),
-			Description: "Open Powershell in your windows and then direct to GO directory using the command cd go Once inside GO directory, go to the src folder using the command cd src. Then you need to make a folder/directory…",
+			Title:       "Title 2",
+			Author:      "Author 2",
+			Link:        "Link 1",
+			PublishDate: time.Date(2022, time.September, 8, 0, 0, 0, 0, time.UTC),
+			Description: "Text 2…",
+		},
+		{
+			Title:       "Title 3",
+			Author:      "Author 3",
+			Link:        "Link 3",
+			PublishDate: time.Date(2022, time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.UTC),
+			Description: "",
 		},
 	}
 
-	lHS := hashnodeScraper{URL: lServer.URL}
+	log := log.New(os.Stdout, "HS", log.Flags())
+	lHS := NewHashnodeScraper(lServer.URL, log)
+
 	lHS.ScrapUrl()
 
 	for idx, val := range lHS.Articles {

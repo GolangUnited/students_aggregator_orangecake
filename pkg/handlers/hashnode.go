@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
@@ -9,30 +10,22 @@ import (
 	"github.com/gocolly/colly"
 )
 
-func parseDate(s string) time.Time {
-	// try parse date or use Now if failed
-	lDate, lErr := time.Parse("Jan _2, 2006", s)
-	if lErr != nil {
-		lDate = time.Now()
-	}
-
-	return time.Date(lDate.Year(), lDate.Month(), lDate.Day(), 0, 0, 0, 0, time.UTC)
-}
-
 type hashnodeScraper struct {
 	Articles []core.Article
 	URL      string
+	Log      *log.Logger
 }
 
-//create Hashnode scrapper struct
-func NewHashnodeScraper() *hashnodeScraper {
+// create Hashnode scrapper struct for "https://hashnode.com/n/go"
+func NewHashnodeScraper(url string, log *log.Logger) *hashnodeScraper {
 	return &hashnodeScraper{
 		Articles: []core.Article{},
-		URL:      "https://hashnode.com/n/go",
+		URL:      url,
+		Log:      log,
 	}
 }
 
-//srappin url
+// srappin url
 func (h *hashnodeScraper) ScrapUrl() error {
 
 	lC := colly.NewCollector()
@@ -57,7 +50,7 @@ func (h *hashnodeScraper) ScrapUrl() error {
 
 		lDate := lDOM.Find("div.css-dxz0om div.css-tel74u div.css-2wkyxu div.css-1n08q4e a.css-1u6dh35")
 
-		lArticle.PublishDate = parseDate(lDate.Text())
+		lArticle.PublishDate = h.parseDate(lDate.Text())
 
 		h.Articles = append(h.Articles, lArticle)
 
@@ -69,4 +62,14 @@ func (h *hashnodeScraper) ScrapUrl() error {
 	}
 
 	return nil
+}
+
+func (р *hashnodeScraper) parseDate(s string) time.Time {
+	// try parse date or use Now if failed
+	lDate, lErr := time.Parse("Jan _2, 2006", s)
+	if lErr != nil {
+		lDate = time.Now()
+	}
+
+	return time.Date(lDate.Year(), lDate.Month(), lDate.Day(), 0, 0, 0, 0, time.UTC)
 }
