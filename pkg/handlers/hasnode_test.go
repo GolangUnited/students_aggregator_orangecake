@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -14,6 +15,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type TestCase struct {
+	TestName string
+	TestData string
+	Err      error
+	URL      string
+}
+
 func NewTestServer(data string) *httptest.Server {
 	lServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -23,12 +31,12 @@ func NewTestServer(data string) *httptest.Server {
 	return lServer
 }
 
-func TestScrapUrl(t *testing.T) {
+func TestOkScrapUrl(t *testing.T) {
 
-	lServer := NewTestServer(test.HashnodeOkTestData)
+	lServer := NewTestServer(test.OkTestData)
 	defer lServer.Close()
 
-	lTestCases := []core.Article{
+	lOkTestCases := []core.Article{
 		{
 			Title:       "Title 1",
 			Author:      "Author 1",
@@ -39,7 +47,7 @@ func TestScrapUrl(t *testing.T) {
 		{
 			Title:       "Title 2",
 			Author:      "Author 2",
-			Link:        "Link 1",
+			Link:        "Link 2",
 			PublishDate: time.Date(2022, time.September, 8, 0, 0, 0, 0, time.UTC),
 			Description: "Text 2…",
 		},
@@ -57,7 +65,51 @@ func TestScrapUrl(t *testing.T) {
 
 	lHS.ScrapUrl()
 
-	for idx, val := range lHS.Articles {
-		assert.Equal(t, lTestCases[idx], val)
+	assert.Equal(t, len(lOkTestCases), len(lHS.Articles))
+
+	for idx, val := range lOkTestCases {
+		assert.Equal(t, val, lHS.Articles[idx])
+
 	}
+}
+
+func TestErrorsScrapUrl(t *testing.T) {
+
+	TestCases := []TestCase{
+		{
+			TestName: "No Articles Err",
+			TestData: test.NoArticlesTestData,
+			Err:      fmt.Errorf("no correct articles"),
+		},
+		{
+			TestName: "No Fields Err",
+			TestData: test.NoFieldsTestData,
+			Err:      fmt.Errorf("unable to find required field"),
+		},
+		{
+			TestName: "URL Visit Err",
+			TestData: "",
+			Err:      fmt.Errorf("visit error"),
+			URL:      "http://127.0.0.1",
+		},
+	}
+
+	for _, tCase := range TestCases {
+
+		lServer := NewTestServer(tCase.TestData)
+		defer lServer.Close()
+
+		log := log.New(os.Stdout, "HS", log.Flags())
+		lHS := NewHashnodeScraper(lServer.URL, log)
+
+		if tCase.URL != "" {
+			lHS.URL = tCase.URL
+		}
+
+		err := lHS.ScrapUrl()
+
+		assert.Contains(t, err.Error(), tCase.Err.Error())
+
+	}
+
 }
