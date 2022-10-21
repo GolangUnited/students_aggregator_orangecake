@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gocolly/colly"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"strings"
-	"time"
 )
 
 const (
@@ -25,10 +25,11 @@ func GolangorgScraper(aURL string) ([]core.Article, error) {
 
 	// Call the OnHTML method to take needed data from website
 	lC.OnHTML("p.blogtitle", func(h *colly.HTMLElement) {
-		lT, lErr := time.Parse("_2 January 2006", h.ChildText("span.date"))
+		lT, lErr := core.ParseDate("_2 January 2006", h.ChildText("span.date"))
 
 		if lErr != nil {
-			fmt.Println("date can't be formatted: ", lErr)
+			//fmt.Println("date can't be formatted: ", lErr)
+			fmt.Println(errors.New("date can't be formatted: "), lErr)
 			return
 		}
 
