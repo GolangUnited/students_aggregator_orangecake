@@ -9,41 +9,41 @@ import (
 
 // ParseAppliedGo returns ...
 // ToDo about args
-func ParseAppliedGo(aStartLink string,
-	aMainCollector *colly.Collector,
-	aArticleCollector *colly.Collector) (aArticles []core.Article, aWarnings []error, aError error) {
-	linksList, err := ParseAppliedGoMain(aStartLink, aMainCollector)
+func ParseAppliedGo(aStartLink string) (aArticles []core.Article, aWarnings []error, aError error) {
+	linksList, err := ParseAppliedGoMain(aStartLink)
 
 	var lArticlesList []core.Article
 	var lErrorsList []error
 	for _, value := range linksList {
-		lArticle, lErr := ParseAppliedGoArticle(value, aArticleCollector)
+		lArticle, lErr := ParseAppliedGoArticle(value)
 		lArticlesList = append(lArticlesList, lArticle)
 		lErrorsList = append(lErrorsList, lErr)
 	}
 	return lArticlesList, lErrorsList, err
 }
 
-func ParseAppliedGoMain(link string, aArticleCollector *colly.Collector) ([]string, error) {
+func ParseAppliedGoMain(link string) ([]string, error) {
 	var lLinksList []string
-	aArticleCollector.OnHTML("header[class=\"article-header\"] > a", func(e *colly.HTMLElement) {
+	var lArticleCollector = colly.NewCollector()
+	lArticleCollector.OnHTML("header[class=\"article-header\"] > a", func(e *colly.HTMLElement) {
 		lLinksList = append(lLinksList, e.Attr("href"))
 	})
-	err := aArticleCollector.Visit(link)
+	err := lArticleCollector.Visit(link)
 	return lLinksList, err
 }
 
-func ParseAppliedGoArticle(link string, aArticleParser *colly.Collector) (core.Article, error) {
+func ParseAppliedGoArticle(link string) (core.Article, error) {
 	var lNewArticle core.Article
-	var callErr, parseErr error
-	aArticleParser.OnHTML("head", func(e *colly.HTMLElement) {
+	var lCallErr, lParseErr error
+	var lArticleParser = colly.NewCollector()
+	lArticleParser.OnHTML("head", func(e *colly.HTMLElement) {
 		aName := e.ChildAttr("meta[property=\"og:title\"]", "content")
-		aDescription := e.ChildAttr("meta[name=\"description\"]", "content")
+		aDescription := e.ChildAttr("meta[property=\"og:description\"]", "content")
 		aUrl := e.ChildAttr("meta[property=\"og:url\"]", "content")
 		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
-		aPublicationDate, lErr := core.ParseDate(time.RFC3339, strings.TrimSpace(aPublicationDateStr))
-		if lErr != nil {
-			parseErr = lErr
+		aPublicationDate, err := core.ParseDate(time.RFC3339, strings.TrimSpace(aPublicationDateStr))
+		if err != nil {
+			lParseErr = err
 			//lWarnings = append(lWarnings, fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning))
 			//lWarnings = append(lWarnings, fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error()))
 		}
@@ -54,9 +54,13 @@ func ParseAppliedGoArticle(link string, aArticleParser *colly.Collector) (core.A
 			PublishDate: aPublicationDate,
 		}
 	})
-	callErr = aArticleParser.Visit(link)
-	if callErr == nil {
-		return lNewArticle, parseErr
+	lCallErr = lArticleParser.Visit(link)
+	if lCallErr == nil {
+		return lNewArticle, lParseErr
 	}
-	return lNewArticle, callErr
+	return lNewArticle, lCallErr
 }
+
+//func ParseTitle(aTitle string) {
+//
+//}
