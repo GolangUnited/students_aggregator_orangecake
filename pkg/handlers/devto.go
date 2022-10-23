@@ -1,11 +1,13 @@
 package handlers
 
 import (
-    "fmt"
-    "time"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
 
-    "github.com/gocolly/colly"
-    "github.com/indikator/aggregator_orange_cake/pkg/core"
+	"github.com/gocolly/colly"
+	"github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
 const Go_URL = "https://dev.to/t/go"
@@ -21,41 +23,58 @@ type DevtoHandler struct {
     URL      string
     Articles []core.Article
     Colly    *colly.Collector
+    Err      error
 }
 
 func NewHandler(aURL string) DevtoHandler {
-
     return DevtoHandler{URL: aURL, Articles: make([]core.Article, 0), Colly: colly.NewCollector()}
 }
 
 func Run() []core.Article {
-    
-    h := NewHandler(Go_URL)
+    lH := NewHandler(Go_URL)
+    lH.Scrap()
 
-    return h.Scrap()
+    return lH.Articles
 }
 
-func (aHandler DevtoHandler) Scrap() []core.Article {
+func (aHandler *DevtoHandler) Scrap() error {
 
     lArticle := core.Article{}
 
     aHandler.Colly.OnHTML(Substories_class, func(e *colly.HTMLElement) {
 
-        e.ForEach(Story_class, func(i int, h *colly.HTMLElement) {
+        e.ForEachWithBreak(Story_class, func(i int, h *colly.HTMLElement) bool {
 
-            lArticle.Author = h.ChildText(Author_class)
-            lArticle.Title = h.ChildText(Title_class)
-            lArticle.Link = Devto_URL + h.ChildAttr("a", "href")
+                lArticle.Author = strings.TrimSpace(h.ChildText(Author_class))
+                if len(lArticle.Author) <= 0 {
+                    fmt.Printf("No author for an Article")
+                }
 
-            lDate := h.ChildAttr("time", "datetime")
-            lArticle.PublishDate = parseDateDevto(lDate)
+                lArticle.Title = strings.TrimSpace(h.ChildText(Title_class))
+                if len(lArticle.Title) <= 0 {
+                    aHandler.Err = errors.New("no title found for an article - quitting")
+                    return false
+                }
 
-            // Following link to an Article itself to get the description
-            aHandler.Colly.Visit(e.Request.AbsoluteURL(lArticle.Link))
+                lDate := h.ChildAttr("time", "datetime")
+                var lErr error
+                lArticle.PublishDate, lErr = core.ParseDate(time.RFC3339, lDate)
+                if lErr != nil {
+                    fmt.Printf("date cannot be parsed: %s", lErr.Error())
+                }
 
-            aHandler.Articles = append(aHandler.Articles, lArticle)
+                lArticle.Link = Devto_URL + h.ChildAttr("a", "href")
+                if len(lArticle.Link) <= 0 {
+                    aHandler.Err = errors.New("no link found for an article - quitting")
+                    return false
+                }
+
+                // Following link to an Article itself to get the description
+                aHandler.Colly.Visit(e.Request.AbsoluteURL(lArticle.Link))
+
+                aHandler.Articles = append(aHandler.Articles, lArticle)
+                return true
         })
-
     })
 
     // Scrapping Artile.Description from the first paragraph of text
@@ -65,19 +84,8 @@ func (aHandler DevtoHandler) Scrap() []core.Article {
 
     lErr := aHandler.Colly.Visit(aHandler.URL)
     if lErr != nil {
-        fmt.Printf("Error scrapping %s: %s\n\n", aHandler.URL, lErr.Error())
+        return errors.New("Error scrapping " + aHandler.URL + "\n\n")
     }
 
-    return aHandler.Articles
-}
-
-func parseDateDevto(aDate string) time.Time {
-
-    lDate, lErr := time.Parse(time.RFC3339, aDate)
-    if lErr != nil {
-        fmt.Printf("Error: %s\n\n", lErr.Error())
-        lDate = time.Now()
-    }
-
-    return lDate.UTC()
+    return nil
 }
