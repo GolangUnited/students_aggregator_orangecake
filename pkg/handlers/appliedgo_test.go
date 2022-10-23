@@ -122,3 +122,24 @@ func TestAppliedGoArticleIncorrectUrlProtocol(t *testing.T) {
 	assert.Equal(t, 1, len(lErr))
 	assert.Equal(t, lExpectedErr, errors.Unwrap(lErr[0]))
 }
+
+func TestAppliedGoGetCombinedResults(t *testing.T) {
+	var lReceivedLinksList []core.Article
+	var lReceivedErrorsList []error
+	var lErr error
+	lExpectedLinksList := []core.Article{
+		{
+			Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music - Applied Go",
+			Author:      "",
+			Link:        TestDataURL + "AppliedGoArticleCombined.htm",
+			PublishDate: time.Date(2022, time.August, 20, 0, 0, 0, 0, time.UTC),
+			Description: "How Go code detects music output on a Raspberry and switches a 3sixty radio to AUX-IN via Frontier Silicon API",
+		},
+	}
+
+	lReceivedLinksList, lReceivedErrorsList, lErr = ParseAppliedGo(TestDataURL + "AppliedGoMainCombined.htm")
+	assert.ElementsMatch(t, lExpectedLinksList, lReceivedLinksList)
+	assert.ElementsMatch(t, []error(nil), lReceivedErrorsList)
+	assert.Equal(t, nil, lErr)
+
+}
