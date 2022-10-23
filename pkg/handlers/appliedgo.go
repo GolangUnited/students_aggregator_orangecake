@@ -57,7 +57,7 @@ func ParseAppliedGoArticle(link string) (core.Article, []error) {
 		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
 		if aPublicationDateStr == "" {
 			lParseErrors = append(lParseErrors, errors.New("warning: date field is empty"))
-			aPublicationDate = time.Now().UTC()
+			aPublicationDate = time.Date(1970, time.January, 20, 0, 0, 0, 0, time.UTC)
 		} else {
 			aPublicationDate, dateErr = core.ParseDate(time.RFC3339, strings.TrimSpace(aPublicationDateStr))
 			if dateErr != nil {

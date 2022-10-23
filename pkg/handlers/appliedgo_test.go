@@ -78,6 +78,34 @@ func TestAppliedGoScrapeSingleArticle(t *testing.T) {
 	assert.Equal(t, []error(nil), lErr)
 }
 
+func TestAppliedGoScrapeEmptyFields(t *testing.T) {
+	var lReceivedData core.Article
+	var lErr []error
+	lReceivedData, lErr = ParseAppliedGoArticle(TestDataURL + "AppliedGoArticleEmptyFields.htm")
+	lExpectedData := core.Article{
+		Title:       "",
+		Author:      "",
+		Link:        TestDataURL + "AppliedGoArticleEmptyFields.htm",
+		PublishDate: time.Date(1970, time.January, 20, 0, 0, 0, 0, time.UTC),
+		Description: "",
+	}
+	lExpectedErr := []error{
+		errors.New("error: title field is empty"),
+		errors.New("warning: description field is empty"),
+		errors.New("warning: date field is empty"),
+	}
+	assert.Equal(t, lExpectedData, lReceivedData)
+	assert.ElementsMatch(t, lExpectedErr, lErr)
+}
+
+func TestAppliedGoScrapeInvalidDate(t *testing.T) {
+	var lErr []error
+	_, lErr = ParseAppliedGoArticle(TestDataURL + "AppliedGoArticleInvalidDate.htm")
+
+	assert.Equal(t, 1, len(lErr))
+	assert.Equal(t, fmt.Errorf("invalid date format: invalid Date format"), lErr[0])
+}
+
 func TestAppliedGoArticleIncorrectUrlProtocol(t *testing.T) {
 	var badUrl = ""
 	var lExpectedArticle = core.Article{
