@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"github.com/stretchr/testify/assert"
 	"net"
@@ -34,7 +36,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestGetArticlesListAppliedGo(t *testing.T) {
+func TestAppliedGoGetArticlesList(t *testing.T) {
 	var lReceivedLinksList []string
 	var lErr error
 	lExpectedLinksList := []string{
@@ -50,7 +52,18 @@ func TestGetArticlesListAppliedGo(t *testing.T) {
 	assert.Equal(t, nil, lErr)
 }
 
-func TestArticleScraping(t *testing.T) {
+func TestAppliedGoMainIncorrectUrlProtocol(t *testing.T) {
+	var badUrl = ""
+	var lReceivedLinksList []string
+	var lErr error
+	var lExpectedErr = fmt.Errorf("unsupported protocol scheme %q", badUrl)
+
+	lReceivedLinksList, lErr = ParseAppliedGoMain(badUrl)
+	assert.Equal(t, []string(nil), lReceivedLinksList)
+	assert.Equal(t, lExpectedErr, errors.Unwrap(lErr))
+}
+
+func TestAppliedGoScrapeSingleArticle(t *testing.T) {
 	var lReceivedData core.Article
 	var lErr error
 	lReceivedData, lErr = ParseAppliedGoArticle(TestDataURL + "AppliedGoArticle.htm")
@@ -63,4 +76,20 @@ func TestArticleScraping(t *testing.T) {
 	}
 	assert.Equal(t, lExpectedData, lReceivedData)
 	assert.Equal(t, nil, lErr)
+}
+
+func TestAppliedGoArticleIncorrectUrlProtocol(t *testing.T) {
+	var badUrl = ""
+	var lExpectedArticle = core.Article{
+		Title:  "",
+		Author: "", Link: "",
+		PublishDate: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
+		Description: ""}
+	var lReceivedArticle core.Article
+	var lExpectedErr = fmt.Errorf("unsupported protocol scheme %q", badUrl)
+	var lErr error
+
+	lReceivedArticle, lErr = ParseAppliedGoArticle(badUrl)
+	assert.Equal(t, lExpectedArticle, lReceivedArticle)
+	assert.Equal(t, lExpectedErr, errors.Unwrap(lErr))
 }

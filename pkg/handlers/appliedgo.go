@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/gocolly/colly"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -28,7 +29,8 @@ func ParseAppliedGoMain(link string) ([]string, error) {
 	lArticleCollector.OnHTML("header[class=\"article-header\"] > a", func(e *colly.HTMLElement) {
 		lLinksList = append(lLinksList, e.Attr("href"))
 	})
-	err := lArticleCollector.Visit(link)
+	_, err := http.Get(link)
+	lArticleCollector.Visit(link)
 	return lLinksList, err
 }
 
@@ -54,7 +56,8 @@ func ParseAppliedGoArticle(link string) (core.Article, error) {
 			PublishDate: aPublicationDate,
 		}
 	})
-	lCallErr = lArticleParser.Visit(link)
+	_, lCallErr = http.Get(link)
+	lArticleParser.Visit(link)
 	if lCallErr == nil {
 		return lNewArticle, lParseErr
 	}
