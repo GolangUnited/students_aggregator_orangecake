@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"github.com/stretchr/testify/assert"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,19 +12,25 @@ import (
 )
 
 const (
-	TestDataFolder = "./test_data"
+	TestDataFolder  = "./test_data"
+	TestDataAddress = "127.0.0.1:8080"
+	TestDataURL     = "http://127.0.0.1:8080/"
 )
 
-var testServer httptest.Server
-var testDataURL string
-
 func TestMain(m *testing.M) {
+	// Create mux handler
 	mux := http.NewServeMux()
 	fServer := http.FileServer(http.Dir(TestDataFolder))
 	mux.Handle("/", fServer)
-	testServer = *httptest.NewServer(mux)
 
-	testDataURL = testServer.URL + "/"
+	// Create the server with certain address
+	lNewListener, _ := net.Listen("tcp", TestDataAddress)
+	testServer := *httptest.NewUnstartedServer(mux)
+	testServer.Listener = lNewListener
+
+	// Start the server and run the tests
+	testServer.Start()
+	defer testServer.Close()
 	os.Exit(m.Run())
 }
 
@@ -38,7 +45,7 @@ func TestGetArticlesListAppliedGo(t *testing.T) {
 		"https://appliedgo.net/auxin/",
 	}
 
-	lReceivedLinksList, lErr = ParseAppliedGoMain(testDataURL + "AppliedGoMain.htm")
+	lReceivedLinksList, lErr = ParseAppliedGoMain(TestDataURL + "AppliedGoMain.htm")
 	assert.ElementsMatch(t, lExpectedLinksList, lReceivedLinksList)
 	assert.Equal(t, nil, lErr)
 }
@@ -46,7 +53,7 @@ func TestGetArticlesListAppliedGo(t *testing.T) {
 func TestArticleScraping(t *testing.T) {
 	var lReceivedData core.Article
 	var lErr error
-	lReceivedData, lErr = ParseAppliedGoArticle(testDataURL + "AppliedGoArticle.htm")
+	lReceivedData, lErr = ParseAppliedGoArticle(TestDataURL + "AppliedGoArticle.htm")
 	lExpectedData := core.Article{
 		Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music - Applied Go",
 		Author:      "",
