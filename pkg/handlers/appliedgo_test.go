@@ -65,17 +65,17 @@ func TestAppliedGoMainIncorrectUrlProtocol(t *testing.T) {
 
 func TestAppliedGoScrapeSingleArticle(t *testing.T) {
 	var lReceivedData core.Article
-	var lErr error
+	var lErr []error
 	lReceivedData, lErr = ParseAppliedGoArticle(TestDataURL + "AppliedGoArticle.htm")
 	lExpectedData := core.Article{
 		Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music - Applied Go",
 		Author:      "",
-		Link:        "https://appliedgo.net/auxin/",
+		Link:        TestDataURL + "AppliedGoArticle.htm",
 		PublishDate: time.Date(2022, time.August, 20, 0, 0, 0, 0, time.UTC),
 		Description: "How Go code detects music output on a Raspberry and switches a 3sixty radio to AUX-IN via Frontier Silicon API",
 	}
 	assert.Equal(t, lExpectedData, lReceivedData)
-	assert.Equal(t, nil, lErr)
+	assert.Equal(t, []error(nil), lErr)
 }
 
 func TestAppliedGoArticleIncorrectUrlProtocol(t *testing.T) {
@@ -87,9 +87,10 @@ func TestAppliedGoArticleIncorrectUrlProtocol(t *testing.T) {
 		Description: ""}
 	var lReceivedArticle core.Article
 	var lExpectedErr = fmt.Errorf("unsupported protocol scheme %q", badUrl)
-	var lErr error
+	var lErr []error
 
 	lReceivedArticle, lErr = ParseAppliedGoArticle(badUrl)
 	assert.Equal(t, lExpectedArticle, lReceivedArticle)
-	assert.Equal(t, lExpectedErr, errors.Unwrap(lErr))
+	assert.Equal(t, 1, len(lErr))
+	assert.Equal(t, lExpectedErr, errors.Unwrap(lErr[0]))
 }

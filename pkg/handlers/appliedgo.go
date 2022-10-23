@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"github.com/gocolly/colly"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"net/http"
@@ -18,7 +20,7 @@ func ParseAppliedGo(aStartLink string) (aArticles []core.Article, aWarnings []er
 	for _, value := range linksList {
 		lArticle, lErr := ParseAppliedGoArticle(value)
 		lArticlesList = append(lArticlesList, lArticle)
-		lErrorsList = append(lErrorsList, lErr)
+		lErrorsList = append(lErrorsList, lErr...)
 	}
 	return lArticlesList, lErrorsList, err
 }
@@ -34,34 +36,48 @@ func ParseAppliedGoMain(link string) ([]string, error) {
 	return lLinksList, err
 }
 
-func ParseAppliedGoArticle(link string) (core.Article, error) {
+func ParseAppliedGoArticle(link string) (core.Article, []error) {
 	var lNewArticle core.Article
-	var lCallErr, lParseErr error
+	var lParseErrors []error
 	var lArticleParser = colly.NewCollector()
 	lArticleParser.OnHTML("head", func(e *colly.HTMLElement) {
-		aName := e.ChildAttr("meta[property=\"og:title\"]", "content")
-		aDescription := e.ChildAttr("meta[property=\"og:description\"]", "content")
-		aUrl := e.ChildAttr("meta[property=\"og:url\"]", "content")
-		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
-		aPublicationDate, err := core.ParseDate(time.RFC3339, strings.TrimSpace(aPublicationDateStr))
-		if err != nil {
-			lParseErr = err
-			//lWarnings = append(lWarnings, fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning))
-			//lWarnings = append(lWarnings, fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error()))
+
+		aTitle := e.ChildAttr("meta[property=\"og:title\"]", "content")
+		if aTitle == "" {
+			lParseErrors = append(lParseErrors, errors.New("error: title field is empty"))
 		}
+
+		aDescription := e.ChildAttr("meta[property=\"og:description\"]", "content")
+		if aDescription == "" {
+			lParseErrors = append(lParseErrors, errors.New("warning: description field is empty"))
+		}
+
+		var aPublicationDate time.Time
+		var dateErr error
+		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
+		if aPublicationDateStr == "" {
+			lParseErrors = append(lParseErrors, errors.New("warning: date field is empty"))
+			aPublicationDate = time.Now().UTC()
+		} else {
+			aPublicationDate, dateErr = core.ParseDate(time.RFC3339, strings.TrimSpace(aPublicationDateStr))
+			if dateErr != nil {
+				lParseErrors = append(lParseErrors, fmt.Errorf("invalid date format: %s", dateErr))
+			}
+		}
+
 		lNewArticle = core.Article{
-			Title:       aName,
+			Title:       aTitle,
 			Description: aDescription,
-			Link:        aUrl,
+			Link:        link,
 			PublishDate: aPublicationDate,
 		}
 	})
-	_, lCallErr = http.Get(link)
+	_, lCallErr := http.Get(link)
 	lArticleParser.Visit(link)
 	if lCallErr == nil {
-		return lNewArticle, lParseErr
+		return lNewArticle, lParseErrors
 	}
-	return lNewArticle, lCallErr
+	return lNewArticle, []error{lCallErr}
 }
 
 //func ParseTitle(aTitle string) {
