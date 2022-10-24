@@ -19,6 +19,7 @@ var lGotErr error
 
 // newTestServer create a new server
 func newTestServer() *httptest.Server {
+	//TODO Implement httptest package for easy server, or not.
 	mux := http.NewServeMux()
 	fServer := http.FileServer(http.Dir(TestDataFolder))
 	mux.Handle("/", fServer)
