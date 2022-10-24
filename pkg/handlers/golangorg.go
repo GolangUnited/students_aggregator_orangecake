@@ -14,7 +14,7 @@ const (
 	TGO_FULL_URL   = "https://tip.golang.org/blog/all"
 )
 
-// Scraping takes data from tip.golang.com/blog/all and converts it into a structure of json.
+// GolangorgScraper takes data from tip.golang.com/blog/all and converts it into a structure of json.
 func GolangorgScraper(aURL string) ([]core.Article, error) {
 
 	lArticles := make([]core.Article, 0, 0)
@@ -28,7 +28,7 @@ func GolangorgScraper(aURL string) ([]core.Article, error) {
 		lT, lErr := core.ParseDate("_2 January 2006", h.ChildText("span.date"))
 
 		if lErr != nil {
-			//fmt.Println("date can't be formatted: ", lErr)
+			// TODO: write error to log
 			fmt.Println(errors.New("date can't be formatted: "), lErr)
 			return
 		}
@@ -56,6 +56,7 @@ func GolangorgScraper(aURL string) ([]core.Article, error) {
 	// Start scraping on URL
 	lErr := lC.Visit(aURL)
 	if lErr != nil {
+		// TODO: write error to log
 		return nil, lErr
 	}
 
