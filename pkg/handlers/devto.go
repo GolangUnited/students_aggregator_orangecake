@@ -10,32 +10,33 @@ import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
-const Go_URL = "https://dev.to/t/go"
 var Devto_URL = "https://dev.to" // To be able to redefine later for testing purposes
 
-const Substories_class = "div.substories"
-const Story_class = "div.crayons-story"
-const Author_class = "button.profile-preview-card__trigger"
-const Title_class = "h2.crayons-story__title"
-const Article_class = "div.crayons-article__body p:nth-of-type(1)"
+const (
+    GO_URL = "https://dev.to/t/go"
+    SUBSTORIES_CLASS = "div.substories"
+    STORY_CLASS = "div.crayons-story"
+    AUTHOR_CLASS = "button.profile-preview-card__trigger"
+    TITLE_CLASS = "h2.crayons-story__title"
+    ARTICLE_CLASS = "div.crayons-article__body p:nth-of-type(1)"
+)
 
 type DevtoHandler struct {
-    URL      string
-    Articles []core.Article
-    Colly    *colly.Collector
-    Err      error
+    url      string
+    articles []core.Article
+    colly    *colly.Collector
+    err      error
 }
 
-func NewHandler(aURL string) DevtoHandler {
-    return DevtoHandler{URL: aURL, Articles: make([]core.Article, 0), Colly: colly.NewCollector()}
+func NewDevtoHandler(aURL string) DevtoHandler {
+    return DevtoHandler{url: aURL, articles: make([]core.Article, 0), colly: colly.NewCollector()}
 }
 
 // Initializes new Handler and runs scrapping of URL provided
-func Run() []core.Article {
-    lH := NewHandler(Go_URL)
-    lH.Scrap()
+func (aHandler *DevtoHandler) Run() []core.Article {
+    aHandler.Scrap()
 
-    return lH.Articles
+    return aHandler.articles
 }
 
 // Runs scrapping and fills Handler field with Articles info
@@ -43,19 +44,19 @@ func (aHandler *DevtoHandler) Scrap() error {
 
     lArticle := core.Article{}
 
-    aHandler.Colly.OnHTML(Substories_class, func(e *colly.HTMLElement) {
+    aHandler.colly.OnHTML(SUBSTORIES_CLASS, func(e *colly.HTMLElement) {
 
-        e.ForEachWithBreak(Story_class, func(i int, h *colly.HTMLElement) bool {
+        e.ForEachWithBreak(STORY_CLASS, func(i int, h *colly.HTMLElement) bool {
 
-                lArticle.Author = strings.TrimSpace(h.ChildText(Author_class))
+                lArticle.Author = strings.TrimSpace(h.ChildText(AUTHOR_CLASS))
                 if len(lArticle.Author) <= 0 {
                     fmt.Printf("No author for an Article\n")
                 }
 
-                // Title is a requiered field
-                lArticle.Title = strings.TrimSpace(h.ChildText(Title_class))
+                // Title is a required field
+                lArticle.Title = strings.TrimSpace(h.ChildText(TITLE_CLASS))
                 if len(lArticle.Title) <= 0 {
-                    aHandler.Err = errors.New("no title found for an article - quitting")
+                    aHandler.err = errors.New("no title found for an article - quitting")
                     return false
                 }
 
@@ -69,31 +70,31 @@ func (aHandler *DevtoHandler) Scrap() error {
                 // Link is a required field
                 lArticle.Link = Devto_URL + h.ChildAttr("a", "href")
                 if len(lArticle.Link) <= 0 {
-                    aHandler.Err = errors.New("no link found for an article - quitting")
+                    aHandler.err = errors.New("no link found for an article - quitting")
                     return false
                 }
 
                 // Following link to an Article itself to get the description
-                aHandler.Colly.Visit(e.Request.AbsoluteURL(lArticle.Link))
+                aHandler.colly.Visit(e.Request.AbsoluteURL(lArticle.Link))
 
-                aHandler.Articles = append(aHandler.Articles, lArticle)
+                aHandler.articles = append(aHandler.articles, lArticle)
                 return true
         })
     })
 
-    // Scrapping Artile.Description from the first paragraph of text
-    aHandler.Colly.OnHTML(Article_class, func(e *colly.HTMLElement) {
+    // Scrapping Article.Description from the first paragraph of text
+    aHandler.colly.OnHTML(ARTICLE_CLASS, func(e *colly.HTMLElement) {
         lArticle.Description = e.Text
     })
 
-    lErr := aHandler.Colly.Visit(aHandler.URL)
+    lErr := aHandler.colly.Visit(aHandler.url)
     if lErr != nil {
-        return errors.New("error scrapping " + aHandler.URL)
+        return errors.New("error scrapping " + aHandler.url)
     }
     
     // Checking Handler for any Articles errors
-    if aHandler.Err != nil {
-        return aHandler.Err
+    if aHandler.err != nil {
+        return aHandler.err
     }
 
     return nil
