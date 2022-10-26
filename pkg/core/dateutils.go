@@ -15,6 +15,8 @@ func ParseDate(aLayout, aValue string) (time.Time, error) {
 		return NormalizeDate(time.Now()), errors.New("empty Date")
 	}
 
+	CI Test test compiler error
+
 	// try parse date or use Now if failed
 	lDate, lErr := time.Parse(aLayout, aValue)
 	if lErr != nil {
