@@ -1,0 +1,54 @@
+﻿# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Project CI
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'develop'
+
+  pull_request:
+    branches:
+      - 'main'
+      - 'develop'
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - name: Display Go version
+        run: go version
+
+      - name: Install dependencies
+        run: go get .
+
+      - name: Build Core Package
+        run: go build -v ./pkg/core
+
+      - name: Build Handlers Package
+        run: go build -v ./pkg/handlers
+
+      - name: Build Aggregator
+        run: go build -v ./cmd/aggregator
+
+      - name: Test Core Package
+        run: go test -v ./pkg/core
+
+      - name: Test Handlers Package
+        run: go test -v ./pkg/handlers
+
+#      - name: Test Aggregator
+#        run: go test -v ./cmd/aggregator
+
