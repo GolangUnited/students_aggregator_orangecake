@@ -31,8 +31,8 @@ jobs:
       - name: Display Go version
         run: go version
 
-      - name: Install dependencies
-        run: go get .
+#      - name: Install dependencies
+#        run: go get .
 
       - name: Build Core Package
         run: go build -v ./pkg/core
