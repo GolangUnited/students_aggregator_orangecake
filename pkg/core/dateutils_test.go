@@ -61,7 +61,7 @@ func TestParseDate(t *testing.T) {
 	}
 	testDefs := []testDef{
 		{testDate: "", wantDate: "", wantError: "empty Date"},
-		{testDate: "02 Jan, 2022", wantDate: "", wantError: "invalid Date format"},
+		{testDate: "02 Jan, 2022", wantDate: "", wantError: "invalid Date format Test Fail"},
 		{testDate: "Jan 02, 2022", wantDate: "2022-01-02T00:00:00Z", wantError: ""},
 	}
 
