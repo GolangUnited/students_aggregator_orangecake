@@ -6,7 +6,6 @@ import (
     "errors"
     "time"
 
-	"github.com/gocolly/colly"
     "github.com/stretchr/testify/assert"
     "github.com/indikator/aggregator_orange_cake/pkg/core"
 )
@@ -17,15 +16,12 @@ func NewTestDevtoHandler(aURL string) DevtoHandler {
     // We don't need to add anything to link during tests
     Devto_URL = ""
 
-    lScrapper := colly.NewCollector()
-
     // Switching Colly's data source from network to local files
     lTransport := &http.Transport{}
     lTransport.RegisterProtocol("file", http.NewFileTransport(http.Dir(TestDataFolder)))
-    lScrapper.WithTransport(lTransport)
 
     lHandler := NewDevtoHandler(aURL)
-    lHandler.colly = lScrapper
+    lHandler.colly.WithTransport(lTransport)
 
     return lHandler
 }
