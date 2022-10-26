@@ -48,11 +48,6 @@ func (aHandler *DevtoHandler) Scrap() error {
 
 		e.ForEachWithBreak(STORY_CLASS, func(i int, h *colly.HTMLElement) bool {
 
-			lArticle.Author = strings.TrimSpace(h.ChildText(AUTHOR_CLASS))
-			if len(lArticle.Author) <= 0 {
-				fmt.Printf("No author for an Article\n")
-			}
-
 			// Title is a required field
 			lArticle.Title = strings.TrimSpace(h.ChildText(TITLE_CLASS))
 			if len(lArticle.Title) <= 0 {
@@ -60,18 +55,23 @@ func (aHandler *DevtoHandler) Scrap() error {
 				return false
 			}
 
-			lDate := h.ChildAttr("time", "datetime")
-			var lErr error
-			lArticle.PublishDate, lErr = core.ParseDate(time.RFC3339, lDate)
-			if lErr != nil {
-				fmt.Printf("date cannot be parsed: %s\n", lErr.Error())
-			}
-
 			// Link is a required field
 			lArticle.Link = Devto_URL + h.ChildAttr("a", "href")
 			if len(lArticle.Link) <= 0 {
 				aHandler.err = errors.New("no link found for an article - quitting")
 				return false
+			}
+            
+			lArticle.Author = strings.TrimSpace(h.ChildText(AUTHOR_CLASS))
+			if len(lArticle.Author) <= 0 {
+				fmt.Printf("No author for an Article\n")
+			}
+
+			lDate := h.ChildAttr("time", "datetime")
+			var lErr error
+			lArticle.PublishDate, lErr = core.ParseDate(time.RFC3339, lDate)
+			if lErr != nil {
+				fmt.Printf("date cannot be parsed: %s\n", lErr.Error())
 			}
 
 			// Following link to an Article itself to get the description
