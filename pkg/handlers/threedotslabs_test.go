@@ -1,4 +1,4 @@
-package threedotslabs
+package handlers
 
 import (
 	"bytes"
