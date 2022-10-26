@@ -58,13 +58,18 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 		return
 	}
 
-	if !(reflect.DeepEqual(lArticles, expectedData)) {
-		t.Errorf("Mismatch between expected and actual data")
+	for i, lExpectedArticle := range expectedData {
+		if !reflect.DeepEqual(lArticles[i], lExpectedArticle) {
+			t.Errorf("Expected %s, but got %s", lArticles[i], lExpectedArticle)
+		}
 	}
 
-	if !(reflect.DeepEqual(lWarnings, lExpectedWarnings)) {
-		t.Errorf("Mismatch between expected and actual warnings")
+	for i, lExpectedWarning := range lExpectedWarnings {
+		if !(reflect.DeepEqual(lWarnings[i], lExpectedWarning)) {
+			t.Errorf("Expected %s, but got %s", lExpectedWarning, lWarnings[i])
+		}
 	}
+
 }
 
 func TestBitfieldHandler_EmptyUrl(t *testing.T) {
