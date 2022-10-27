@@ -47,7 +47,7 @@ func (b *bitfieldParser) parseTitleLink(selection *goquery.Selection) error {
 	}
 
 	lTitle := strings.TrimSpace(selection.First().Clone().Children().Remove().End().Text())
-	if len(lTitle) <= 0 {
+	if len(lTitle) == 0 {
 		return errors.New("article title is empty")
 	}
 
@@ -57,7 +57,7 @@ func (b *bitfieldParser) parseTitleLink(selection *goquery.Selection) error {
 	}
 
 	lLink := strings.TrimSpace(lUrl)
-	if len(lLink) <= 0 {
+	if len(lLink) == 0 {
 		return errors.New("article link is empty")
 	}
 
@@ -77,7 +77,7 @@ func (b *bitfieldParser) parseDescription(selection *goquery.Selection) {
 	// TODO: replace warnings
 	if selection.Nodes != nil {
 		lDescription = strings.TrimSpace(selection.Text())
-		if len(lDescription) <= 0 {
+		if len(lDescription) == 0 {
 			b.addWarning("article description is empty")
 		}
 	} else {
@@ -92,7 +92,7 @@ func (b *bitfieldParser) parseAuthor(selection *goquery.Selection) {
 	// TODO: replace warnings
 	if selection.Nodes != nil {
 		lAuthor = strings.TrimSpace(selection.Text())
-		if len(lAuthor) <= 0 {
+		if len(lAuthor) == 0 {
 			b.addWarning("article author is empty")
 		}
 	} else {
