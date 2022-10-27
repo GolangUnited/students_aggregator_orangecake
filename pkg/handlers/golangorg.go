@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	TGO_FULL_URL = "https://tip.golang.org/blog/all"
-	TGO_SURL     = "https://tip.golang.org"
+	TGO_SURL = "https://tip.golang.org"
 )
 
 // GolangorgScraper takes data from tip.golang.com/blog/all and converts it into a structure of json.
@@ -19,7 +18,7 @@ func GolangorgScraper(aURL string) ([]core.Article, error) {
 
 	lArticles := make([]core.Article, 0, 0)
 
-	resp, lErr := http.Get(TGO_FULL_URL)
+	resp, lErr := http.Get(aURL)
 	if lErr != nil {
 		// TODO: write error to log
 		fmt.Println(errors.New("http request returns an error: "), lErr)
