@@ -36,7 +36,7 @@ func NewHashnodeScraper(log *log.Logger) *hashnodeScraper {
 	}
 }
 
-// TODO: errors will be replaced
+// TODO: errors and log messages will be replaced
 // srappin url
 func (h *hashnodeScraper) ScrapUrl() error {
 
@@ -66,7 +66,7 @@ func (h *hashnodeScraper) ScrapUrl() error {
 	return nil
 }
 
-// TODO: errors will be replaced
+// TODO: errors and log messages will be replaced
 // colly searching func
 func (h *hashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 

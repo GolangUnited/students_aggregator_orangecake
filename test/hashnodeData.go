@@ -1,6 +1,6 @@
 package test
 
-const OkTestData = `
+const OK_TEST_DATA = `
 <!DOCTYPE html>
 <html lang="en" id="current-style">
   <body class="css-ki1d5z">
@@ -104,13 +104,13 @@ const OkTestData = `
 </body>
 </html>`
 
-const NoArticlesTestData = `
+const NO_ARTICLES_TEST_DATA = `
 <!DOCTYPE html>
 <html lang="en" id="current-style">
   <body class="lalala"></body>
 </html>`
 
-const NoFieldsTestData = `
+const NO_FIELDS_TEST_DATA = `
 <!DOCTYPE html>
 <html lang="en" id="current-style">
   <body class="css-ki1d5z">
@@ -118,7 +118,7 @@ const NoFieldsTestData = `
 </body>
 </html>`
 
-const NoCorrectArticlesTestData = `
+const NO_CORRECT_ARTICLES_TEST_DATA = `
 <!DOCTYPE html>
 <html lang="en" id="current-style">
   <body class="css-ki1d5z">

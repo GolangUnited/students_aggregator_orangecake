@@ -33,7 +33,7 @@ func newHTTPTestServer(data string) *httptest.Server {
 
 func TestOkScrapUrl(t *testing.T) {
 
-	lServer := newHTTPTestServer(test.OkTestData)
+	lServer := newHTTPTestServer(test.OK_TEST_DATA)
 	defer lServer.Close()
 
 	lOkTestCases := []core.Article{
@@ -55,7 +55,7 @@ func TestOkScrapUrl(t *testing.T) {
 			Title:       "Title 3",
 			Author:      "Author 3",
 			Link:        "Link 3",
-			PublishDate: time.Date(2022, time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.UTC),
+			PublishDate: core.NormalizeDate(time.Now()),
 			Description: "",
 		},
 	}
@@ -79,12 +79,12 @@ func TestErrorsScrapUrl(t *testing.T) {
 	lTestCases := []HashnodeTestCase{
 		{
 			TestName: "No Articles Err",
-			TestData: test.NoArticlesTestData,
+			TestData: test.NO_ARTICLES_TEST_DATA,
 			Err:      fmt.Errorf("unable to find articles"),
 		},
 		{
 			TestName: "No Req Fields Err",
-			TestData: test.NoFieldsTestData,
+			TestData: test.NO_FIELDS_TEST_DATA,
 			Err:      fmt.Errorf("unable to find required field"),
 		},
 		{
@@ -95,7 +95,7 @@ func TestErrorsScrapUrl(t *testing.T) {
 		},
 		{
 			TestName: "No Correct Articles Err",
-			TestData: test.NoCorrectArticlesTestData,
+			TestData: test.NO_CORRECT_ARTICLES_TEST_DATA,
 			Err:      fmt.Errorf("no correct articles"),
 		},
 	}
