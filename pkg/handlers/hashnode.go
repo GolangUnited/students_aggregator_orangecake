@@ -10,29 +10,39 @@ import (
 )
 
 type hashnodeScraper struct {
-	Articles []core.Article
-	URL      string
-	Log      *log.Logger
-	Err      error
+	Articles      []core.Article
+	URL           string
+	Log           *log.Logger
+	Err           error
+	ArticlesFound int
 }
 
-const HASHNODE_URL = "https://hashnode.com/n/go"
+const (
+	HASHNODE_URL  = "https://hashnode.com/n/go"
+	ARTICLE_CLASS = "div.css-4gdbui"
+	TITLE_PATH    = "div.css-1wg9be8 div.css-16fbhyp h1.css-1j1qyv3 a.css-4zleql"
+	DESCR_PATH    = "div.css-1wg9be8 div.css-16fbhyp p.css-1072ocs a.css-4zleql"
+	AUTHOR_PATH   = "div.css-dxz0om div.css-tel74u div.css-2wkyxu div.css-1ajtyzd a.css-c3r4j7"
+	DATE_PATH     = "div.css-dxz0om div.css-tel74u div.css-2wkyxu div.css-1n08q4e a.css-1u6dh35"
+)
 
 // create Hashnode scrapper struct for "https://hashnode.com/n/go"
 func NewHashnodeScraper(log *log.Logger) *hashnodeScraper {
 	return &hashnodeScraper{
-		Articles: []core.Article{},
-		URL:      HASHNODE_URL,
-		Log:      log,
+		Articles:      []core.Article{},
+		URL:           HASHNODE_URL,
+		Log:           log,
+		ArticlesFound: 0,
 	}
 }
 
+// TODO: errors will be replaced
 // srappin url
 func (h *hashnodeScraper) ScrapUrl() error {
 
 	lC := colly.NewCollector()
 
-	lC.OnHTML("div.css-4gdbui", h.ElementSearch)
+	lC.OnHTML(ARTICLE_CLASS, h.ElementSearch)
 
 	err := lC.Visit(h.URL)
 	if err != nil {
@@ -45,6 +55,10 @@ func (h *hashnodeScraper) ScrapUrl() error {
 		return h.Err
 	}
 
+	if h.ArticlesFound == 0 {
+		return fmt.Errorf("unable to find articles")
+	}
+
 	if len(h.Articles) == 0 {
 		return fmt.Errorf("no correct articles")
 	}
@@ -52,7 +66,12 @@ func (h *hashnodeScraper) ScrapUrl() error {
 	return nil
 }
 
+// TODO: errors will be replaced
+// colly searching func
 func (h *hashnodeScraper) ElementSearch(el *colly.HTMLElement) {
+
+	//articles counter
+	h.ArticlesFound++
 
 	//Handler already have critical error. Skip further crawl
 	if h.Err != nil {
@@ -62,8 +81,8 @@ func (h *hashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 	lArticle := core.Article{}
 	lDOM := el.DOM
 
-	lTitle := lDOM.Find("div.css-1wg9be8 div.css-16fbhyp h1.css-1j1qyv3 a.css-4zleql")
-	if lTitle.Length() == 0 {
+	lTitle := lDOM.Find(TITLE_PATH)
+	if lTitle.Nodes == nil {
 		h.Err = fmt.Errorf("unable to find required field")
 		h.Log.Println("unable to find required field")
 		return
@@ -82,8 +101,8 @@ func (h *hashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 		return
 	}
 
-	lDescription := lDOM.Find("div.css-1wg9be8 div.css-16fbhyp p.css-1072ocs a.css-4zleql")
-	if lDescription.Length() == 0 {
+	lDescription := lDOM.Find(DESCR_PATH)
+	if lDescription.Nodes == nil {
 		h.Err = fmt.Errorf("unable to find required field")
 		h.Log.Println("unable to find required field")
 		return
@@ -91,8 +110,8 @@ func (h *hashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
 	lArticle.Description = lDescription.Text()
 
-	lAuthor := lDOM.Find("div.css-dxz0om div.css-tel74u div.css-2wkyxu div.css-1ajtyzd a.css-c3r4j7")
-	if lAuthor.Length() == 0 {
+	lAuthor := lDOM.Find(AUTHOR_PATH)
+	if lAuthor.Nodes == nil {
 		h.Err = fmt.Errorf("unable to find required field")
 		h.Log.Println("unable to find required field")
 		return
@@ -100,8 +119,8 @@ func (h *hashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
 	lArticle.Author = lAuthor.Text()
 
-	lDate := lDOM.Find("div.css-dxz0om div.css-tel74u div.css-2wkyxu div.css-1n08q4e a.css-1u6dh35")
-	if lTitle.Length() == 0 {
+	lDate := lDOM.Find(DATE_PATH)
+	if lDate.Nodes == nil {
 		h.Err = fmt.Errorf("unable to find required field")
 		h.Log.Println("unable to find required field")
 		return
