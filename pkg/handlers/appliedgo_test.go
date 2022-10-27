@@ -20,7 +20,7 @@ const (
 	TestDataURL     = "http://127.0.0.1:8080/"
 )
 
-func buildTestDataPath() (string, error) {
+func buildTestDataPathAppliedGo() (string, error) {
 	_, lFileName, _, lOK := runtime.Caller(0)
 	if !lOK {
 		return "", errors.New("cannot get TestDataPath")
@@ -38,7 +38,7 @@ func buildTestDataPath() (string, error) {
 func TestMain(m *testing.M) {
 	// Create mux handler
 	mux := http.NewServeMux()
-	testDataFolder, _ := buildTestDataPath()
+	testDataFolder, _ := buildTestDataPathAppliedGo()
 	fServer := http.FileServer(http.Dir(testDataFolder))
 	mux.Handle("/", fServer)
 
