@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gocolly/colly"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
@@ -10,76 +9,103 @@ import (
 	"time"
 )
 
-// ParseAppliedGo returns ...
-// ToDo about args
-func ParseAppliedGo(aStartLink string) (aArticles []core.Article, aWarnings []error, aError error) {
-	linksList, err := ParseAppliedGoMain(aStartLink)
+type appliedGoArticleParser struct {
+	Article  core.Article
+	Warnings []string
+}
+
+func newAppliedGoArticleParser() appliedGoArticleParser {
+	return appliedGoArticleParser{
+		Article:  core.Article{},
+		Warnings: make([]string, 0),
+	}
+}
+
+type appliedGoMainParser struct {
+	Links []string
+}
+
+func newAppliedGoMainParser() appliedGoMainParser {
+	return appliedGoMainParser{
+		Links: make([]string, 0),
+	}
+}
+
+// ParseAppliedGo returns the list of parsed articles from appliedgo.net site.
+func ParseAppliedGo(aStartLink string) (aArticles []core.Article, aWarnings []string, aError error) {
+	lReceivedLinks := newAppliedGoMainParser()
+	lReceivedErr := lReceivedLinks.ParseAppliedGoMain(aStartLink)
+	if lReceivedErr != nil {
+		return nil, nil, lReceivedErr
+	}
 
 	var lArticlesList []core.Article
-	var lErrorsList []error
-	for _, value := range linksList {
-		lArticle, lErr := ParseAppliedGoArticle(value)
-		lArticlesList = append(lArticlesList, lArticle)
-		lErrorsList = append(lErrorsList, lErr...)
+	var lWarningsList []string
+	for aIndex, value := range lReceivedLinks.Links {
+		lNewArticle := newAppliedGoArticleParser()
+		lParseErr := lNewArticle.ParseAppliedGoArticle(value)
+		if lParseErr != nil {
+			lWarningsList = append(lWarningsList, fmt.Sprintf("Error[%d]: %s", aIndex, lParseErr.Error()))
+		}
+		lArticlesList = append(lArticlesList, lNewArticle.Article)
+		for i, lWarning := range lNewArticle.Warnings {
+			lWarningsList = append(lWarningsList, fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning))
+		}
+
 	}
-	return lArticlesList, lErrorsList, err
+	return lArticlesList, lWarningsList, nil
 }
 
-func ParseAppliedGoMain(link string) ([]string, error) {
-	var lLinksList []string
+func (p *appliedGoMainParser) ParseAppliedGoMain(link string) error {
 	var lArticleCollector = colly.NewCollector()
 	lArticleCollector.OnHTML("header[class=\"article-header\"] > a", func(e *colly.HTMLElement) {
-		lLinksList = append(lLinksList, e.Attr("href"))
+		p.Links = append(p.Links, e.Attr("href"))
 	})
-	_, err := http.Get(link)
-	lArticleCollector.Visit(link)
-	return lLinksList, err
+	_, lCallErr := http.Get(link)
+	if lCallErr != nil {
+		return lCallErr
+	}
+	lVisitErr := lArticleCollector.Visit(link)
+	return lVisitErr
 }
 
-func ParseAppliedGoArticle(link string) (core.Article, []error) {
-	var lNewArticle core.Article
-	var lParseErrors []error
+func (p *appliedGoArticleParser) ParseAppliedGoArticle(link string) error {
 	var lArticleParser = colly.NewCollector()
 	lArticleParser.OnHTML("head", func(e *colly.HTMLElement) {
 
 		aTitle := e.ChildAttr("meta[property=\"og:title\"]", "content")
 		if aTitle == "" {
-			lParseErrors = append(lParseErrors, errors.New("error: title field is empty"))
+			p.Warnings = append(p.Warnings, "error: title field is empty")
 		}
 
 		aDescription := e.ChildAttr("meta[property=\"og:description\"]", "content")
 		if aDescription == "" {
-			lParseErrors = append(lParseErrors, errors.New("warning: description field is empty"))
+			p.Warnings = append(p.Warnings, "warning: description field is empty")
 		}
 
 		var aPublicationDate time.Time
 		var dateErr error
 		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
 		if aPublicationDateStr == "" {
-			lParseErrors = append(lParseErrors, errors.New("warning: date field is empty"))
+			p.Warnings = append(p.Warnings, "warning: date field is empty")
 			aPublicationDate = time.Date(1970, time.January, 20, 0, 0, 0, 0, time.UTC)
 		} else {
 			aPublicationDate, dateErr = core.ParseDate(time.RFC3339, strings.TrimSpace(aPublicationDateStr))
 			if dateErr != nil {
-				lParseErrors = append(lParseErrors, fmt.Errorf("invalid date format: %s", dateErr))
+				p.Warnings = append(p.Warnings, fmt.Sprintf("invalid date format: %s", dateErr))
 			}
 		}
 
-		lNewArticle = core.Article{
-			Title:       aTitle,
-			Description: aDescription,
-			Link:        link,
-			PublishDate: aPublicationDate,
-		}
+		p.Article.Title = aTitle
+		p.Article.Description = aDescription
+		p.Article.Link = link
+		p.Article.PublishDate = aPublicationDate
 	})
-	_, lCallErr := http.Get(link)
-	lArticleParser.Visit(link)
-	if lCallErr == nil {
-		return lNewArticle, lParseErrors
-	}
-	return lNewArticle, []error{lCallErr}
-}
 
-//func ParseTitle(aTitle string) {
-//
-//}
+	_, lCallErr := http.Get(link)
+	if lCallErr != nil {
+		return lCallErr
+	}
+	lVisitErr := lArticleParser.Visit(link)
+	return lVisitErr
+}

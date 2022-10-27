@@ -54,73 +54,71 @@ func TestMain(m *testing.M) {
 }
 
 func TestAppliedGoGetArticlesList(t *testing.T) {
-	var lReceivedLinksList []string
-	var lErr error
-	lExpectedLinksList := []string{
+	lExpectedLinks := []string{
 		"https://appliedgo.net/rich/",
 		"https://appliedgo.net/generictree/",
 		"https://appliedgo.net/instantgo/",
 		"https://appliedgo.net/mantil/",
 		"https://appliedgo.net/auxin/",
 	}
-
-	lReceivedLinksList, lErr = ParseAppliedGoMain(TestDataURL + "AppliedGoMain.htm")
-	assert.ElementsMatch(t, lExpectedLinksList, lReceivedLinksList)
-	assert.Equal(t, nil, lErr)
+	lReceivedLinks := newAppliedGoMainParser()
+	lReceivedErr := lReceivedLinks.ParseAppliedGoMain(TestDataURL + "AppliedGoMain.htm")
+	assert.ElementsMatch(t, lExpectedLinks, lReceivedLinks.Links)
+	assert.Equal(t, nil, lReceivedErr)
 }
 
 func TestAppliedGoMainIncorrectUrlProtocol(t *testing.T) {
 	var badUrl = ""
-	var lReceivedLinksList []string
-	var lErr error
 	var lExpectedErr = fmt.Errorf("unsupported protocol scheme %q", badUrl)
 
-	lReceivedLinksList, lErr = ParseAppliedGoMain(badUrl)
-	assert.Equal(t, []string(nil), lReceivedLinksList)
-	assert.Equal(t, lExpectedErr, errors.Unwrap(lErr))
+	lReceivedLinks := newAppliedGoMainParser()
+	lReceivedErr := lReceivedLinks.ParseAppliedGoMain(badUrl)
+	assert.Equal(t, []string{}, lReceivedLinks.Links)
+	assert.Equal(t, lExpectedErr, errors.Unwrap(lReceivedErr))
 }
 
 func TestAppliedGoScrapeSingleArticle(t *testing.T) {
-	var lReceivedData core.Article
-	var lErr []error
-	lReceivedData, lErr = ParseAppliedGoArticle(TestDataURL + "AppliedGoArticle.htm")
-	lExpectedData := core.Article{
+	lReceivedArticle := newAppliedGoArticleParser()
+	lReceivedErr := lReceivedArticle.ParseAppliedGoArticle(TestDataURL + "AppliedGoArticle.htm")
+	lExpectedArticle := core.Article{
 		Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music - Applied Go",
 		Author:      "",
 		Link:        TestDataURL + "AppliedGoArticle.htm",
 		PublishDate: time.Date(2022, time.August, 20, 0, 0, 0, 0, time.UTC),
 		Description: "How Go code detects music output on a Raspberry and switches a 3sixty radio to AUX-IN via Frontier Silicon API",
 	}
-	assert.Equal(t, lExpectedData, lReceivedData)
-	assert.Equal(t, []error(nil), lErr)
+	assert.Equal(t, lExpectedArticle, lReceivedArticle.Article)
+	assert.Equal(t, []string{}, lReceivedArticle.Warnings)
+	assert.Equal(t, nil, lReceivedErr)
 }
 
 func TestAppliedGoScrapeEmptyFields(t *testing.T) {
-	var lReceivedData core.Article
-	var lErr []error
-	lReceivedData, lErr = ParseAppliedGoArticle(TestDataURL + "AppliedGoArticleEmptyFields.htm")
-	lExpectedData := core.Article{
+	lReceivedArticle := newAppliedGoArticleParser()
+	lReceivedErr := lReceivedArticle.ParseAppliedGoArticle(TestDataURL + "AppliedGoArticleEmptyFields.htm")
+	lExpectedArticle := core.Article{
 		Title:       "",
 		Author:      "",
 		Link:        TestDataURL + "AppliedGoArticleEmptyFields.htm",
 		PublishDate: time.Date(1970, time.January, 20, 0, 0, 0, 0, time.UTC),
 		Description: "",
 	}
-	lExpectedErr := []error{
-		errors.New("error: title field is empty"),
-		errors.New("warning: description field is empty"),
-		errors.New("warning: date field is empty"),
+	lExpectedWarnings := []string{
+		"error: title field is empty",
+		"warning: description field is empty",
+		"warning: date field is empty",
 	}
-	assert.Equal(t, lExpectedData, lReceivedData)
-	assert.ElementsMatch(t, lExpectedErr, lErr)
+	assert.Equal(t, lExpectedArticle, lReceivedArticle.Article)
+	assert.ElementsMatch(t, lExpectedWarnings, lReceivedArticle.Warnings)
+	assert.Equal(t, nil, lReceivedErr)
 }
 
 func TestAppliedGoScrapeInvalidDate(t *testing.T) {
-	var lErr []error
-	_, lErr = ParseAppliedGoArticle(TestDataURL + "AppliedGoArticleInvalidDate.htm")
+	lReceivedArticle := newAppliedGoArticleParser()
+	lReceivedErr := lReceivedArticle.ParseAppliedGoArticle(TestDataURL + "AppliedGoArticleInvalidDate.htm")
 
-	assert.Equal(t, 1, len(lErr))
-	assert.Equal(t, fmt.Errorf("invalid date format: invalid Date format"), lErr[0])
+	assert.Equal(t, 1, len(lReceivedArticle.Warnings))
+	assert.Equal(t, "invalid date format: invalid Date format", lReceivedArticle.Warnings[0])
+	assert.Equal(t, nil, lReceivedErr)
 }
 
 func TestAppliedGoArticleIncorrectUrlProtocol(t *testing.T) {
@@ -130,19 +128,17 @@ func TestAppliedGoArticleIncorrectUrlProtocol(t *testing.T) {
 		Author: "", Link: "",
 		PublishDate: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
 		Description: ""}
-	var lReceivedArticle core.Article
 	var lExpectedErr = fmt.Errorf("unsupported protocol scheme %q", badUrl)
-	var lErr []error
 
-	lReceivedArticle, lErr = ParseAppliedGoArticle(badUrl)
-	assert.Equal(t, lExpectedArticle, lReceivedArticle)
-	assert.Equal(t, 1, len(lErr))
-	assert.Equal(t, lExpectedErr, errors.Unwrap(lErr[0]))
+	lReceivedArticle := newAppliedGoArticleParser()
+	lReceivedErr := lReceivedArticle.ParseAppliedGoArticle(badUrl)
+	assert.Equal(t, lExpectedArticle, lReceivedArticle.Article)
+	assert.Equal(t, lExpectedErr, errors.Unwrap(lReceivedErr))
 }
 
 func TestAppliedGoGetCombinedResults(t *testing.T) {
 	var lReceivedLinksList []core.Article
-	var lReceivedErrorsList []error
+	var lReceivedWarningsList []string
 	var lErr error
 	lExpectedLinksList := []core.Article{
 		{
@@ -154,9 +150,9 @@ func TestAppliedGoGetCombinedResults(t *testing.T) {
 		},
 	}
 
-	lReceivedLinksList, lReceivedErrorsList, lErr = ParseAppliedGo(TestDataURL + "AppliedGoMainCombined.htm")
+	lReceivedLinksList, lReceivedWarningsList, lErr = ParseAppliedGo(TestDataURL + "AppliedGoMainCombined.htm")
 	assert.ElementsMatch(t, lExpectedLinksList, lReceivedLinksList)
-	assert.ElementsMatch(t, []error(nil), lReceivedErrorsList)
+	assert.ElementsMatch(t, []error(nil), lReceivedWarningsList)
 	assert.Equal(t, nil, lErr)
 
 }
