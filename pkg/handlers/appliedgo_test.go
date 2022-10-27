@@ -9,20 +9,37 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
 
 const (
-	TestDataFolder  = "./test_data"
 	TestDataAddress = "127.0.0.1:8080"
 	TestDataURL     = "http://127.0.0.1:8080/"
 )
 
+func buildTestDataPath() (string, error) {
+	_, lFileName, _, lOK := runtime.Caller(0)
+	if !lOK {
+		return "", errors.New("cannot get TestDataPath")
+	}
+
+	lFullFileName, lErr := filepath.Abs(lFileName)
+	if lErr != nil {
+		return "", lErr
+	}
+	lFullFileName = filepath.Join(filepath.Dir(lFullFileName), "testdata")
+
+	return lFullFileName, nil
+}
+
 func TestMain(m *testing.M) {
 	// Create mux handler
 	mux := http.NewServeMux()
-	fServer := http.FileServer(http.Dir(TestDataFolder))
+	testDataFolder, _ := buildTestDataPath()
+	fServer := http.FileServer(http.Dir(testDataFolder))
 	mux.Handle("/", fServer)
 
 	// Create the server with certain address
