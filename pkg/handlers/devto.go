@@ -51,6 +51,7 @@ func (aHandler *DevtoHandler) Scrap() error {
             // Title is a required field
             lArticle.Title = strings.TrimSpace(h.ChildText(TITLE_CLASS))
             if len(lArticle.Title) <= 0 {
+                // TODO: switch to custom errors
                 aHandler.err = errors.New("no title found for an article - quitting")
                 return false
             }
@@ -58,12 +59,14 @@ func (aHandler *DevtoHandler) Scrap() error {
             // Link is a required field
             lArticle.Link = Devto_URL + h.ChildAttr("a", "href")
             if len(lArticle.Link) <= 0 {
+                // TODO: switch to custom errors
                 aHandler.err = errors.New("no link found for an article - quitting")
                 return false
             }
             
             lArticle.Author = strings.TrimSpace(h.ChildText(AUTHOR_CLASS))
             if len(lArticle.Author) <= 0 {
+                // TODO: log
                 fmt.Printf("No author for an Article\n")
             }
 
@@ -71,6 +74,7 @@ func (aHandler *DevtoHandler) Scrap() error {
             var lErr error
             lArticle.PublishDate, lErr = core.ParseDate(time.RFC3339, lDate)
             if lErr != nil {
+                // TODO: log
                 fmt.Printf("date cannot be parsed: %s\n", lErr.Error())
             }
 
@@ -89,11 +93,13 @@ func (aHandler *DevtoHandler) Scrap() error {
 
     lErr := aHandler.colly.Visit(aHandler.url)
     if lErr != nil {
+        // TODO: switch to custom errors
         return errors.New("error scrapping " + aHandler.url)
     }
 
     // Checking Handler for any Articles errors
     if aHandler.err != nil {
+        // TODO: log
         return aHandler.err
     }
 
