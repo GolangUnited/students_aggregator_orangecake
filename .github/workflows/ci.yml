@@ -31,24 +31,31 @@ jobs:
       - name: Display Go version
         run: go version
 
-#      - name: Install dependencies
-#        run: go get .
+      - name: Build and Test Core Package
+        run: |
+          go build -v ./pkg/core
+          go test -v ./pkg/core -coverprofile coverage_core.out
+          go tool cover -html=coverage_core.out -o=coverage_core.html
 
-      - name: Build Core Package
-        run: go build -v ./pkg/core
-
-      - name: Build Handlers Package
-        run: go build -v ./pkg/handlers
+      - name: Build and Test Handlers Package
+        run: |
+          go build -v ./pkg/handlers
+          go test -v ./pkg/handlers -coverprofile coverage_handlers.out
+          go tool cover -html=coverage_handlers.out -o=coverage_handlers.html
 
       - name: Build Aggregator
         run: go build -v ./cmd/aggregator
 
-      - name: Test Core Package
-        run: go test -v ./pkg/core
+      - name: Upload Coverage for Core Package
+          uses: actions/upload-artifact@v3
+          with:
+            name: coverage-core
+            path: coverage_core.html
+            retention-days: 3
 
-      - name: Test Handlers Package
-        run: go test -v ./pkg/handlers
-
-#      - name: Test Aggregator
-#        run: go test -v ./cmd/aggregator
-
+      - name: Upload Coverage for Handlers Package
+          uses: actions/upload-artifact@v3
+          with:
+            name: coverage-handlers
+            path: coverage_handlers.html
+            retention-days: 3
