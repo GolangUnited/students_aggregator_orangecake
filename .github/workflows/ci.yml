@@ -47,15 +47,15 @@ jobs:
         run: go build -v ./cmd/aggregator
 
       - name: Upload Coverage for Core Package
-          uses: actions/upload-artifact@v3
-          with:
-            name: coverage-core
-            path: coverage_core.html
-            retention-days: 3
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-core
+          path: coverage_core.html
+          retention-days: 3
 
       - name: Upload Coverage for Handlers Package
-          uses: actions/upload-artifact@v3
-          with:
-            name: coverage-handlers
-            path: coverage_handlers.html
-            retention-days: 3
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-handlers
+          path: coverage_handlers.html
+          retention-days: 3
