@@ -50,7 +50,7 @@ func (aHandler *DevtoHandler) Scrap() error {
 
             // Title is a required field
             lArticle.Title = strings.TrimSpace(h.ChildText(TITLE_CLASS))
-            if len(lArticle.Title) <= 0 {
+            if len(lArticle.Title) == 0 {
                 // TODO: switch to custom errors
                 aHandler.err = errors.New("no title found for an article - quitting")
                 return false
@@ -69,7 +69,7 @@ func (aHandler *DevtoHandler) Scrap() error {
             lArticle.Link = Devto_URL + lLink
             
             lArticle.Author = strings.TrimSpace(h.ChildText(AUTHOR_CLASS))
-            if len(lArticle.Author) <= 0 {
+            if len(lArticle.Author) == 0 {
                 // TODO: log
                 fmt.Printf("No author for an Article\n")
             }
