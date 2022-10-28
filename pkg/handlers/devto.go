@@ -57,12 +57,16 @@ func (aHandler *DevtoHandler) Scrap() error {
             }
 
             // Link is a required field
-            lArticle.Link = Devto_URL + h.ChildAttr("a", "href")
-            if len(lArticle.Link) <= 0 {
+            lLink := h.ChildAttr("a", "href")
+            if len(lLink) == 0 {
                 // TODO: switch to custom errors
                 aHandler.err = errors.New("no link found for an article - quitting")
                 return false
             }
+            if !strings.HasPrefix(lLink, "/") && !strings.HasPrefix(lLink, "file") {
+                lLink = "/" + lLink
+            }
+            lArticle.Link = Devto_URL + lLink
             
             lArticle.Author = strings.TrimSpace(h.ChildText(AUTHOR_CLASS))
             if len(lArticle.Author) <= 0 {
