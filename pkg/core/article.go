@@ -2,8 +2,6 @@ package core
 
 import "time"
 
-test build error
-
 type Article struct {
 	Title       string
 	Author      string
