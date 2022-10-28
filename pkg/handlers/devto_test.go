@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"net/http"
-	"testing"
+    "net/http"
+    "testing"
     "errors"
     "time"
 
@@ -31,7 +31,7 @@ func TestScrapDevto(t *testing.T) {
     lHandle := NewTestDevtoHandler("file://./Devto.html")
     lHandle.Scrap()
 
-	lExpectedArticles := 
+    lExpectedArticles := 
         []core.Article(
             []core.Article{
                 {
@@ -59,7 +59,7 @@ func TestScrapDevtoEmptyNotRequiredFields(t *testing.T) {
     lHandle := NewTestDevtoHandler("file://./DevtoEmptyFields.html")
     lHandle.Scrap()
 
-	lExpectedArticles := 
+    lExpectedArticles := 
         []core.Article(
             []core.Article{
                 {
@@ -85,23 +85,23 @@ func TestScrapDevtoEmptyNotRequiredFields(t *testing.T) {
 func TestScrapDevtoEmptyTitle(t *testing.T) {
 
     var lErr error
-	var lExpectedErr = errors.New("no title found for an article - quitting")
+    var lExpectedErr = errors.New("no title found for an article - quitting")
 
     lHandle := NewTestDevtoHandler("file://./DevtoEmptyTitle.html")
     lErr = lHandle.Scrap()
 
-	assert.Equal(t, lExpectedErr, lErr, "ErrorsEqual")
+    assert.Equal(t, lExpectedErr, lErr, "ErrorsEqual")
 }
 
 func TestScrapDevtoEmptyLink(t *testing.T) {
 
     var lErr error
-	var lExpectedErr = errors.New("no link found for an article - quitting")
+    var lExpectedErr = errors.New("no link found for an article - quitting")
 
     lHandle := NewTestDevtoHandler("file://./DevtoEmptyLink.html")
     lErr = lHandle.Scrap()
 
-	assert.Equal(t, lExpectedErr, lErr, "ErrorsEqual")
+    assert.Equal(t, lExpectedErr, lErr, "ErrorsEqual")
 }
 
 func TestScrapDevtoBadUrl(t *testing.T) {
@@ -109,10 +109,10 @@ func TestScrapDevtoBadUrl(t *testing.T) {
     lBadUrl := "https://de.vto/t/go"
 
     var lErr error
-	var lExpectedErr = errors.New("error scrapping " + lBadUrl)
+    var lExpectedErr = errors.New("error scrapping " + lBadUrl)
 
     lHandle := NewDevtoHandler(lBadUrl)
     lErr = lHandle.Scrap()
 
-	assert.Equal(t, lExpectedErr, lErr, "ErrorsEqual")
+    assert.Equal(t, lExpectedErr, lErr, "ErrorsEqual")
 }
