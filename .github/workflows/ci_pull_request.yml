@@ -1,10 +1,10 @@
 ﻿# This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: CI Push
+name: CI Pull Request
 
 on:
-  push:
+  pull_request:
 #    branches:
 #      - 'main'
 #      - 'develop'
@@ -29,15 +29,23 @@ jobs:
       - name: Build and Test Core Package
         run: |
           GOOS=linux GOARCH=amd64 go build -v ./pkg/core
-          go test -v ./pkg/core 
+          go test -v ./pkg/core -coverprofile coverage_core.out
+          go tool cover -html=coverage_core.out -o=coverage_core.html
 
       - name: Build and Test Handlers Package
         run: |
           GOOS=linux GOARCH=amd64 go build -v ./pkg/handlers
-          go test -v ./pkg/handlers
+          go test -v ./pkg/handlers -coverprofile coverage_handlers.out
+          go tool cover -html=coverage_handlers.out -o=coverage_handlers.html
 
       - name: Build Aggregator
         run: GOOS=linux GOARCH=amd64 go build -v ./cmd/aggregator
 
-      - name: Run Aggregator
-        run: ./aggregator
+      - name: Upload Code Coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage
+          path: |
+            coverage_core.html
+            coverage_handlers.html
+          retention-days: 3
