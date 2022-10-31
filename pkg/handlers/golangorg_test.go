@@ -72,12 +72,6 @@ func TestGolangOrg(t *testing.T) {
 	newHandler := NewGolangOrgHandler(testServer.URL + File)
 	lGot, lErr := newHandler.GolangOrgScraper()
 
-	/*	lGot, lErr := GolangorgScraper(testServer.URL + File)
-		if lErr != nil {
-			fmt.Println("function Scraping return the error: ", lErr)
-			lGotErr = lErr
-		}*/
-
 	lWant := lExpectedData
 
 	//compare data
