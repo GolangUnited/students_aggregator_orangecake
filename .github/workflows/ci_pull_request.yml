@@ -5,9 +5,6 @@ name: CI Pull Request
 
 on:
   pull_request:
-#    branches:
-#      - 'main'
-#      - 'develop'
 
 jobs:
 
@@ -26,20 +23,20 @@ jobs:
       - name: Display Go version
         run: go version
 
-      - name: Build and Test Core Package
+      - name: Build
         run: |
           GOOS=linux GOARCH=amd64 go build -v ./pkg/core
-          go test -v ./pkg/core -coverprofile coverage_core.out
-          go tool cover -html=coverage_core.out -o=coverage_core.html
-
-      - name: Build and Test Handlers Package
-        run: |
           GOOS=linux GOARCH=amd64 go build -v ./pkg/handlers
-          go test -v ./pkg/handlers -coverprofile coverage_handlers.out
-          go tool cover -html=coverage_handlers.out -o=coverage_handlers.html
+          GOOS=linux GOARCH=amd64 go build -v ./cmd/aggregator
 
-      - name: Build Aggregator
-        run: GOOS=linux GOARCH=amd64 go build -v ./cmd/aggregator
+      - name: Test
+        run: |
+          # Run tests
+          go test -v ./pkg/core -coverprofile coverage_core.out
+          go test -v ./pkg/handlers -coverprofile coverage_handlers.out
+          # Generate Coverage report
+          go tool cover -html=coverage_core.out -o=coverage_core.html
+          go tool cover -html=coverage_handlers.out -o=coverage_handlers.html
 
       - name: Upload Code Coverage
         uses: actions/upload-artifact@v3

@@ -5,9 +5,6 @@ name: CI Push
 
 on:
   push:
-#    branches:
-#      - 'main'
-#      - 'develop'
 
 jobs:
 
@@ -26,18 +23,13 @@ jobs:
       - name: Display Go version
         run: go version
 
-      - name: Build and Test Core Package
+      - name: Build
         run: |
           GOOS=linux GOARCH=amd64 go build -v ./pkg/core
-          go test -v ./pkg/core 
-
-      - name: Build and Test Handlers Package
-        run: |
           GOOS=linux GOARCH=amd64 go build -v ./pkg/handlers
+          GOOS=linux GOARCH=amd64 go build -v ./cmd/aggregator
+
+      - name: Test
+        run: |
+          go test -v ./pkg/core 
           go test -v ./pkg/handlers
-
-      - name: Build Aggregator
-        run: GOOS=linux GOARCH=amd64 go build -v ./cmd/aggregator
-
-      - name: Run Aggregator
-        run: ./aggregator
