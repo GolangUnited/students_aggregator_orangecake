@@ -1,0 +1,96 @@
+﻿<!doctype html><html lang=en>
+<head>
+<meta charset=utf-8>
+<title>Three Dots Labs blog</title>
+</head>
+<body>
+  <section class="main post-list">
+
+    <!-- Normal Article -->
+    <article class=post-entry>
+      <header class=post-header>
+        <h3 class=post-title><a href='LinkUrl' class=post-link>Title 1</a></h3>
+        <p class=post-meta>@Author · Feb 1, 2022</p>
+      </header>
+      <p class=post-summary>Summary</p>
+    </article>
+
+    <!-- Empty Author and Date Header (warning) -->
+    <article class=post-entry>
+      <header class=post-header>
+        <h3 class=post-title><a href='LinkUrl' class=post-link>Title 2</a></h3>
+        <p class=post-meta></p>
+      </header>
+      <p class=post-summary>Summary</p>
+    </article>
+
+    <!-- Invalid Author and Date (warning) -->
+    <article class=post-entry>
+      <header class=post-header>
+        <h3 class=post-title><a href='LinkUrl' class=post-link>Title 3</a></h3>
+        <p class=post-meta>@Author ! Feb 1, 2022</p>
+      </header>
+      <p class=post-summary>Summary</p>
+    </article>
+
+    <!-- Invalid Date (warning) -->
+    <article class=post-entry>
+      <header class=post-header>
+        <h3 class=post-title><a href='LinkUrl' class=post-link>Title 4</a></h3>
+        <p class=post-meta>@Author · Feb 31, 2022</p>
+      </header>
+      <p class=post-summary>Summary</p>
+    </article>
+
+    <!-- Empty Author and Date values (warning) -->
+    <article class=post-entry>
+      <header class=post-header>
+        <h3 class=post-title><a href='LinkUrl' class=post-link>Title 5</a></h3>
+        <p class=post-meta>@ · </p>
+      </header>
+      <p class=post-summary>Summary</p>
+    </article>
+
+    <!-- Required Fields (Title and Link) Only (warning) -->
+    <article class=post-entry>
+      <header class=post-header>
+        <h3 class=post-title><a href='LinkUrl' class=post-link>Title 6</a></h3>
+      </header>
+    </article>
+
+    <!-- Empty Article -->
+    <article class=post-entry>
+    </article>
+
+    <!-- Missed Title 
+    <article class=post-entry>
+      <header class=post-header></header>
+    </article>
+    -->
+
+    <!-- Empty Title (error) -->
+    <article class=post-entry>
+      <header class=post-header>
+        <h3 class=post-title><a href='LinkUrl' class=post-link></a></h3>
+        <p class=post-meta>@Author · Feb 1, 2022</p>
+      </header>
+      <p class=post-summary>Summary emp</p>
+    </article>
+
+    <!-- Missed Link URL -->
+    <article class=post-entry>
+      <header class=post-header>
+        <h3 class=post-title><a class=post-link>Title</a></h3>
+      </header>
+    </article>
+
+    <!-- Empty Link URL -->
+    <article class=post-entry>
+      <header class=post-header>
+        <h3 class=post-title><a href="" class=post-link>Title 4</a></h3>
+      </header>
+    </article>
+
+  </section>
+</body>
+</html>
