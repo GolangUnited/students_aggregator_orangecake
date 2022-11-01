@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +11,7 @@ import (
 )
 
 const (
-	TestDataFolder = "./test_data"
+	TestDataFolder = "./testdata"
 	File           = "/golangorg.html"
 )
 
@@ -18,7 +19,6 @@ var lGotErr error
 
 // newTestServer create a new server
 func newTestServer() *httptest.Server {
-	//TODO Implement httptest package for easy server, or not
 	mux := http.NewServeMux()
 	fServer := http.FileServer(http.Dir(TestDataFolder))
 	mux.Handle("/", fServer)
@@ -33,25 +33,11 @@ func TestGolangOrg(t *testing.T) {
 	// create expected data
 	lExpectedData := []core.Article{
 		{
-			Title:       "Go runtime: 4 years later",
-			Author:      "Michael Knyszek",
-			Link:        "https://tip.golang.org/blog/go119runtime",
-			PublishDate: time.Date(2022, time.September, 26, 0, 0, 0, 0, time.UTC),
-			Description: "A check-in on the status of Go runtime development",
-		},
-		{
-			Title:       "Go Developer Survey 2022 Q2 Results",
-			Author:      "Todd Kulesza",
-			Link:        "https://tip.golang.org/blog/survey2022-q2-results",
-			PublishDate: time.Date(2022, time.September, 8, 0, 0, 0, 0, time.UTC),
-			Description: "An analysis of the results from the 2022 Q2 Go Developer Survey.",
-		},
-		{
 			Title:       "Vulnerability Management for Go",
 			Author:      "Julie Qiu, for the Go security team",
 			Link:        "https://tip.golang.org/blog/vuln",
 			PublishDate: time.Date(2022, time.September, 6, 0, 0, 0, 0, time.UTC),
-			Description: "Announcing vulnerability management for Go, to help developers learn about known vulnerabilities in their dependencies.",
+			Description: "",
 		},
 		{
 			Title:       "Go 1.19 is released!",
@@ -69,13 +55,26 @@ func TestGolangOrg(t *testing.T) {
 		},
 	}
 
-	newHandler := NewGolangOrgHandler(testServer.URL + File)
-	lGot, lErr := newHandler.GolangOrgScraper()
+	h := NewGolangOrgHandler(testServer.URL + File)
+	lArticles, lErr := h.GolangOrgScraper()
+
+	for i, lArticle := range lArticles {
+		fmt.Printf("Node %d: %s\n", i, lArticle.Title)
+		fmt.Printf("  Author: %s\n", lArticle.Author)
+		fmt.Printf("  Date: %s\n", lArticle.PublishDate.Format("Jan _2, 2006"))
+		fmt.Printf("  URL: %s\n", lArticle.Link)
+		fmt.Printf("  Description:\n    %s\n\n", lArticle.Description)
+	}
+
+	fmt.Println()
+	fmt.Println()
+	fmt.Printf("  %d Articles detected.", len(lArticles))
+	fmt.Println()
 
 	lWant := lExpectedData
 
 	//compare data
-	if !reflect.DeepEqual(lGot, lWant) {
+	if !reflect.DeepEqual(lArticles, lWant) {
 		t.Errorf("Mismatch between expected and actual data")
 	}
 
