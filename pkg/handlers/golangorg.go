@@ -19,6 +19,10 @@ type GolangOrgHandler struct {
 	err      error
 }
 
+var (
+	lOk = true
+)
+
 func NewGolangOrgHandler(aUrl string) GolangOrgHandler {
 	return GolangOrgHandler{url: aUrl, articles: make([]core.Article, 0)}
 }
@@ -80,6 +84,7 @@ func (h *GolangOrgHandler) GolangOrgScraper() ([]core.Article, error) {
 		lArticle.Title = aSelection.Find("a[href]").Text()
 		if len(lArticle.Title) == 0 {
 			// TODO: write error to log
+			lOk = false
 			h.err = errors.New("title not found in article ==> exit")
 			//how to return h.err
 		}
@@ -87,6 +92,7 @@ func (h *GolangOrgHandler) GolangOrgScraper() ([]core.Article, error) {
 		lArticle.Link = GOLANG_ORG_URL + lLink
 		if len(lLink) == 0 {
 			// TODO: write error to log
+			lOk = false
 			h.err = errors.New("link not found in article ==> exit")
 			//how to return h.err
 		}
@@ -105,7 +111,9 @@ func (h *GolangOrgHandler) GolangOrgScraper() ([]core.Article, error) {
 			h.err = errors.New("description not found in article")
 		}
 
-		lArticles = append(lArticles, lArticle)
+		if lOk {
+			lArticles = append(lArticles, lArticle)
+		}
 	})
 
 	return lArticles, nil
