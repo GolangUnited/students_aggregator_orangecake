@@ -23,12 +23,6 @@ jobs:
       - name: Display Go version
         run: go version
 
-      - name: Build
-        run: |
-          GOOS=linux GOARCH=amd64 go build -v ./pkg/core
-          GOOS=linux GOARCH=amd64 go build -v ./pkg/handlers
-          GOOS=linux GOARCH=amd64 go build -v ./cmd/aggregator
-
       - name: Test
         run: |
           # Run tests
@@ -37,6 +31,12 @@ jobs:
           # Generate Coverage report
           go tool cover -html=coverage_core.out -o=coverage_core.html
           go tool cover -html=coverage_handlers.out -o=coverage_handlers.html
+
+      - name: Build
+        run: |
+          GOOS=linux GOARCH=amd64 go build -v ./pkg/core
+          GOOS=linux GOARCH=amd64 go build -v ./pkg/handlers
+          GOOS=linux GOARCH=amd64 go build -v ./cmd/aggregator
 
       - name: Upload Code Coverage
         uses: actions/upload-artifact@v3
