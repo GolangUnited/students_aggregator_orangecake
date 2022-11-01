@@ -5,10 +5,13 @@ import (
 	"fmt"
 )
 
-// Critical fields
+// Article fields name
 const (
-	Title = "Title"
-	Link  = "Link"
+	TitleFieldName       = "Title"
+	LinkFieldName        = "Link"
+	AuthorFieldName      = "Author"
+	DescriptionFieldName = "Description"
+	PublishDateFieldName = "PublishDate"
 )
 
 // RequiredFieldError when you have any trouble with acquiring data for critical fields
