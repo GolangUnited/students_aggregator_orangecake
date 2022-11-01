@@ -49,19 +49,22 @@ func (h *GolangOrgHandler) GolangOrgScraper() ([]core.Article, error) {
 	resp, lErr := http.Get(h.url)
 	if lErr != nil {
 		// TODO: write error to log
-		h.err = errors.New("http request returns an error: ")
+		h.err = fmt.Errorf("http request returns an error: %w", lErr)
+		return nil, h.err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode > 400 {
-		fmt.Println("Status code: ", resp.StatusCode)
+		h.err = fmt.Errorf("Status code: %d", resp.StatusCode)
+		return nil, h.err
 	}
 
 	doc, lErr := goquery.NewDocumentFromReader(resp.Body)
 	if lErr != nil {
 		// TODO: write error to log
-		h.err = errors.New("goquery.NewDocumentFromReader returns an error: ")
+		h.err = fmt.Errorf("goquery.NewDocumentFromReader returns an error: %w", lErr)
+		return nil, h.err
 	}
 
 	// doc.Find("p.blogtitle").Each(func(aIndex int, aSelection *goquery.Selection) {
