@@ -60,7 +60,7 @@ func TestOkScrapUrl(t *testing.T) {
 	}
 
 	log := log.New(os.Stdout, "HS", log.Flags())
-	lHS := NewHashnodeScraper(log)
+	lHS := NewHashnodeScraper(log, HASHNODE_URL)
 	lHS.URL = lServer.URL
 
 	lHS.ScrapUrl()
@@ -100,7 +100,7 @@ func TestErrorsScrapUrl(t *testing.T) {
 		defer lServer.Close()
 
 		log := log.New(os.Stdout, "HS", log.Flags())
-		lHS := NewHashnodeScraper(log)
+		lHS := NewHashnodeScraper(log, HASHNODE_URL)
 		lHS.URL = lServer.URL
 
 		if tCase.url != "" {

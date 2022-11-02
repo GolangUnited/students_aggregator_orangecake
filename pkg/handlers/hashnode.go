@@ -28,16 +28,16 @@ const (
 )
 
 // create Hashnode scrapper struct for "https://hashnode.com/n/go"
-func NewHashnodeScraper(log *log.Logger) *HashnodeScraper {
+func NewHashnodeScraper(log *log.Logger, aUrl string) *HashnodeScraper {
 	return &HashnodeScraper{
 		Articles:      []core.Article{},
-		URL:           HASHNODE_URL,
+		URL:           aUrl,
 		Log:           log,
 		ArticlesFound: 0,
 	}
 }
 
-// TODO: errors and log messages will be replaced
+// TODO: log will be replaced
 // srappin url
 func (h *HashnodeScraper) ScrapUrl() error {
 
