@@ -47,23 +47,22 @@ func (h *HashnodeScraper) ScrapUrl() error {
 
 	err := lC.Visit(h.URL)
 	if err != nil {
-		return fmt.Errorf("visit error %w", err)
+		return fmt.Errorf("%s: %w", core.ErrUrlVisit.Error(), err)
 	}
 
 	lC.Wait()
 
 	if h.ArticlesFound == 0 {
-		return fmt.Errorf("unable to find articles")
+		return core.ErrArticlesNotFound
 	}
 
 	if len(h.Articles) == 0 {
-		return fmt.Errorf("no correct articles")
+		return core.ErrNoArticles
 	}
-
 	return nil
 }
 
-// TODO: errors and log messages will be replaced
+// TODO: log will be replaced
 // colly searching func
 func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
@@ -112,7 +111,7 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 	lDate := lDOM.Find(DATE_PATH)
 	if lDate.Nodes == nil {
 		h.BadArticle = true
-		log.Println("unable to find field ")
+		h.Log.Printf("For article %s, %s field Data not found", lArticle.Title, lArticle.Link)
 		lArticle.PublishDate = core.NormalizeDate(time.Now())
 	} else {
 		lPubDate, err := core.ParseDate("Jan _2, 2006", lDate.Text())
@@ -123,7 +122,7 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 	}
 
 	if h.BadArticle {
-		log.Printf("Bad Article: %#v", lArticle)
+		h.Log.Printf("Bad Article: %#v", lArticle)
 		return
 	}
 

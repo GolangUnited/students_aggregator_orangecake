@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -80,18 +79,18 @@ func TestErrorsScrapUrl(t *testing.T) {
 		{
 			testName: "No Articles Err",
 			testData: test.NO_ARTICLES_TEST_DATA,
-			err:      fmt.Errorf("unable to find articles"),
+			err:      core.ErrArticlesNotFound,
 		},
 		{
 			testName: "URL Visit Err",
 			testData: "",
-			err:      fmt.Errorf("visit error"),
+			err:      core.ErrUrlVisit,
 			url:      "http://127.0.0.1",
 		},
 		{
 			testName: "No Correct Articles Err",
 			testData: test.NO_CORRECT_ARTICLES_TEST_DATA,
-			err:      fmt.Errorf("no correct articles"),
+			err:      core.ErrNoArticles,
 		},
 	}
 
