@@ -15,11 +15,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type HashnodeTestCase struct {
-	TestName string
-	TestData string
-	Err      error
-	URL      string
+type hashnodeTestCase struct {
+	testName string
+	testData string
+	err      error
+	url      string
 }
 
 func newHTTPTestServer(data string) *httptest.Server {
@@ -76,46 +76,41 @@ func TestOkScrapUrl(t *testing.T) {
 
 func TestErrorsScrapUrl(t *testing.T) {
 
-	lTestCases := []HashnodeTestCase{
+	lTestCases := []hashnodeTestCase{
 		{
-			TestName: "No Articles Err",
-			TestData: test.NO_ARTICLES_TEST_DATA,
-			Err:      fmt.Errorf("unable to find articles"),
+			testName: "No Articles Err",
+			testData: test.NO_ARTICLES_TEST_DATA,
+			err:      fmt.Errorf("unable to find articles"),
 		},
 		{
-			TestName: "No Req Fields Err",
-			TestData: test.NO_FIELDS_TEST_DATA,
-			Err:      fmt.Errorf("unable to find required field"),
+			testName: "URL Visit Err",
+			testData: "",
+			err:      fmt.Errorf("visit error"),
+			url:      "http://127.0.0.1",
 		},
 		{
-			TestName: "URL Visit Err",
-			TestData: "",
-			Err:      fmt.Errorf("visit error"),
-			URL:      "http://127.0.0.1",
-		},
-		{
-			TestName: "No Correct Articles Err",
-			TestData: test.NO_CORRECT_ARTICLES_TEST_DATA,
-			Err:      fmt.Errorf("no correct articles"),
+			testName: "No Correct Articles Err",
+			testData: test.NO_CORRECT_ARTICLES_TEST_DATA,
+			err:      fmt.Errorf("no correct articles"),
 		},
 	}
 
 	for _, tCase := range lTestCases {
 
-		lServer := newHTTPTestServer(tCase.TestData)
+		lServer := newHTTPTestServer(tCase.testData)
 		defer lServer.Close()
 
 		log := log.New(os.Stdout, "HS", log.Flags())
 		lHS := NewHashnodeScraper(log)
 		lHS.URL = lServer.URL
 
-		if tCase.URL != "" {
-			lHS.URL = tCase.URL
+		if tCase.url != "" {
+			lHS.URL = tCase.url
 		}
 
 		err := lHS.ScrapUrl()
 
-		assert.Contains(t, err.Error(), tCase.Err.Error())
+		assert.Contains(t, err.Error(), tCase.err.Error())
 
 	}
 

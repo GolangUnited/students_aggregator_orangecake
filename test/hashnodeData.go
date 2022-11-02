@@ -110,14 +110,6 @@ const NO_ARTICLES_TEST_DATA = `
   <body class="lalala"></body>
 </html>`
 
-const NO_FIELDS_TEST_DATA = `
-<!DOCTYPE html>
-<html lang="en" id="current-style">
-  <body class="css-ki1d5z">
-	<div class="css-4gdbui"></div>   
-</body>
-</html>`
-
 const NO_CORRECT_ARTICLES_TEST_DATA = `
 <!DOCTYPE html>
 <html lang="en" id="current-style">

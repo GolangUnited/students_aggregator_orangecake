@@ -3,17 +3,18 @@ package handlers
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 
 	"github.com/gocolly/colly"
 )
 
-type hashnodeScraper struct {
+type HashnodeScraper struct {
 	Articles      []core.Article
 	URL           string
 	Log           *log.Logger
-	Err           error
+	BadArticle    bool
 	ArticlesFound int
 }
 
@@ -27,8 +28,8 @@ const (
 )
 
 // create Hashnode scrapper struct for "https://hashnode.com/n/go"
-func NewHashnodeScraper(log *log.Logger) *hashnodeScraper {
-	return &hashnodeScraper{
+func NewHashnodeScraper(log *log.Logger) *HashnodeScraper {
+	return &HashnodeScraper{
 		Articles:      []core.Article{},
 		URL:           HASHNODE_URL,
 		Log:           log,
@@ -38,7 +39,7 @@ func NewHashnodeScraper(log *log.Logger) *hashnodeScraper {
 
 // TODO: errors and log messages will be replaced
 // srappin url
-func (h *hashnodeScraper) ScrapUrl() error {
+func (h *HashnodeScraper) ScrapUrl() error {
 
 	lC := colly.NewCollector()
 
@@ -50,10 +51,6 @@ func (h *hashnodeScraper) ScrapUrl() error {
 	}
 
 	lC.Wait()
-
-	if h.Err != nil {
-		return h.Err
-	}
 
 	if h.ArticlesFound == 0 {
 		return fmt.Errorf("unable to find articles")
@@ -68,70 +65,67 @@ func (h *hashnodeScraper) ScrapUrl() error {
 
 // TODO: errors and log messages will be replaced
 // colly searching func
-func (h *hashnodeScraper) ElementSearch(el *colly.HTMLElement) {
+func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
-	//articles counter
 	h.ArticlesFound++
-
-	//Handler already have critical error. Skip further crawl
-	if h.Err != nil {
-		return
-	}
+	h.BadArticle = false
 
 	lArticle := core.Article{}
 	lDOM := el.DOM
 
 	lTitle := lDOM.Find(TITLE_PATH)
+
 	if lTitle.Nodes == nil {
-		h.Err = fmt.Errorf("unable to find required field")
-		h.Log.Println("unable to find required field")
-		return
-	}
+		h.BadArticle = true
+		lArticle.Title = "unable to find field"
+	} else {
+		lArticle.Title = lTitle.Text()
+		if lTitle.Text() == "" {
+			h.BadArticle = true
+			lArticle.Title = "critical field is empty"
+		}
 
-	lArticle.Title = lTitle.Text()
-	if lTitle.Text() == "" {
-		h.Log.Println("Critical field is empty")
-		return
-	}
-
-	lLink, _ := lTitle.Attr("href")
-	lArticle.Link = lLink
-	if lLink == "" {
-		h.Log.Println("Critical field is empty")
-		return
+		lLink, _ := lTitle.Attr("href")
+		lArticle.Link = lLink
+		if lLink == "" {
+			h.BadArticle = true
+			lArticle.Link = "critical field is empty"
+		}
 	}
 
 	lDescription := lDOM.Find(DESCR_PATH)
 	if lDescription.Nodes == nil {
-		h.Err = fmt.Errorf("unable to find required field")
-		h.Log.Println("unable to find required field")
-		return
+		h.BadArticle = true
+		lArticle.Description = "unable to find field"
+	} else {
+		lArticle.Description = lDescription.Text()
 	}
-
-	lArticle.Description = lDescription.Text()
 
 	lAuthor := lDOM.Find(AUTHOR_PATH)
 	if lAuthor.Nodes == nil {
-		h.Err = fmt.Errorf("unable to find required field")
-		h.Log.Println("unable to find required field")
-		return
+		h.BadArticle = true
+		lArticle.Author = "unable to find field"
+	} else {
+		lArticle.Author = lAuthor.Text()
 	}
-
-	lArticle.Author = lAuthor.Text()
 
 	lDate := lDOM.Find(DATE_PATH)
 	if lDate.Nodes == nil {
-		h.Err = fmt.Errorf("unable to find required field")
-		h.Log.Println("unable to find required field")
+		h.BadArticle = true
+		log.Println("unable to find field ")
+		lArticle.PublishDate = core.NormalizeDate(time.Now())
+	} else {
+		lPubDate, err := core.ParseDate("Jan _2, 2006", lDate.Text())
+		if err != nil {
+			h.Log.Printf("For article %s, %s DataErr: %s ", lArticle.Title, lArticle.Link, err.Error())
+		}
+		lArticle.PublishDate = lPubDate
+	}
+
+	if h.BadArticle {
+		log.Printf("Bad Article: %#v", lArticle)
 		return
 	}
 
-	lPubDate, err := core.ParseDate("Jan _2, 2006", lDate.Text())
-	if err != nil {
-		h.Log.Printf("For article %s, %s DataErr: %s ", lArticle.Title, lArticle.Link, err.Error())
-	}
-	lArticle.PublishDate = lPubDate
-
 	h.Articles = append(h.Articles, lArticle)
-
 }
