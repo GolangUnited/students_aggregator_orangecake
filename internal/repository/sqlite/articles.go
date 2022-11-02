@@ -16,7 +16,7 @@ func NewStorage(db *sql.DB) *SQLiteStorage {
 }
 
 func (s *SQLiteStorage) WriteArticle(aCtx context.Context, lArticle core.Article) error {
-	lStatement := "INSERT INTO articles (title, author, link, pablish_date, description) VALUES (?, ?, ?, ?, ?)"
+	lStatement := "INSERT INTO articles (title, author, link, publish_date, description) VALUES (?, ?, ?, ?, ?)"
 
 	if _, lErr := s.db.ExecContext(aCtx, lStatement, lArticle.Title, lArticle.Author, lArticle.Link, lArticle.PublishDate, lArticle.Description); lErr != nil {
 		return fmt.Errorf("can't write article: %w", lErr)
@@ -25,19 +25,19 @@ func (s *SQLiteStorage) WriteArticle(aCtx context.Context, lArticle core.Article
 	return nil
 }
 
-func (s *SQLiteStorage) ReadArticleById(aCtx context.Context, aId int) (core.Article, error) {
+func (s *SQLiteStorage) ReadArticleById(aCtx context.Context, aId int) (*core.Article, error) {
 	var lArticle core.Article //нужен конструктор для создания пустого статьи ИЛИ aArticle в аргумент?
-	lStatement := "SELECT title, author, link, pablish_date, description FROM articles WHERE id=?"
+	lStatement := "SELECT title, author, link, publish_date, description FROM articles WHERE id=?"
 
 	lErr := s.db.QueryRowContext(aCtx, lStatement, aId).Scan(&lArticle.Title, &lArticle.Author, &lArticle.Link, &lArticle.PublishDate, &lArticle.Description)
 	if lErr == sql.ErrNoRows {
-		return lArticle, fmt.Errorf("article #%d not found: %w", aId, lErr)
+		return nil, fmt.Errorf("article #%d not found: %w", aId, lErr)
 	}
 	if lErr != nil {
-		return core.Article{}, fmt.Errorf("can't read article #%d: %w", aId, lErr)
+		return nil, fmt.Errorf("can't read article #%d: %w", aId, lErr)
 	}
 
-	return lArticle, nil
+	return &lArticle, nil
 }
 
 func (s *SQLiteStorage) ReadAllArticles(aCtx context.Context) ([]core.Article, error) {
