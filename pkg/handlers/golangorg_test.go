@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"net/http"
 	"net/http/httptest"
@@ -57,19 +56,6 @@ func TestGolangOrg(t *testing.T) {
 
 	h := NewGolangOrgHandler(testServer.URL + File)
 	lArticles, lErr := h.GolangOrgScraper()
-
-	for i, lArticle := range lArticles {
-		fmt.Printf("Node %d: %s\n", i, lArticle.Title)
-		fmt.Printf("  Author: %s\n", lArticle.Author)
-		fmt.Printf("  Date: %s\n", lArticle.PublishDate.Format("Jan _2, 2006"))
-		fmt.Printf("  URL: %s\n", lArticle.Link)
-		fmt.Printf("  Description:\n    %s\n\n", lArticle.Description)
-	}
-
-	fmt.Println()
-	fmt.Println()
-	fmt.Printf("  %d Articles detected.", len(lArticles))
-	fmt.Println()
 
 	lWant := lExpectedData
 
