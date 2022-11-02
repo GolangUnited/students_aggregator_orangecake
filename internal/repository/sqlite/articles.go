@@ -7,15 +7,15 @@ import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
-type Storage struct {
+type SQLiteStorage struct {
 	db *sql.DB
 }
 
-func NewStorage(db *sql.DB) *Storage {
-	return &Storage{db}
+func NewStorage(db *sql.DB) *SQLiteStorage {
+	return &SQLiteStorage{db}
 }
 
-func (s *Storage) WriteArticle(aCtx context.Context, lArticle core.Article) error {
+func (s *SQLiteStorage) WriteArticle(aCtx context.Context, lArticle core.Article) error {
 	lStatement := "INSERT INTO articles (title, author, link, pablish_date, description) VALUES (?, ?, ?, ?, ?)"
 
 	if _, lErr := s.db.ExecContext(aCtx, lStatement, lArticle.Title, lArticle.Author, lArticle.Link, lArticle.PublishDate, lArticle.Description); lErr != nil {
@@ -25,7 +25,7 @@ func (s *Storage) WriteArticle(aCtx context.Context, lArticle core.Article) erro
 	return nil
 }
 
-func (s *Storage) ReadArticleById(aCtx context.Context, aId int) (core.Article, error) {
+func (s *SQLiteStorage) ReadArticleById(aCtx context.Context, aId int) (core.Article, error) {
 	var lArticle core.Article //нужен конструктор для создания пустого статьи ИЛИ aArticle в аргумент?
 	lStatement := "SELECT title, author, link, pablish_date, description FROM articles WHERE id=?"
 
@@ -40,7 +40,7 @@ func (s *Storage) ReadArticleById(aCtx context.Context, aId int) (core.Article, 
 	return lArticle, nil
 }
 
-func (s *Storage) ReadAllArticles(aCtx context.Context) ([]core.Article, error) {
+func (s *SQLiteStorage) ReadAllArticles(aCtx context.Context) ([]core.Article, error) {
 	lRows, lErr := s.db.QueryContext(aCtx, "SELECT title, author, link, publish_date, description FROM articles")
 	if lErr != nil {
 		return nil, lErr
