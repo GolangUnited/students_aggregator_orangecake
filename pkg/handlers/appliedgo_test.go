@@ -60,15 +60,15 @@ func TestAppliedGoGetArticlesList(t *testing.T) {
 			Link:        "https://appliedgo.net/auxin/",
 			Description: "Ok, so your radio lacks AirPlay support but has an auxiliary input and can be remote-controlled via the Frontier Silicon API. Fetch a Raspberry Pi, put Shairport-sync and Raspotify on it, plug it into the AUX port, and glue everything together with some Go code. Et voilà - home automation in the small.",
 			PublishDate: time.Date(2022, time.August, 20, 0, 0, 0, 0, time.UTC)},
-			warnings: nil,
-			errors:   nil},
+			warnings: []string{},
+			errors:   []error{}},
 		{article: core.Article{
 			Title:       "Rapid AWS Lambda development with Go and Mantil",
 			Link:        "https://appliedgo.net/mantil/",
 			Description: "If you need to develop an AWS Lambda function in Go, take a look at Mantil, a dev kit with staging and database connection included.",
 			PublishDate: time.Date(2022, time.January, 28, 0, 0, 0, 0, time.UTC)},
-			warnings: nil,
-			errors:   nil}}
+			warnings: []string{},
+			errors:   []error{}}}
 	lReceivedArticles := newAppliedGoParser()
 	lReceivedErr := lReceivedArticles.ParseAppliedGo(TestDataURL + "AppliedGoMain.htm")
 	assert.ElementsMatch(t, lExpectedArticles, lReceivedArticles.articles, "invalid articles content")
