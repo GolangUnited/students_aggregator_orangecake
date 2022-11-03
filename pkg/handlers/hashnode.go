@@ -14,8 +14,8 @@ type HashnodeScraper struct {
 	Articles      []core.Article
 	URL           string
 	Log           *log.Logger
-	BadArticle    bool
-	ArticlesFound int
+	badArticle    bool
+	articlesFound int
 }
 
 const (
@@ -33,7 +33,7 @@ func NewHashnodeScraper(log *log.Logger, aUrl string) *HashnodeScraper {
 		Articles:      []core.Article{},
 		URL:           aUrl,
 		Log:           log,
-		ArticlesFound: 0,
+		articlesFound: 0,
 	}
 }
 
@@ -52,7 +52,7 @@ func (h *HashnodeScraper) ScrapUrl() error {
 
 	lC.Wait()
 
-	if h.ArticlesFound == 0 {
+	if h.articlesFound == 0 {
 		return core.ErrArticlesNotFound
 	}
 
@@ -66,8 +66,8 @@ func (h *HashnodeScraper) ScrapUrl() error {
 // colly searching func
 func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
-	h.ArticlesFound++
-	h.BadArticle = false
+	h.articlesFound++
+	h.badArticle = false
 
 	lArticle := core.Article{}
 	lDOM := el.DOM
@@ -75,26 +75,26 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 	lTitle := lDOM.Find(TITLE_PATH)
 
 	if lTitle.Nodes == nil {
-		h.BadArticle = true
+		h.badArticle = true
 		lArticle.Title = "unable to find field"
 	} else {
 		lArticle.Title = lTitle.Text()
 		if lTitle.Text() == "" {
-			h.BadArticle = true
+			h.badArticle = true
 			lArticle.Title = "critical field is empty"
 		}
 
 		lLink, _ := lTitle.Attr("href")
 		lArticle.Link = lLink
 		if lLink == "" {
-			h.BadArticle = true
+			h.badArticle = true
 			lArticle.Link = "critical field is empty"
 		}
 	}
 
 	lDescription := lDOM.Find(DESCR_PATH)
 	if lDescription.Nodes == nil {
-		h.BadArticle = true
+		h.badArticle = true
 		lArticle.Description = "unable to find field"
 	} else {
 		lArticle.Description = lDescription.Text()
@@ -102,7 +102,7 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
 	lAuthor := lDOM.Find(AUTHOR_PATH)
 	if lAuthor.Nodes == nil {
-		h.BadArticle = true
+		h.badArticle = true
 		lArticle.Author = "unable to find field"
 	} else {
 		lArticle.Author = lAuthor.Text()
@@ -110,7 +110,7 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
 	lDate := lDOM.Find(DATE_PATH)
 	if lDate.Nodes == nil {
-		h.BadArticle = true
+		h.badArticle = true
 		h.Log.Printf("For article %s, %s field Data not found", lArticle.Title, lArticle.Link)
 		lArticle.PublishDate = core.NormalizeDate(time.Now())
 	} else {
@@ -121,7 +121,7 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 		lArticle.PublishDate = lPubDate
 	}
 
-	if h.BadArticle {
+	if h.badArticle {
 		h.Log.Printf("Bad Article: %#v", lArticle)
 		return
 	}
