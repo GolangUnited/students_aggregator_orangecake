@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"fmt"
+	"errors"
 	"github.com/gocolly/colly"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"net/http"
@@ -9,103 +9,93 @@ import (
 	"time"
 )
 
-type appliedGoArticleParser struct {
-	Article  core.Article
-	Warnings []string
+const (
+	appliedGoDateLayout = "2006-01-02 15:04:05 -0700 MST"
+	APPLIED_GO_URL      = "https://appliedgo.net/"
+)
+
+type appliedGoArticle struct {
+	article  core.Article
+	warnings []string
+	errors   []error
 }
 
-func newAppliedGoArticleParser() appliedGoArticleParser {
-	return appliedGoArticleParser{
-		Article:  core.Article{},
-		Warnings: make([]string, 0),
+func newAppliedGoArticle() appliedGoArticle {
+	return appliedGoArticle{
+		article:  core.Article{},
+		warnings: make([]string, 0),
+		errors:   make([]error, 0),
 	}
 }
 
-type appliedGoMainParser struct {
-	Links []string
+type appliedGoParser struct {
+	articles []appliedGoArticle
 }
 
-func newAppliedGoMainParser() appliedGoMainParser {
-	return appliedGoMainParser{
-		Links: make([]string, 0),
+func newAppliedGoParser() appliedGoParser {
+	return appliedGoParser{
+		articles: make([]appliedGoArticle, 0),
 	}
 }
 
-// ParseAppliedGo returns the list of parsed articles from appliedgo.net site.
-func ParseAppliedGo(aStartLink string) (aArticles []core.Article, aWarnings []string, aError error) {
-	lReceivedLinks := newAppliedGoMainParser()
-	lReceivedErr := lReceivedLinks.ParseAppliedGoMain(aStartLink)
-	if lReceivedErr != nil {
-		return nil, nil, lReceivedErr
-	}
-
-	var lArticlesList []core.Article
-	var lWarningsList []string
-	for aIndex, value := range lReceivedLinks.Links {
-		lNewArticle := newAppliedGoArticleParser()
-		lParseErr := lNewArticle.ParseAppliedGoArticle(value)
-		if lParseErr != nil {
-			lWarningsList = append(lWarningsList, fmt.Sprintf("Error[%d]: %s", aIndex, lParseErr.Error()))
-		}
-		lArticlesList = append(lArticlesList, lNewArticle.Article)
-		for i, lWarning := range lNewArticle.Warnings {
-			lWarningsList = append(lWarningsList, fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning))
-		}
-
-	}
-	return lArticlesList, lWarningsList, nil
-}
-
-func (p *appliedGoMainParser) ParseAppliedGoMain(link string) error {
+func (p *appliedGoParser) ParseAppliedGo(link string) error {
 	var lArticleCollector = colly.NewCollector()
-	lArticleCollector.OnHTML("header[class=\"article-header\"] > a", func(e *colly.HTMLElement) {
-		p.Links = append(p.Links, e.Attr("href"))
-	})
-	_, lCallErr := http.Get(link)
-	if lCallErr != nil {
-		return lCallErr
-	}
-	lVisitErr := lArticleCollector.Visit(link)
-	return lVisitErr
-}
+	lArticleCollector.OnHTML("div[class=\"article-inner\"]", func(e *colly.HTMLElement) {
+		lNewArticle := newAppliedGoArticle()
+		lCorrect := true
 
-func (p *appliedGoArticleParser) ParseAppliedGoArticle(link string) error {
-	var lArticleParser = colly.NewCollector()
-	lArticleParser.OnHTML("head", func(e *colly.HTMLElement) {
+		//Link
+		aLink := e.ChildAttr("header[class=\"article-header\"] > a", "href")
+		if aLink == "" {
+			//TODO
+			lNewArticle.errors = append(lNewArticle.errors, errors.New("error: link field is empty"))
+			lCorrect = false
+		}
 
-		aTitle := e.ChildAttr("meta[property=\"og:title\"]", "content")
+		//Title
+		aTitle := e.ChildText("h1[class=\"article-title\"]")
 		if aTitle == "" {
-			p.Warnings = append(p.Warnings, "error: title field is empty")
+			//TODO
+			lNewArticle.errors = append(lNewArticle.errors, errors.New("error: title field is empty"))
+			lCorrect = false
 		}
 
-		aDescription := e.ChildAttr("meta[property=\"og:description\"]", "content")
-		if aDescription == "" {
-			p.Warnings = append(p.Warnings, "warning: description field is empty")
-		}
-
+		//Date
 		var aPublicationDate time.Time
 		var dateErr error
-		aPublicationDateStr := e.ChildAttr("meta[property=\"article:published_time\"]", "content")
-		if aPublicationDateStr == "" {
-			p.Warnings = append(p.Warnings, "warning: date field is empty")
-			aPublicationDate = time.Date(1970, time.January, 20, 0, 0, 0, 0, time.UTC)
-		} else {
-			aPublicationDate, dateErr = core.ParseDate(time.RFC3339, strings.TrimSpace(aPublicationDateStr))
-			if dateErr != nil {
-				p.Warnings = append(p.Warnings, fmt.Sprintf("invalid date format: %s", dateErr))
-			}
+		aPublicationDateStr := e.ChildAttr("div[class=\"article-date\"] > time", "datetime")
+		aPublicationDate, dateErr = core.ParseDate(appliedGoDateLayout, strings.TrimSpace(aPublicationDateStr))
+		if dateErr != nil {
+			lNewArticle.errors = append(lNewArticle.errors, dateErr)
 		}
 
-		p.Article.Title = aTitle
-		p.Article.Description = aDescription
-		p.Article.Link = link
-		p.Article.PublishDate = aPublicationDate
+		//Description
+		aDescription := e.ChildText("div[class=\"summary doc \"] > p")
+		if aDescription == "" {
+			//TODO
+			lNewArticle.warnings = append(lNewArticle.warnings, "warning: description field is empty")
+		}
+
+		if lCorrect {
+			lNewArticle.article.Title = aTitle
+			lNewArticle.article.Description = aDescription
+			lNewArticle.article.Link = aLink
+			lNewArticle.article.PublishDate = aPublicationDate
+		}
+		p.articles = append(p.articles, lNewArticle)
 	})
 
 	_, lCallErr := http.Get(link)
 	if lCallErr != nil {
 		return lCallErr
 	}
-	lVisitErr := lArticleParser.Visit(link)
+
+	lVisitErr := lArticleCollector.Visit(link)
+	lArticleCollector.Wait()
+
+	if len(p.articles) == 0 {
+		return core.ErrNoArticles
+	}
+
 	return lVisitErr
 }

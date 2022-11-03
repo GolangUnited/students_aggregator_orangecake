@@ -54,105 +54,91 @@ func TestMain(m *testing.M) {
 }
 
 func TestAppliedGoGetArticlesList(t *testing.T) {
-	lExpectedLinks := []string{
-		"https://appliedgo.net/rich/",
-		"https://appliedgo.net/generictree/",
-		"https://appliedgo.net/instantgo/",
-		"https://appliedgo.net/mantil/",
-		"https://appliedgo.net/auxin/",
-	}
-	lReceivedLinks := newAppliedGoMainParser()
-	lReceivedErr := lReceivedLinks.ParseAppliedGoMain(TestDataURL + "AppliedGoMain.htm")
-	assert.ElementsMatch(t, lExpectedLinks, lReceivedLinks.Links)
-	assert.Equal(t, nil, lReceivedErr)
+	lExpectedArticles := []appliedGoArticle{
+		{article: core.Article{
+			Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music",
+			Link:        "https://appliedgo.net/auxin/",
+			Description: "Ok, so your radio lacks AirPlay support but has an auxiliary input and can be remote-controlled via the Frontier Silicon API. Fetch a Raspberry Pi, put Shairport-sync and Raspotify on it, plug it into the AUX port, and glue everything together with some Go code. Et voilà - home automation in the small.",
+			PublishDate: time.Date(2022, time.August, 20, 0, 0, 0, 0, time.UTC)},
+			warnings: nil,
+			errors:   nil},
+		{article: core.Article{
+			Title:       "Rapid AWS Lambda development with Go and Mantil",
+			Link:        "https://appliedgo.net/mantil/",
+			Description: "If you need to develop an AWS Lambda function in Go, take a look at Mantil, a dev kit with staging and database connection included.",
+			PublishDate: time.Date(2022, time.January, 28, 0, 0, 0, 0, time.UTC)},
+			warnings: nil,
+			errors:   nil}}
+	lReceivedArticles := newAppliedGoParser()
+	lReceivedErr := lReceivedArticles.ParseAppliedGo(TestDataURL + "AppliedGoMain.htm")
+	assert.ElementsMatch(t, lExpectedArticles, lReceivedArticles.articles, "invalid articles content")
+	assert.Equal(t, nil, lReceivedErr, "invalid error message")
 }
 
-func TestAppliedGoMainIncorrectUrlProtocol(t *testing.T) {
+func TestAppliedGoIncorrectUrlProtocol(t *testing.T) {
 	var badUrl = ""
 	var lExpectedErr = fmt.Errorf("unsupported protocol scheme %q", badUrl)
 
-	lReceivedLinks := newAppliedGoMainParser()
-	lReceivedErr := lReceivedLinks.ParseAppliedGoMain(badUrl)
-	assert.Equal(t, []string{}, lReceivedLinks.Links)
-	assert.Equal(t, lExpectedErr, errors.Unwrap(lReceivedErr))
+	lReceivedArticles := newAppliedGoParser()
+	lReceivedErr := lReceivedArticles.ParseAppliedGo(badUrl)
+	assert.Equal(t, []appliedGoArticle{}, lReceivedArticles.articles, "invalid articles content")
+	assert.Equal(t, lExpectedErr, errors.Unwrap(lReceivedErr), "invalid error message")
 }
 
-func TestAppliedGoScrapeSingleArticle(t *testing.T) {
-	lReceivedArticle := newAppliedGoArticleParser()
-	lReceivedErr := lReceivedArticle.ParseAppliedGoArticle(TestDataURL + "AppliedGoArticle.htm")
-	lExpectedArticle := core.Article{
-		Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music - Applied Go",
-		Author:      "",
-		Link:        TestDataURL + "AppliedGoArticle.htm",
-		PublishDate: time.Date(2022, time.August, 20, 0, 0, 0, 0, time.UTC),
-		Description: "How Go code detects music output on a Raspberry and switches a 3sixty radio to AUX-IN via Frontier Silicon API",
+func TestAppliedGoScrapeEmptyRequiredFields(t *testing.T) {
+	lReceivedArticle := newAppliedGoParser()
+	lReceivedErr := lReceivedArticle.ParseAppliedGo(TestDataURL + "AppliedGoArticleEmptyRequiredFields.htm")
+	lExpectedArticle := appliedGoArticle{
+		article: core.Article{},
+		errors: []error{
+			errors.New("error: link field is empty"),
+			errors.New("error: title field is empty")},
+		warnings: []string{},
 	}
-	assert.Equal(t, lExpectedArticle, lReceivedArticle.Article)
-	assert.Equal(t, []string{}, lReceivedArticle.Warnings)
-	assert.Equal(t, nil, lReceivedErr)
+	assert.Equal(t, lExpectedArticle, lReceivedArticle.articles[0], "invalid articles content")
+	assert.Equal(t, nil, lReceivedErr, "invalid error message")
 }
 
-func TestAppliedGoScrapeEmptyFields(t *testing.T) {
-	lReceivedArticle := newAppliedGoArticleParser()
-	lReceivedErr := lReceivedArticle.ParseAppliedGoArticle(TestDataURL + "AppliedGoArticleEmptyFields.htm")
-	lExpectedArticle := core.Article{
-		Title:       "",
-		Author:      "",
-		Link:        TestDataURL + "AppliedGoArticleEmptyFields.htm",
-		PublishDate: time.Date(1970, time.January, 20, 0, 0, 0, 0, time.UTC),
-		Description: "",
+func TestAppliedGoScrapeEmptyNonRequiredFields(t *testing.T) {
+	lReceivedArticle := newAppliedGoParser()
+	lReceivedErr := lReceivedArticle.ParseAppliedGo(TestDataURL + "AppliedGoArticleEmptyNonRequiredFields.htm")
+	lDate := time.Now()
+	lExpectedArticle := appliedGoArticle{
+		article: core.Article{
+			Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music",
+			Link:        "https://appliedgo.net/auxin/",
+			Description: "",
+			PublishDate: time.Date(lDate.Year(), lDate.Month(), lDate.Day(), 0, 0, 0, 0, time.UTC)},
+		errors: []error{core.ErrEmptyDate},
+		warnings: []string{
+			"warning: description field is empty",
+		},
 	}
-	lExpectedWarnings := []string{
-		"error: title field is empty",
-		"warning: description field is empty",
-		"warning: date field is empty",
-	}
-	assert.Equal(t, lExpectedArticle, lReceivedArticle.Article)
-	assert.ElementsMatch(t, lExpectedWarnings, lReceivedArticle.Warnings)
-	assert.Equal(t, nil, lReceivedErr)
+	assert.Equal(t, lExpectedArticle, lReceivedArticle.articles[0], "invalid articles content")
+	assert.Equal(t, nil, lReceivedErr, "invalid error message")
 }
 
 func TestAppliedGoScrapeInvalidDate(t *testing.T) {
-	lReceivedArticle := newAppliedGoArticleParser()
-	lReceivedErr := lReceivedArticle.ParseAppliedGoArticle(TestDataURL + "AppliedGoArticleInvalidDate.htm")
-
-	assert.Equal(t, 1, len(lReceivedArticle.Warnings))
-	assert.Equal(t, "invalid date format: invalid Date format", lReceivedArticle.Warnings[0])
-	assert.Equal(t, nil, lReceivedErr)
-}
-
-func TestAppliedGoArticleIncorrectUrlProtocol(t *testing.T) {
-	var badUrl = ""
-	var lExpectedArticle = core.Article{
-		Title:  "",
-		Author: "", Link: "",
-		PublishDate: time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC),
-		Description: ""}
-	var lExpectedErr = fmt.Errorf("unsupported protocol scheme %q", badUrl)
-
-	lReceivedArticle := newAppliedGoArticleParser()
-	lReceivedErr := lReceivedArticle.ParseAppliedGoArticle(badUrl)
-	assert.Equal(t, lExpectedArticle, lReceivedArticle.Article)
-	assert.Equal(t, lExpectedErr, errors.Unwrap(lReceivedErr))
-}
-
-func TestAppliedGoGetCombinedResults(t *testing.T) {
-	var lReceivedLinksList []core.Article
-	var lReceivedWarningsList []string
-	var lErr error
-	lExpectedLinksList := []core.Article{
-		{
-			Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music - Applied Go",
-			Author:      "",
-			Link:        TestDataURL + "AppliedGoArticleCombined.htm",
-			PublishDate: time.Date(2022, time.August, 20, 0, 0, 0, 0, time.UTC),
-			Description: "How Go code detects music output on a Raspberry and switches a 3sixty radio to AUX-IN via Frontier Silicon API",
-		},
+	lReceivedArticle := newAppliedGoParser()
+	lReceivedErr := lReceivedArticle.ParseAppliedGo(TestDataURL + "AppliedGoArticleInvalidDate.htm")
+	lDate := time.Now()
+	lExpectedArticle := appliedGoArticle{
+		article: core.Article{
+			Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music",
+			Link:        "https://appliedgo.net/auxin/",
+			Description: "Ok, so your radio lacks AirPlay support but has an auxiliary input and can be remote-controlled via the Frontier Silicon API. Fetch a Raspberry Pi, put Shairport-sync and Raspotify on it, plug it into the AUX port, and glue everything together with some Go code. Et voilà - home automation in the small.",
+			PublishDate: time.Date(lDate.Year(), lDate.Month(), lDate.Day(), 0, 0, 0, 0, time.UTC)},
+		errors:   []error{core.ErrInvalidDateFormat},
+		warnings: []string{},
 	}
+	assert.Equal(t, lExpectedArticle, lReceivedArticle.articles[0], "invalid articles content")
+	assert.Equal(t, nil, lReceivedErr, "invalid error message")
+}
 
-	lReceivedLinksList, lReceivedWarningsList, lErr = ParseAppliedGo(TestDataURL + "AppliedGoMainCombined.htm")
-	assert.ElementsMatch(t, lExpectedLinksList, lReceivedLinksList)
-	assert.ElementsMatch(t, []error(nil), lReceivedWarningsList)
-	assert.Equal(t, nil, lErr)
-
+func TestAppliedGoNoArticles(t *testing.T) {
+	lReceivedArticle := newAppliedGoParser()
+	lReceivedErr := lReceivedArticle.ParseAppliedGo(TestDataURL + "AppliedGoNoArticles.htm")
+	lExpectedArticle := appliedGoParser{articles: make([]appliedGoArticle, 0)}
+	assert.Equal(t, lExpectedArticle, lReceivedArticle, "invalid articles content")
+	assert.Equal(t, core.ErrNoArticles, lReceivedErr, "invalid error message")
 }
