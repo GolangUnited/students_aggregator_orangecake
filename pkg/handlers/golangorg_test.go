@@ -16,17 +16,17 @@ const (
 
 var lGotErr error
 
-// newTestServer create a new server
-func newTestServer() *httptest.Server {
+// newGolangOrgTestServer create a new server
+func newGolangOrgTestServer() *httptest.Server {
 	mux := http.NewServeMux()
 	fServer := http.FileServer(http.Dir(TestDataFolder))
 	mux.Handle("/", fServer)
 	return httptest.NewServer(mux)
 }
 
-func TestGolangOrg(t *testing.T) {
+func TestGolangOrgData(t *testing.T) {
 
-	testServer := newTestServer()
+	testServer := newGolangOrgTestServer()
 	defer testServer.Close()
 
 	// create expected data
@@ -56,16 +56,30 @@ func TestGolangOrg(t *testing.T) {
 
 	h := NewGolangOrgHandler(testServer.URL + File)
 	lArticles, lErr := h.GolangOrgScraper()
-
-	lWant := lExpectedData
-
-	//compare data
-	if !reflect.DeepEqual(lArticles, lWant) {
-		t.Errorf("Mismatch between expected and actual data")
+	if lErr != nil {
+		t.Error(lErr.Error())
+		return
 	}
 
-	//compare errors
+	for i, lExpectedArticle := range lExpectedData {
+		if !reflect.DeepEqual(lArticles[i], lExpectedArticle) {
+			t.Errorf("Expected %s, but got %s", lArticles[i], lExpectedArticle)
+		}
+	}
+
 	if lErr != lGotErr {
 		t.Errorf("Mismatch between expected and actual errors")
+	}
+}
+
+func TestGolangOrgHandler_EmptyUrl(t *testing.T) {
+	golangOrgHandler := NewGolangOrgHandler("")
+	lArticles, lErr := golangOrgHandler.GolangOrgScraper()
+	if lArticles != nil {
+		t.Errorf("articles and warnings must be nil")
+	}
+
+	if lErr == nil {
+		t.Errorf("error must be not nil")
 	}
 }

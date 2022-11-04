@@ -71,6 +71,7 @@ func (h *GolangOrgHandler) GolangOrgScraper() ([]core.Article, error) {
 	doc.Find("p.blogtitle").Each(func(aIndex int, aSelection *goquery.Selection) {
 		lOk := true
 		lLink, _ := aSelection.Find("a").Attr("href")
+
 		lT, lErr := core.ParseDate("_2 January 2006", aSelection.Find("span.date").Text())
 		if lErr != nil {
 			// TODO: write error to log
