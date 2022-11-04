@@ -6,17 +6,11 @@ import (
 )
 
 type ConnectionInfo struct {
-	Host     string
-	Port     int
-	Username string
-	DBName   string
-	SSLMode  string
-	Password string
+	FileName string
 }
 
 func NewSqliteConnection(info ConnectionInfo) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=%s password=%s",
-		info.Host, info.Port, info.Username, info.DBName, info.SSLMode, info.Password))
+	db, err := sql.Open("sqlite3", info.FileName)
 	if err != nil {
 		return nil, fmt.Errorf("can't open database: %w", err)
 	}
