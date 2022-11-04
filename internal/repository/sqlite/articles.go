@@ -27,7 +27,7 @@ func (s *SQLiteStorage) WriteArticle(aCtx context.Context, lArticle core.Article
 
 func (s *SQLiteStorage) ReadArticleById(aCtx context.Context, aLink string) (*core.Article, error) {
 	var lArticle core.Article //нужен конструктор для создания пустого статьи ИЛИ aArticle в аргумент?
-	lStatement := "SELECT title, author, link, publish_date, description FROM articles WHERE id=?"
+	lStatement := "SELECT title, author, link, publish_date, description FROM articles WHERE link=?"
 
 	lErr := s.db.QueryRowContext(aCtx, lStatement, aLink).Scan(&lArticle.Title, &lArticle.Author, &lArticle.Link, &lArticle.PublishDate, &lArticle.Description)
 	if lErr == sql.ErrNoRows {
@@ -41,7 +41,9 @@ func (s *SQLiteStorage) ReadArticleById(aCtx context.Context, aLink string) (*co
 }
 
 func (s *SQLiteStorage) ReadAllArticles(aCtx context.Context) ([]core.Article, error) {
-	lRows, lErr := s.db.QueryContext(aCtx, "SELECT title, author, link, publish_date, description FROM articles")
+	//TODO How to add date interval to arguments of method
+	lStatement := "SELECT * FROM articles WHERE MONTH(publish_date) BETWEEN ? AND ?"
+	lRows, lErr := s.db.QueryContext(aCtx, lStatement, 8, 9) //must be smth like this'2022-04-11 00:00:00.000'
 	if lErr != nil {
 		return nil, lErr
 	}
