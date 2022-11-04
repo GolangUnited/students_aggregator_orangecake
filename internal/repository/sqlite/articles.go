@@ -25,16 +25,16 @@ func (s *SQLiteStorage) WriteArticle(aCtx context.Context, lArticle core.Article
 	return nil
 }
 
-func (s *SQLiteStorage) ReadArticleById(aCtx context.Context, aId int) (*core.Article, error) {
+func (s *SQLiteStorage) ReadArticleById(aCtx context.Context, aLink string) (*core.Article, error) {
 	var lArticle core.Article //нужен конструктор для создания пустого статьи ИЛИ aArticle в аргумент?
 	lStatement := "SELECT title, author, link, publish_date, description FROM articles WHERE id=?"
 
-	lErr := s.db.QueryRowContext(aCtx, lStatement, aId).Scan(&lArticle.Title, &lArticle.Author, &lArticle.Link, &lArticle.PublishDate, &lArticle.Description)
+	lErr := s.db.QueryRowContext(aCtx, lStatement, aLink).Scan(&lArticle.Title, &lArticle.Author, &lArticle.Link, &lArticle.PublishDate, &lArticle.Description)
 	if lErr == sql.ErrNoRows {
-		return nil, fmt.Errorf("article #%d not found: %w", aId, lErr)
+		return nil, fmt.Errorf("article with link #%s not found: %w", aLink, lErr)
 	}
 	if lErr != nil {
-		return nil, fmt.Errorf("can't read article #%d: %w", aId, lErr)
+		return nil, fmt.Errorf("can't read article with link #%s: %w", aLink, lErr)
 	}
 
 	return &lArticle, nil
