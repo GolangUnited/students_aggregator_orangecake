@@ -3,7 +3,6 @@ package handlers
 import (
     "net/http"
     "testing"
-    "errors"
     "time"
 
     "github.com/stretchr/testify/assert"
@@ -85,7 +84,7 @@ func TestScrapDevtoEmptyNotRequiredFields(t *testing.T) {
 func TestScrapDevtoEmptyTitle(t *testing.T) {
 
     var lErr error
-    var lExpectedErr = errors.New("no title found for an article - quitting")
+    var lExpectedErr = core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}
 
     lHandle := NewTestDevtoHandler("file://./DevtoEmptyTitle.html")
     lErr = lHandle.Scrap()
@@ -96,7 +95,7 @@ func TestScrapDevtoEmptyTitle(t *testing.T) {
 func TestScrapDevtoEmptyLink(t *testing.T) {
 
     var lErr error
-    var lExpectedErr = errors.New("no link found for an article - quitting")
+    var lExpectedErr = core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
 
     lHandle := NewTestDevtoHandler("file://./DevtoEmptyLink.html")
     lErr = lHandle.Scrap()
@@ -109,7 +108,7 @@ func TestScrapDevtoBadUrl(t *testing.T) {
     lBadUrl := "https://de.vto/t/go"
 
     var lErr error
-    var lExpectedErr = errors.New("error scrapping " + lBadUrl)
+    var lExpectedErr = core.ErrHTMLAccess
 
     lHandle := NewDevtoHandler(lBadUrl)
     lErr = lHandle.Scrap()

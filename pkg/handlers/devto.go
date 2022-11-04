@@ -1,7 +1,6 @@
 package handlers
 
 import (
-    "errors"
     "fmt"
     "strings"
     "time"
@@ -19,6 +18,8 @@ const (
     AUTHOR_CLASS     = "button.profile-preview-card__trigger"
     TITLE_CLASS      = "h2.crayons-story__title"
     ARTICLE_CLASS    = "div.crayons-article__body p:nth-of-type(1)"
+
+    FILE_PREFIX = "file"
 )
 
 type DevtoHandler struct {
@@ -51,19 +52,17 @@ func (aHandler *DevtoHandler) Scrap() error {
             // Title is a required field
             lArticle.Title = strings.TrimSpace(h.ChildText(TITLE_CLASS))
             if len(lArticle.Title) == 0 {
-                // TODO: switch to custom errors
-                aHandler.err = errors.New("no title found for an article - quitting")
+                aHandler.err = core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}
                 return false
             }
 
             // Link is a required field
             lLink := h.ChildAttr("a", "href")
             if len(lLink) == 0 {
-                // TODO: switch to custom errors
-                aHandler.err = errors.New("no link found for an article - quitting")
+                aHandler.err = core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
                 return false
             }
-            if !strings.HasPrefix(lLink, "/") && !strings.HasPrefix(lLink, "file") {
+            if !strings.HasPrefix(lLink, "/") && !strings.HasPrefix(lLink, FILE_PREFIX) {
                 lLink = "/" + lLink
             }
             lArticle.Link = Devto_URL + lLink
@@ -71,7 +70,7 @@ func (aHandler *DevtoHandler) Scrap() error {
             lArticle.Author = strings.TrimSpace(h.ChildText(AUTHOR_CLASS))
             if len(lArticle.Author) == 0 {
                 // TODO: log
-                fmt.Printf("No author for an Article\n")
+                fmt.Printf("%s\n", core.EmptyFieldError{Field: core.AuthorFieldName})
             }
 
             lDate := h.ChildAttr("time", "datetime")
@@ -97,8 +96,7 @@ func (aHandler *DevtoHandler) Scrap() error {
 
     lErr := aHandler.colly.Visit(aHandler.url)
     if lErr != nil {
-        // TODO: switch to custom errors
-        return errors.New("error scrapping " + aHandler.url)
+        return core.ErrHTMLAccess
     }
 
     // Checking Handler for any Articles errors
