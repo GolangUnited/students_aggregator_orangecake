@@ -56,8 +56,6 @@ var (
 	ErrEmptyDate = errors.New("empty Date")
 	// ErrInvalidDateFormat invalid data format
 	ErrInvalidDateFormat = errors.New("invalid Date format")
-	//ErrNArticlesNotFound if you cant get any article including incorrect
-	ErrArticlesNotFound = errors.New("unable to find articles")
 	//ErrUrlVisit scrapper cant visit url
 	ErrUrlVisit = errors.New("unable to visit URL")
 )

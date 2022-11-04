@@ -33,7 +33,7 @@ const OK_TEST_DATA = `
       <div class="css-tel74u">
         <div class="css-2wkyxu">
           <div class="css-1ajtyzd">
-            <a href class="css-c3r4j7">Author 2</a>
+            <a href class="css-c3r4j7"></a>
           </div>                      
           <div class="css-1n08q4e">
             <a href class="css-1u6dh35">Sep 8, 2022</a>
@@ -102,12 +102,6 @@ const OK_TEST_DATA = `
   </div>
 </div>   
 </body>
-</html>`
-
-const NO_ARTICLES_TEST_DATA = `
-<!DOCTYPE html>
-<html lang="en" id="current-style">
-  <body class="lalala"></body>
 </html>`
 
 const NO_CORRECT_ARTICLES_TEST_DATA = `

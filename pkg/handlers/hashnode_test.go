@@ -45,7 +45,7 @@ func TestOkScrapUrl(t *testing.T) {
 		},
 		{
 			Title:       "Title 2",
-			Author:      "Author 2",
+			Author:      "",
 			Link:        "Link 2",
 			PublishDate: time.Date(2022, time.September, 8, 0, 0, 0, 0, time.UTC),
 			Description: "Text 2…",
@@ -76,18 +76,13 @@ func TestErrorsScrapUrl(t *testing.T) {
 
 	lTestCases := []hashnodeTestCase{
 		{
-			testName: "No Articles Err",
-			testData: test.NO_ARTICLES_TEST_DATA,
-			err:      core.ErrArticlesNotFound,
-		},
-		{
 			testName: "URL Visit Err",
 			testData: "",
 			err:      core.ErrUrlVisit,
 			url:      "http://127.0.0.1",
 		},
 		{
-			testName: "No Correct Articles Err",
+			testName: "No Articles Err",
 			testData: test.NO_CORRECT_ARTICLES_TEST_DATA,
 			err:      core.ErrNoArticles,
 		},
