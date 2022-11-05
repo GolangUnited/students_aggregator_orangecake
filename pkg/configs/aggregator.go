@@ -6,16 +6,12 @@ type AggregatorConfig struct {
 }
 
 func NewAggregatorConfig() (*AggregatorConfig, error) {
-
 	handlersConfig, err := NewHandlersConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	dbConfig, err := NewDBConfig()
-	if err != nil {
-		return nil, err
-	}
+	dbConfig := NewDBConfig()
 
 	return &AggregatorConfig{
 		Handlers: handlersConfig,

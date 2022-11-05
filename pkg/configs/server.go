@@ -1,9 +1,13 @@
 package configs
 
+import "os"
+
 type Server struct {
-	Address string
+	Port string
 }
 
-func NewServerConfig() (*Server, error) {
-	return nil, nil
+func NewServerConfig() *Server {
+	port := os.Getenv("OC_SERVER_PORT")
+
+	return &Server{Port: port}
 }

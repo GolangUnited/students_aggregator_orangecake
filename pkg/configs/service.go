@@ -6,18 +6,11 @@ type ServiceConfig struct {
 }
 
 func NewServiceConfig() (*ServiceConfig, error) {
-
-	dbConfig, err := NewDBConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	serverConfig, err := NewServerConfig()
-	if err != nil {
-		return nil, err
-	}
+	dbConfig := NewDBConfig()
+	serverConfig := NewServerConfig()
 
 	return &ServiceConfig{
 		Server:   serverConfig,
-		DBConfig: dbConfig}, nil
+		DBConfig: dbConfig,
+	}, nil
 }

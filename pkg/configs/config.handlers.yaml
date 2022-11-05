@@ -1,0 +1,10 @@
+#handlers
+
+---
+handlers:
+  -
+    handler: bitfield
+    url: https://bitfieldconsulting.com/golang
+  -
+    handler: threedotslabs
+    url: https://threedots.tech/
