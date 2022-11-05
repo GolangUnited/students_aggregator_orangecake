@@ -8,3 +8,6 @@ handlers:
   -
     handler: threedotslabs
     url: https://threedots.tech/
+  -
+    handler: hashnode
+    url: https://hashnode.com/n/go
