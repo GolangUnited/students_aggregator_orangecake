@@ -9,9 +9,15 @@ import (
 	"time"
 )
 
+const APPLIED_GO_URL = "https://appliedgo.net/"
+
 const (
-	appliedGoDateLayout = "2006-01-02 15:04:05 -0700 MST"
-	APPLIED_GO_URL      = "https://appliedgo.net/"
+	appliedGoArticlePath = "div[class=\"article-inner\"]"
+	appliedGoLinkPath    = "header[class=\"article-header\"] > a"
+	appliedGoTitlePath   = "h1[class=\"article-title\"]"
+	appliedGoDatePath    = "div[class=\"article-date\"] > time"
+	appliedGoDateLayout  = "2006-01-02 15:04:05 -0700 MST"
+	appliedGoDescrPath   = "div[class=\"summary doc \"] > p"
 )
 
 type appliedGoArticle struct {
@@ -30,22 +36,26 @@ func newAppliedGoArticle() appliedGoArticle {
 
 type appliedGoParser struct {
 	articles []appliedGoArticle
+	warnings []string
+	errors   []error
 }
 
 func newAppliedGoParser() appliedGoParser {
 	return appliedGoParser{
 		articles: make([]appliedGoArticle, 0),
+		warnings: make([]string, 0),
+		errors:   make([]error, 0),
 	}
 }
 
 func (p *appliedGoParser) ParseAppliedGo(link string) error {
 	var lArticleCollector = colly.NewCollector()
-	lArticleCollector.OnHTML("div[class=\"article-inner\"]", func(e *colly.HTMLElement) {
+	lArticleCollector.OnHTML(appliedGoArticlePath, func(e *colly.HTMLElement) {
 		lNewArticle := newAppliedGoArticle()
 		lCorrect := true
 
 		//Link
-		aLink := e.ChildAttr("header[class=\"article-header\"] > a", "href")
+		aLink := e.ChildAttr(appliedGoLinkPath, "href")
 		if aLink == "" {
 			//TODO
 			lNewArticle.errors = append(lNewArticle.errors, errors.New("error: link field is empty"))
@@ -53,7 +63,7 @@ func (p *appliedGoParser) ParseAppliedGo(link string) error {
 		}
 
 		//Title
-		aTitle := e.ChildText("h1[class=\"article-title\"]")
+		aTitle := e.ChildText(appliedGoTitlePath)
 		if aTitle == "" {
 			//TODO
 			lNewArticle.errors = append(lNewArticle.errors, errors.New("error: title field is empty"))
@@ -63,14 +73,14 @@ func (p *appliedGoParser) ParseAppliedGo(link string) error {
 		//Date
 		var aPublicationDate time.Time
 		var dateErr error
-		aPublicationDateStr := e.ChildAttr("div[class=\"article-date\"] > time", "datetime")
+		aPublicationDateStr := e.ChildAttr(appliedGoDatePath, "datetime")
 		aPublicationDate, dateErr = core.ParseDate(appliedGoDateLayout, strings.TrimSpace(aPublicationDateStr))
 		if dateErr != nil {
 			lNewArticle.errors = append(lNewArticle.errors, dateErr)
 		}
 
 		//Description
-		aDescription := e.ChildText("div[class=\"summary doc \"] > p")
+		aDescription := e.ChildText(appliedGoDescrPath)
 		if aDescription == "" {
 			//TODO
 			lNewArticle.warnings = append(lNewArticle.warnings, "warning: description field is empty")
@@ -99,3 +109,5 @@ func (p *appliedGoParser) ParseAppliedGo(link string) error {
 
 	return lVisitErr
 }
+
+//Link core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
