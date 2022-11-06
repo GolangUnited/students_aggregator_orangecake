@@ -6,7 +6,6 @@ import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"net/http"
 	"strings"
-	"time"
 )
 
 const APPLIED_GO_URL = "https://appliedgo.net/"
@@ -20,29 +19,15 @@ const (
 	appliedGoDescrPath   = "div[class=\"summary doc \"] > p"
 )
 
-type appliedGoArticle struct {
-	article  core.Article
-	warnings []string
-	errors   []error
-}
-
-func newAppliedGoArticle() appliedGoArticle {
-	return appliedGoArticle{
-		article:  core.Article{},
-		warnings: make([]string, 0),
-		errors:   make([]error, 0),
-	}
-}
-
 type appliedGoParser struct {
-	articles []appliedGoArticle
+	articles []core.Article
 	warnings []string
 	errors   []error
 }
 
 func newAppliedGoParser() appliedGoParser {
 	return appliedGoParser{
-		articles: make([]appliedGoArticle, 0),
+		articles: make([]core.Article, 0),
 		warnings: make([]string, 0),
 		errors:   make([]error, 0),
 	}
@@ -51,47 +36,42 @@ func newAppliedGoParser() appliedGoParser {
 func (p *appliedGoParser) ParseAppliedGo(link string) error {
 	var lArticleCollector = colly.NewCollector()
 	lArticleCollector.OnHTML(appliedGoArticlePath, func(e *colly.HTMLElement) {
-		lNewArticle := newAppliedGoArticle()
-		lCorrect := true
+		lNewArticle := core.Article{}
 
 		//Link
 		aLink := e.ChildAttr(appliedGoLinkPath, "href")
 		if aLink == "" {
 			//TODO
-			lNewArticle.errors = append(lNewArticle.errors, errors.New("error: link field is empty"))
-			lCorrect = false
+			p.errors = append(p.errors, errors.New("error: link field is empty"))
+			return
 		}
+		lNewArticle.Link = aLink
 
 		//Title
 		aTitle := e.ChildText(appliedGoTitlePath)
 		if aTitle == "" {
 			//TODO
-			lNewArticle.errors = append(lNewArticle.errors, errors.New("error: title field is empty"))
-			lCorrect = false
+			p.errors = append(p.errors, errors.New("error: title field is empty"))
+			return
 		}
+		lNewArticle.Title = aTitle
 
 		//Date
-		var aPublicationDate time.Time
-		var dateErr error
-		aPublicationDateStr := e.ChildAttr(appliedGoDatePath, "datetime")
-		aPublicationDate, dateErr = core.ParseDate(appliedGoDateLayout, strings.TrimSpace(aPublicationDateStr))
+		aPublishDateStr := e.ChildAttr(appliedGoDatePath, "datetime")
+		aPublishDate, dateErr := core.ParseDate(appliedGoDateLayout, strings.TrimSpace(aPublishDateStr))
 		if dateErr != nil {
-			lNewArticle.errors = append(lNewArticle.errors, dateErr)
+			p.errors = append(p.errors, dateErr)
 		}
+		lNewArticle.PublishDate = aPublishDate
 
 		//Description
 		aDescription := e.ChildText(appliedGoDescrPath)
 		if aDescription == "" {
 			//TODO
-			lNewArticle.warnings = append(lNewArticle.warnings, "warning: description field is empty")
+			p.warnings = append(p.warnings, "warning: description field is empty")
 		}
+		lNewArticle.Description = aDescription
 
-		if lCorrect {
-			lNewArticle.article.Title = aTitle
-			lNewArticle.article.Description = aDescription
-			lNewArticle.article.Link = aLink
-			lNewArticle.article.PublishDate = aPublicationDate
-		}
 		p.articles = append(p.articles, lNewArticle)
 	})
 
@@ -103,7 +83,7 @@ func (p *appliedGoParser) ParseAppliedGo(link string) error {
 	lVisitErr := lArticleCollector.Visit(link)
 	lArticleCollector.Wait()
 
-	if len(p.articles) == 0 {
+	if len(p.articles) == 0 && len(p.errors) == 0 {
 		return core.ErrNoArticles
 	}
 
