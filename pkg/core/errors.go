@@ -65,4 +65,6 @@ var (
 	ErrEmptyDate = errors.New("empty Date")
 	// ErrInvalidDateFormat invalid data format
 	ErrInvalidDateFormat = errors.New("invalid Date format")
+	//ErrUrlVisit scrapper cant visit url
+	ErrUrlVisit = errors.New("unable to visit URL")
 )
