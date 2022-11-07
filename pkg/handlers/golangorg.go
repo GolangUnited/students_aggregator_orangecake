@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"io"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 )
 
 const (
@@ -16,104 +19,188 @@ const (
 type GolangOrgHandler struct {
 	url      string
 	articles []core.Article
-	err      error
+	warnings []string
 }
 
 func NewGolangOrgHandler(aUrl string) GolangOrgHandler {
-	return GolangOrgHandler{url: aUrl, articles: make([]core.Article, 0)}
+	return GolangOrgHandler{
+		url:      aUrl,
+		articles: make([]core.Article, 0),
+		warnings: make([]string, 0),
+	}
 }
 
-func (h *GolangOrgHandler) getDescription(aSelection *goquery.Selection) string {
+type golangOrgParser struct {
+	article  core.Article
+	warnings []string
+}
+
+func newGolangOrgParser() golangOrgParser {
+	return golangOrgParser{
+		article:  core.Article{},
+		warnings: make([]string, 0),
+	}
+}
+
+func (p *golangOrgParser) parseTitleLink(aSelection *goquery.Selection) error {
+	// TODO: replace errors
+	if aSelection.Nodes == nil {
+		return errors.New("article title and url node not found")
+	}
+
+	lTitle := aSelection.Find("a[href]").Text()
+	if len(lTitle) == 0 {
+		return errors.New("article's title is empty")
+	}
+
+	lUrl, lOk := aSelection.Find("a").Attr("href")
+	if !lOk {
+		return errors.New("article's link attribute not found")
+	}
+
+	lLink := strings.TrimSpace(lUrl)
+	if len(lLink) == 0 {
+		return errors.New("article's link is empty")
+	}
+
+	lLink, lErr := resolveGolangOrgURL(GOLANG_ORG_URL, lLink)
+	if lErr != nil {
+		return errors.New("cannot resolve url")
+	}
+
+	p.article.Title = lTitle
+	p.article.Link = lLink
+
+	return nil
+}
+
+func (g *golangOrgParser) parseAuthor(aSelection *goquery.Selection) {
+	lAuthor := ""
+	// TODO: replace warnings
+	if aSelection.Nodes != nil {
+		lAuthor = strings.TrimSpace(aSelection.Find("span.author").Text())
+		if len(lAuthor) == 0 {
+			g.addWarning("article's author is empty")
+		}
+	} else {
+		g.addWarning("article's author node not found")
+	}
+
+	g.article.Author = lAuthor
+}
+
+func (g *golangOrgParser) parseDate(aSelection *goquery.Selection) {
+	// TODO: replace warnings
+	lDate := core.NormalizeDate(time.Now())
+	var lErr error
+	if aSelection.Nodes != nil {
+		lDateStr := aSelection.Find("span.date").Text()
+		lDateStr = strings.TrimSpace(lDateStr)
+		lDate, lErr = core.ParseDate("_2 January 2006", lDateStr)
+		if lErr != nil {
+			g.addWarning(fmt.Sprintf("cannot parse article date '%s'. %s", lDateStr, lErr.Error()))
+		}
+	} else {
+		g.addWarning("article date node not found")
+	}
+
+	g.article.PublishDate = lDate
+}
+
+func (g *golangOrgParser) parseDescription(aSelection *goquery.Selection) {
+	// TODO: replace warnings
+	g.article.Description = ""
 	lDesc := aSelection.Next()
 	if len(lDesc.Nodes) == 1 {
 		lClass, lOk := lDesc.Attr("class")
 		if lOk && lClass == "blogsummary" {
-			return strings.TrimSpace(lDesc.Text())
+			g.article.Description = strings.TrimSpace(lDesc.Text())
+		} else {
+			g.addWarning("article description node not found")
 		}
+	} else if len(lDesc.Nodes) == 0 {
+		g.addWarning("article description is empty")
 	}
-
-	return ""
 }
 
-func (h *GolangOrgHandler) Run() []core.Article {
-	h.GolangOrgScraper()
-	return h.articles
+func (g GolangOrgHandler) GetArticles() (aArticles []core.Article, aWarnings []string, aError error) {
+
+	lResp, lErr := http.Get(g.url)
+	if lErr != nil {
+		// TODO: write error to log fmt.Errorf("http request returns an error: %w", lErr)
+		return nil, nil, lErr
+	}
+
+	defer lResp.Body.Close()
+
+	if lResp.StatusCode > 400 {
+		lErr := fmt.Sprintf("Status code: %d %s", lResp.StatusCode, lResp.Status)
+		return nil, nil, errors.New(lErr)
+	}
+
+	return g.GolangOrgScraper(lResp.Body)
+}
+
+func (p *golangOrgParser) parseArticle(aSelection *goquery.Selection) error {
+	p.article = core.Article{}
+
+	if lErr := p.parseTitleLink(aSelection); lErr != nil {
+		return lErr
+	}
+
+	p.parseDate(aSelection)
+	p.parseAuthor(aSelection)
+	p.parseDescription(aSelection)
+
+	return nil
 }
 
 // GolangOrgScraper takes data from tip.golang.com/blog/all and converts it into a structure of json.
-func (h *GolangOrgHandler) GolangOrgScraper() ([]core.Article, error) {
+func (g *GolangOrgHandler) GolangOrgScraper(aHtmlReader io.Reader) ([]core.Article, []string, error) {
 
-	lArticle := core.Article{}
-	lArticles := make([]core.Article, 0, 0)
+	lArticles := make([]core.Article, 0)
+	lWarnings := make([]string, 0)
 
-	resp, lErr := http.Get(h.url)
+	lDoc, lErr := goquery.NewDocumentFromReader(aHtmlReader)
 	if lErr != nil {
-		// TODO: write error to log
-		h.err = fmt.Errorf("http request returns an error: %w", lErr)
-		return nil, h.err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode > 400 {
-		h.err = fmt.Errorf("Status code: %d", resp.StatusCode)
-		return nil, h.err
-	}
-
-	doc, lErr := goquery.NewDocumentFromReader(resp.Body)
-	if lErr != nil {
-		// TODO: write error to log
-		h.err = fmt.Errorf("goquery.NewDocumentFromReader returns an error: %w", lErr)
-		return nil, h.err
+		//TODO: write error to log fmt.Errorf("goquery.NewDocumentFromReader returns an error: %w", lErr)
+		return nil, nil, lErr
 	}
 
 	// doc.Find("p.blogtitle").Each(func(aIndex int, aSelection *goquery.Selection) {
-	doc.Find("p.blogtitle").Each(func(aIndex int, aSelection *goquery.Selection) {
-		lOk := true
-		lLink, _ := aSelection.Find("a").Attr("href")
-
-		lT, lErr := core.ParseDate("_2 January 2006", aSelection.Find("span.date").Text())
-		if lErr != nil {
-			// TODO: write error to log
-			h.err = errors.New("error of ParseDate function: ")
-		}
-
-		//title is a required field
-		lArticle.Title = aSelection.Find("a[href]").Text()
-		if len(lArticle.Title) == 0 {
-			// TODO: write error to log
-			lOk = false
-			h.err = errors.New("title not found in article ==> exit")
-			//how to return h.err
-		}
-
-		lArticle.Link = GOLANG_ORG_URL + lLink
-		if len(lLink) == 0 {
-			// TODO: write error to log
-			lOk = false
-			h.err = errors.New("link not found in article ==> exit")
-			//how to return h.err
-		}
-
-		lArticle.Author = aSelection.Find("span.author").Text()
-		if len(lArticle.Author) == 0 {
-			// TODO: write error to log
-			h.err = errors.New("author not found in article")
-		}
-
-		lArticle.PublishDate = lT
-
-		lArticle.Description = h.getDescription(aSelection)
-		if len(lArticle.Description) == 0 {
-			// TODO: write error to log
-			h.err = errors.New("description not found in article")
-		}
-
-		if lOk {
-			lArticles = append(lArticles, lArticle)
+	lDoc.Find("p.blogtitle").Each(func(aIndex int, aSelection *goquery.Selection) {
+		lParser := newGolangOrgParser()
+		lErr := lParser.parseArticle(aSelection)
+		if lErr == nil {
+			lArticles = append(lArticles, lParser.article)
+			if len(lParser.warnings) > 0 {
+				for i, lWarning := range lParser.warnings {
+					lWarnings = append(lWarnings, fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning))
+				}
+			}
+		} else {
+			lWarnings = append(lWarnings, fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error()))
 		}
 	})
 
-	return lArticles, nil
+	return lArticles, lWarnings, nil
 
+}
+
+func (g *golangOrgParser) addWarning(aWarning string) {
+	g.warnings = append(g.warnings, aWarning)
+}
+
+func resolveGolangOrgURL(baseUrl, path string) (string, error) {
+	u, err := url.Parse(path)
+	if err != nil {
+		return "", err
+	}
+
+	base, err := url.Parse(baseUrl)
+	if err != nil {
+		return "", err
+	}
+
+	return base.ResolveReference(u).String(), nil
 }
