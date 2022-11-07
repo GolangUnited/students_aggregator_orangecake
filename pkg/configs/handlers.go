@@ -2,10 +2,13 @@ package configs
 
 import (
 	_ "embed"
+	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gopkg.in/yaml.v3"
 )
 
-//go:embed config.handlers.yaml
+// if file not found error will be printed in std out
+//
+//go:embed handlers.config.example.yaml
 var data []byte
 
 type HandlersConfig struct {
@@ -16,10 +19,17 @@ type HandlersConfig struct {
 }
 
 func NewHandlersConfig() (*HandlersConfig, error) {
+	if len(data) == 0 {
+		return nil, core.ErrConfigFileIsEmpty
+	}
 	var lConfig HandlersConfig
 	err := yaml.Unmarshal(data, &lConfig)
 	if err != nil {
 		return nil, err
+	}
+
+	if lConfig.Handlers == nil {
+		return nil, core.ErrNoHandlersInConfig
 	}
 
 	return &lConfig, nil
