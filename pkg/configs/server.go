@@ -1,8 +1,12 @@
 package configs
 
 import (
-	"os"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"os"
+)
+
+const (
+	SERVER_PORT = "OC_SERVER_PORT"
 )
 
 type Server struct {
@@ -11,7 +15,7 @@ type Server struct {
 
 func NewServerConfig() (*Server, error) {
 	lConfig := Server{
-		Port: os.Getenv("OC_SERVER_PORT"),
+		Port: os.Getenv(SERVER_PORT),
 	}
 
 	lEmptyConfig := Server{}
