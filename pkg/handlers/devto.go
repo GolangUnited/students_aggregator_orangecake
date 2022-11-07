@@ -90,7 +90,7 @@ func (aHandler *DevtoHandler) Scrap() error {
     })
 
     // Scrapping Article.Description from the first paragraph of text
-    aHandler.colly.OnHTML(ARTICLE_CLASS, func(e *colly.HTMLElement) {
+    aHandler.colly.OnHTML(DEVTO_ARTICLE_CLASS, func(e *colly.HTMLElement) {
         lArticle.Description = e.Text
     })
 
