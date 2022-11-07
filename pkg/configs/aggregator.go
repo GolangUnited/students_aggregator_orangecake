@@ -11,9 +11,13 @@ func NewAggregatorConfig() (*AggregatorConfig, error) {
 		return nil, err
 	}
 
-	dbConfig := NewDBConfig()
+	dbConfig, err := NewDBConfig()
+	if err != nil {
+		return nil, err
+	}
 
 	return &AggregatorConfig{
 		Handlers: handlersConfig,
-		DBConfig: dbConfig}, nil
+		DBConfig: dbConfig,
+	}, nil
 }
