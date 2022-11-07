@@ -12,12 +12,12 @@ import (
 var Devto_URL = "https://dev.to" // To be able to redefine later for testing purposes
 
 const (
-    GO_URL           = "https://dev.to/t/go"
-    SUBSTORIES_CLASS = "div.substories"
-    STORY_CLASS      = "div.crayons-story"
-    AUTHOR_CLASS     = "button.profile-preview-card__trigger"
-    TITLE_CLASS      = "h2.crayons-story__title"
-    ARTICLE_CLASS    = "div.crayons-article__body p:nth-of-type(1)"
+    DEVTO_GO_URL           = "https://dev.to/t/go"
+    DEVTO_SUBSTORIES_CLASS = "div.substories"
+    DEVTO_STORY_CLASS      = "div.crayons-story"
+    DEVTO_AUTHOR_CLASS     = "button.profile-preview-card__trigger"
+    DEVTO_TITLE_CLASS      = "h2.crayons-story__title"
+    DEVTO_ARTICLE_CLASS    = "div.crayons-article__body p:nth-of-type(1)"
 
     FILE_PREFIX = "file"
 )
@@ -45,12 +45,12 @@ func (aHandler *DevtoHandler) Scrap() error {
 
     lArticle := core.Article{}
 
-    aHandler.colly.OnHTML(SUBSTORIES_CLASS, func(e *colly.HTMLElement) {
+    aHandler.colly.OnHTML(DEVTO_SUBSTORIES_CLASS, func(e *colly.HTMLElement) {
 
-        e.ForEachWithBreak(STORY_CLASS, func(i int, h *colly.HTMLElement) bool {
+        e.ForEachWithBreak(DEVTO_STORY_CLASS, func(i int, h *colly.HTMLElement) bool {
 
             // Title is a required field
-            lArticle.Title = strings.TrimSpace(h.ChildText(TITLE_CLASS))
+            lArticle.Title = strings.TrimSpace(h.ChildText(DEVTO_TITLE_CLASS))
             if len(lArticle.Title) == 0 {
                 aHandler.err = core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}
                 return false
@@ -67,7 +67,7 @@ func (aHandler *DevtoHandler) Scrap() error {
             }
             lArticle.Link = Devto_URL + lLink
             
-            lArticle.Author = strings.TrimSpace(h.ChildText(AUTHOR_CLASS))
+            lArticle.Author = strings.TrimSpace(h.ChildText(DEVTO_AUTHOR_CLASS))
             if len(lArticle.Author) == 0 {
                 // TODO: log
                 fmt.Printf("%s\n", core.EmptyFieldError{Field: core.AuthorFieldName})
