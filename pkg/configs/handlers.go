@@ -7,8 +7,8 @@ import (
 )
 
 // if file not found error will be printed in std out
-//
-//go:embed handlers.config.example.yaml
+
+//go:embed handlers.config.yaml
 var data []byte
 
 type HandlersConfig struct {
