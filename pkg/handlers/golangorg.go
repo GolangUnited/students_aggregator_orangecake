@@ -77,16 +77,16 @@ func (p *golangOrgParser) parseTitleLink(aSelection *goquery.Selection) error {
 func (g *golangOrgParser) parseAuthor(aSelection *goquery.Selection) {
 	lAuthor := ""
 	// TODO: replace warnings
-	if aSelection.Nodes != nil {
+	if len(aSelection.Nodes) != 0 {
 		lAuthor = strings.TrimSpace(aSelection.Find("span.author").Text())
 		if len(lAuthor) == 0 {
 			g.addWarning("article's author is empty")
+		} else {
+			g.article.Author = lAuthor
 		}
 	} else {
 		g.addWarning("article's author node not found")
 	}
-
-	g.article.Author = lAuthor
 }
 
 func (g *golangOrgParser) parseDate(aSelection *goquery.Selection) {
@@ -118,7 +118,8 @@ func (g *golangOrgParser) parseDescription(aSelection *goquery.Selection) {
 		} else {
 			g.addWarning("article description node not found")
 		}
-	} else if len(lDesc.Nodes) == 0 {
+	}
+	if g.article.Description == "" {
 		g.addWarning("article description is empty")
 	}
 }

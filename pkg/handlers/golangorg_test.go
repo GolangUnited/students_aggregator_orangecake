@@ -32,7 +32,7 @@ func TestGolangOrgData(t *testing.T) {
 	// create expected data
 	lExpectedData := []core.Article{
 		{
-			Title:       "Vulnerability Management for Go",
+			Title:       "",
 			Author:      "Julie Qiu, for the Go security team",
 			Link:        "https://tip.golang.org/blog/vuln",
 			PublishDate: time.Date(2022, time.September, 6, 0, 0, 0, 0, time.UTC),
@@ -54,8 +54,12 @@ func TestGolangOrgData(t *testing.T) {
 		},
 	}
 
+	/*	lExpectedWarnings := []string{
+		"Warning[1,0]: article date attribute not exists",
+	}*/
+
 	h := NewGolangOrgHandler(testServer.URL + File)
-	lArticles, lErr := h.GolangOrgScraper()
+	lArticles, _, lErr := h.GetArticles()
 	if lErr != nil {
 		t.Error(lErr.Error())
 		return
@@ -67,14 +71,16 @@ func TestGolangOrgData(t *testing.T) {
 		}
 	}
 
-	if lErr != lGotErr {
-		t.Errorf("Mismatch between expected and actual errors")
-	}
+	/*	for i, lExpectedWarning := range lExpectedWarnings {
+		if !(reflect.DeepEqual(lWarnings[i], lExpectedWarning)) {
+			t.Errorf("Expected %s, but got %s", lExpectedWarning, lWarnings[i])
+		}
+	}*/
 }
 
 func TestGolangOrgHandler_EmptyUrl(t *testing.T) {
 	golangOrgHandler := NewGolangOrgHandler("")
-	lArticles, lErr := golangOrgHandler.GolangOrgScraper()
+	lArticles, _, lErr := golangOrgHandler.GetArticles()
 	if lArticles != nil {
 		t.Errorf("articles and warnings must be nil")
 	}
