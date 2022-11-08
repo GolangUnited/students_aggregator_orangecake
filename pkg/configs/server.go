@@ -9,16 +9,16 @@ const (
 	SERVER_PORT = "OC_SERVER_PORT"
 )
 
-type Server struct {
+type ServerConfig struct {
 	Port string
 }
 
-func NewServerConfig() (*Server, error) {
-	lConfig := Server{
+func NewServerConfig() (*ServerConfig, error) {
+	lConfig := ServerConfig{
 		Port: os.Getenv(SERVER_PORT),
 	}
 
-	lEmptyConfig := Server{}
+	lEmptyConfig := ServerConfig{}
 
 	if lConfig == lEmptyConfig {
 		return nil, core.ErrEmptyConfig

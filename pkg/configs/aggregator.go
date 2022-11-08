@@ -1,8 +1,8 @@
 package configs
 
 type AggregatorConfig struct {
-	Handlers *HandlersConfig
-	DBConfig *DBConfig
+	HandlersConfig *HandlersConfig
+	DBConfig       *DBConfig
 }
 
 func NewAggregatorConfig() (*AggregatorConfig, error) {
@@ -17,7 +17,7 @@ func NewAggregatorConfig() (*AggregatorConfig, error) {
 	}
 
 	return &AggregatorConfig{
-		Handlers: handlersConfig,
-		DBConfig: dbConfig,
+		HandlersConfig: handlersConfig,
+		DBConfig:       dbConfig,
 	}, nil
 }
