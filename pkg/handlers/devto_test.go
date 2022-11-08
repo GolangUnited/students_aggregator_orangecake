@@ -9,7 +9,7 @@ import (
     "github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
-const TestDataFolder = "./test_data/devto/"
+const TestDataFolder = "./testdata/devto/"
 
 func NewTestDevtoHandler(aURL string) DevtoHandler {
     // We don't need to add anything to link during tests
