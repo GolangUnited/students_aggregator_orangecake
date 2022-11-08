@@ -1,8 +1,8 @@
 package configs
 
 type ServiceConfig struct {
-	DBConfig *DBConfig
-	Server   *Server
+	DBConfig     *DBConfig
+	ServerConfig *ServerConfig
 }
 
 func NewServiceConfig() (*ServiceConfig, error) {
@@ -17,7 +17,7 @@ func NewServiceConfig() (*ServiceConfig, error) {
 	}
 
 	return &ServiceConfig{
-		Server:   serverConfig,
-		DBConfig: dbConfig,
+		ServerConfig: serverConfig,
+		DBConfig:     dbConfig,
 	}, nil
 }
