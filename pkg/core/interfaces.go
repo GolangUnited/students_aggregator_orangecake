@@ -2,25 +2,26 @@ package core
 
 import (
     "context"
+    "time"
 )
 
-type Handler interface {
+type ArticleScraper interface {
     ParseArticles() error
 }
 
 type DBReader interface {
     ReadArticleById(aCtx context.Context, aLink string) (*Article, error)
-    ReadAllArticles(aCtx context.Context) ([]Article, error)
+    ReadArticlesByDateRange(aCtx context.Context, aMin, aMax time.Time) ([]Article, error)
 }
 
 type DBWriter interface {
-    WriteArticle(aCtx context.Context, lArticle Article) error
+    WriteArticle(aCtx context.Context, aArticle Article) error
 }
 
 type Logger interface {
-    LogWarning()
-    LogError()
-    LogTrace()
-    LogInfo()
-    LogDebug()
+    Info(aMessage string, aValues ...interface{})
+    Error(aMessage string, aValues ...interface{})
+    Warn(aMessage string, aValues ...interface{})
+    Debug(aMessage string, aValues ...interface{})
+    Trace(aMessage string, aValues ...interface{})
 }
