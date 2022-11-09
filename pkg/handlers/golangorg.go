@@ -134,7 +134,7 @@ func (g GolangOrgHandler) GetArticles() (aArticles []core.Article, aWarnings []s
 
 	defer lResp.Body.Close()
 
-	if lResp.StatusCode == 200 {
+	if lResp.StatusCode != 200 {
 		lErr := fmt.Sprintf("Status code: %d %s", lResp.StatusCode, lResp.Status)
 		return nil, nil, errors.New(lErr)
 	}

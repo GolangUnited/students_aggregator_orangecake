@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	TestDataFolder = "./testdata"
-	File           = "/golangorg.html"
+	TestDataPath  = "./testdata"
+	GolangOrgHtml = "/golangorg.html"
 )
 
 var lGotErr error
@@ -19,7 +19,7 @@ var lGotErr error
 // newGolangOrgTestServer create a new server
 func newGolangOrgTestServer() *httptest.Server {
 	mux := http.NewServeMux()
-	fServer := http.FileServer(http.Dir(TestDataFolder))
+	fServer := http.FileServer(http.Dir(TestDataPath))
 	mux.Handle("/", fServer)
 	return httptest.NewServer(mux)
 }
@@ -73,7 +73,7 @@ func TestGolangOrgData(t *testing.T) {
 		"Error[5]: article's link is empty",
 	}
 
-	h := NewGolangOrgHandler(testServer.URL + File)
+	h := NewGolangOrgHandler(testServer.URL + GolangOrgHtml)
 	lArticles, lWarnings, lErr := h.GetArticles()
 	if lErr != nil {
 		t.Error(lErr.Error())
