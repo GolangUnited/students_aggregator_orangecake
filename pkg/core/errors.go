@@ -29,6 +29,15 @@ func (r RequiredFieldError) Unwrap() error {
 	return r.ErrorType
 }
 
+// Non-essential field is empty, can be sent to log
+type EmptyFieldError struct {
+	Field     string
+}
+
+func (r EmptyFieldError) Error() string {
+	return fmt.Sprintf("error: %s, field: %s", ErrFieldIsEmpty, r.Field)
+}
+
 // ResponseError when you received any error response code
 type ResponseError struct {
 	Status string
@@ -56,4 +65,6 @@ var (
 	ErrEmptyDate = errors.New("empty Date")
 	// ErrInvalidDateFormat invalid data format
 	ErrInvalidDateFormat = errors.New("invalid Date format")
+	//ErrUrlVisit scrapper cant visit url
+	ErrUrlVisit = errors.New("unable to visit URL")
 )
