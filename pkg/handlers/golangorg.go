@@ -192,16 +192,16 @@ func (g *golangOrgParser) addWarning(aWarning string) {
 	g.warnings = append(g.warnings, aWarning)
 }
 
-func resolveGolangOrgURL(baseUrl, path string) (string, error) {
-	u, err := url.Parse(path)
-	if err != nil {
-		return "", err
+func resolveGolangOrgURL(aBaseUrl, aPath string) (string, error) {
+	lUrl, lErr := url.Parse(aPath)
+	if lErr != nil {
+		return "", lErr
 	}
 
-	base, err := url.Parse(baseUrl)
-	if err != nil {
-		return "", err
+	lBase, lErr := url.Parse(aBaseUrl)
+	if lErr != nil {
+		return "", lErr
 	}
 
-	return base.ResolveReference(u).String(), nil
+	return lBase.ResolveReference(lUrl).String(), nil
 }

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"net/http"
 	"net/http/httptest"
@@ -44,7 +43,7 @@ func TestGolangOrgData(t *testing.T) {
 			Title:       "Share your feedback about developing with Go",
 			Author:      "Todd Kulesza",
 			Link:        "https://tip.golang.org/blog/survey2022-q2",
-			PublishDate: time.Date(2022, time.November, 8, 0, 0, 0, 0, time.UTC), //empty date
+			PublishDate: time.Date(2022, time.November, 9, 0, 0, 0, 0, time.UTC), //empty date
 			Description: "",                                                      //empty description
 		},
 		{
@@ -64,10 +63,14 @@ func TestGolangOrgData(t *testing.T) {
 	}
 
 	lExpectedWarnings := []string{
-		"Error[0]: article's title is empty",
-		"Warning[1,0]: article's author is empty",
-		"Warning[2,0]: cannot parse article date ''. empty Date",
-		"Warning[2,1]: article description is empty",
+		"Warning[0,0]: article's author is empty",
+		"Warning[1,0]: cannot parse article date ''. empty Date",
+		"Warning[1,1]: article description is empty",
+		"Warning[2,0]: article's author is empty",
+		"Warning[3,0]: article description node not found",
+		"Warning[3,1]: article description is empty",
+		"Error[4]: article's title is empty",
+		"Error[5]: article's link is empty",
 	}
 
 	h := NewGolangOrgHandler(testServer.URL + File)
@@ -76,8 +79,6 @@ func TestGolangOrgData(t *testing.T) {
 		t.Error(lErr.Error())
 		return
 	}
-
-	fmt.Println(len(lArticles), len(lExpectedData), len(lWarnings), lWarnings, len(lExpectedWarnings))
 
 	for i, lExpectedArticle := range lExpectedData {
 		if !reflect.DeepEqual(lArticles[i], lExpectedArticle) {
