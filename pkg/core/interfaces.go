@@ -6,7 +6,7 @@ import (
 )
 
 type ArticleScraper interface {
-    ParseArticles() ([]Article, []string, error)
+    ParseArticles() ([]Article, []Warning, error)
 }
 
 type DBReader interface {
