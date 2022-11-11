@@ -10,7 +10,11 @@ import (
 )
 
 type Logger interface {
+	Trace(msg string, keyvals ...Value)
 	Info(msg string, keyvals ...Value)
+	Debug(msg string, keyvals ...Value)
+	Warning(msg string, keyvals ...Value)
+	Error(msg string, err error, keyvals ...Value)
 }
 
 type gLogger struct {
@@ -32,8 +36,32 @@ func newGLogger(writers ...io.Writer) gLogger {
 	return gLogger{log.Output(w)}
 }
 
+func (g *gLogger) Trace(msg string, keyvals ...Value) {
+	event := g.Log.Trace()
+	addFields(event, keyvals...)
+	event.Msg(msg)
+}
+
 func (g *gLogger) Info(msg string, keyvals ...Value) {
 	event := g.Log.Info()
+	addFields(event, keyvals...)
+	event.Msg(msg)
+}
+
+func (g *gLogger) Debug(msg string, keyvals ...Value) {
+	event := g.Log.Debug()
+	addFields(event, keyvals...)
+	event.Msg(msg)
+}
+
+func (g *gLogger) Warning(msg string, keyvals ...Value) {
+	event := g.Log.Warn()
+	addFields(event, keyvals...)
+	event.Msg(msg)
+}
+
+func (g *gLogger) Error(msg string, err error, keyvals ...Value) {
+	event := g.Log.Error().Err(err)
 	addFields(event, keyvals...)
 	event.Msg(msg)
 }
