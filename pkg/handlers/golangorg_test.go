@@ -43,8 +43,8 @@ func TestGolangOrgData(t *testing.T) {
 			Title:       "Share your feedback about developing with Go",
 			Author:      "Todd Kulesza",
 			Link:        "https://tip.golang.org/blog/survey2022-q2",
-			PublishDate: time.Date(2022, time.November, 9, 0, 0, 0, 0, time.UTC), //empty date
-			Description: "",                                                      //empty description
+			PublishDate: time.Date(2022, time.November, 15, 0, 0, 0, 0, time.UTC), //empty date
+			Description: "",                                                       //empty description
 		},
 		{
 			Title:       "Go: What's New in March 2010",
