@@ -51,7 +51,7 @@ func (s *SqliteStorage) ReadArticlesByDateRange(aMin, aMax time.Time) ([]core.Ar
 	return lArticles, nil
 }
 
-func (s *SqliteStorage) UpdateArticles(aArticles []core.ArticleDB) error {
+func (s *SqliteStorage) UpdateArticles(aID uint) error {
 	return nil
 }
 
