@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gorm.io/gorm"
 	"time"
@@ -35,12 +36,18 @@ func (s *SqliteStorage) WriteArticles(lArticles []core.Article) error {
 	return nil
 }
 
-func (s *SqliteStorage) ReadArticleByID(ID uint) (core.ArticleDB, error) {
+func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 	var lArticle core.ArticleDB
-	//TODO Wrap errors
-	s.db.Where("id = ?", ID).Find(&lArticle)
 
-	return lArticle, nil
+	lResult := s.db.Where("id = ?", aID).Find(&lArticle)
+
+	lErr := lResult.Error
+	if lErr != nil {
+		fmt.Errorf("Error row with id = %d: %w", aID, lErr)
+		return nil, lErr
+	}
+
+	return &lArticle, nil
 }
 
 func (s *SqliteStorage) ReadArticlesByDateRange(aMin, aMax time.Time) ([]core.ArticleDB, error) {
