@@ -5,7 +5,7 @@ name: CI DockerHub Push
 
 on:
   push:
-    branches: [develop]
+    branches: [main, develop]
     tags: "v*.*.*"
 
 jobs:
