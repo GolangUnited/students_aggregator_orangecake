@@ -27,31 +27,31 @@ func NewGLogger(writers ...io.Writer) GLogger {
 	return GLogger{log.Output(w)}
 }
 
-func (g *GLogger) Trace(msg string, keyvals ...Field) {
+func (g GLogger) Trace(msg string, keyvals ...Field) {
 	event := g.Log.Trace()
 	addFields(event, keyvals...)
 	event.Msg(msg)
 }
 
-func (g *GLogger) Info(msg string, keyvals ...Field) {
+func (g GLogger) Info(msg string, keyvals ...Field) {
 	event := g.Log.Info()
 	addFields(event, keyvals...)
 	event.Msg(msg)
 }
 
-func (g *GLogger) Debug(msg string, keyvals ...Field) {
+func (g GLogger) Debug(msg string, keyvals ...Field) {
 	event := g.Log.Debug()
 	addFields(event, keyvals...)
 	event.Msg(msg)
 }
 
-func (g *GLogger) Warning(msg string, keyvals ...Field) {
+func (g GLogger) Warning(msg string, keyvals ...Field) {
 	event := g.Log.Warn()
 	addFields(event, keyvals...)
 	event.Msg(msg)
 }
 
-func (g *GLogger) Error(msg string, err error, keyvals ...Field) {
+func (g GLogger) Error(msg string, err error, keyvals ...Field) {
 	event := g.Log.Error().Err(err)
 	addFields(event, keyvals...)
 	event.Msg(msg)

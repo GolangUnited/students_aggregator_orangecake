@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/indikator/aggregator_orange_cake/pkg/logger"
-	"os"
+	"io"
 )
 
 type Logger interface {
@@ -12,9 +12,10 @@ type Logger interface {
 	Warning(msg string, keyvals ...Field)
 	Error(msg string, err error, keyvals ...Field)
 }
+type Field = logger.Field
 
 var _ Logger = (*logger.GLogger)(nil)
 
-type Field = logger.Field
-
-var GLogger = logger.NewGLogger(os.Stdout)
+func NewLogger(writers ...io.Writer) Logger {
+	return logger.NewGLogger(writers...)
+}
