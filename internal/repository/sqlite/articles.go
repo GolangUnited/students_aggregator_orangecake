@@ -55,6 +55,6 @@ func (s *SqliteStorage) UpdateArticles(aID uint) error {
 	return nil
 }
 
-func (s *SqliteStorage) AddOneArticle(aArticle core.ArticleDB) error {
+func (s *SqliteStorage) AddOneArticle(aArticle *core.ArticleDB) error {
 	return nil
 }
