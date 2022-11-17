@@ -1,7 +1,6 @@
 package core
 
 import (
-    "context"
     "time"
 )
 
@@ -10,12 +9,14 @@ type ArticleScraper interface {
 }
 
 type DBReader interface {
-    ReadArticleById(aCtx context.Context, aLink string) (*Article, error)
-    ReadArticlesByDateRange(aCtx context.Context, aMin, aMax time.Time) ([]Article, error)
+    ReadArticleByID(ID uint) (Article, error)
+    ReadArticlesByDateRange(aMin, aMax time.Time) ([]Article, error)
 }
 
 type DBWriter interface {
-    WriteArticle(aCtx context.Context, aArticle Article) error
+    WriteArticle(aArticle Article) error
+    WriteArticles(aArticles []Article) error
+    UpdateArticle(aID uint, aArticle Article) error
 }
 
 type Logger interface {
