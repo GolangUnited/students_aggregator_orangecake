@@ -6,7 +6,7 @@ name: CI DockerHub Push
 on:
   push:
     branches: [main, develop]
-    tags: "v*.*.*"
+    tags: "*"
 
 jobs:
   push_to_registry:
