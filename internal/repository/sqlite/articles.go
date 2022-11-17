@@ -38,7 +38,7 @@ func (s *SqliteStorage) WriteArticles(lArticles []core.Article) error {
 func (s *SqliteStorage) ReadArticleByID(ID uint) (core.ArticleDB, error) {
 	var lArticle core.ArticleDB
 	//TODO Wrap errors
-	s.db.Find(&lArticle, "id = ?", ID)
+	s.db.Where("id = ?", ID).Find(&lArticle)
 
 	return lArticle, nil
 }
