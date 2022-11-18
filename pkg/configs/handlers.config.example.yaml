@@ -11,3 +11,12 @@ handlers:
 -
     handler: hashnode
     url: https://hashnode.com/n/go
+-
+    handler: appliedgo
+    url: https://appliedgo.net
+-
+    handler: devto
+    url: https://dev.to
+-
+    handler: golangorg
+    url: https://tip.golang.org
