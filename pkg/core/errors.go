@@ -67,4 +67,10 @@ var (
 	ErrInvalidDateFormat = errors.New("invalid Date format")
 	//ErrUrlVisit scrapper cant visit url
 	ErrUrlVisit = errors.New("unable to visit URL")
+	// ErrConfigFileIsEmpty empty config file
+	ErrConfigFileIsEmpty = errors.New("config file is empty")
+	// ErrEmptyConfig config struct is empty
+	ErrEmptyConfig = errors.New("empty config struct")
+	// ErrNoHandlersInConfig unable to unmarshal info about handlers from yaml file
+	ErrNoHandlersInConfig = errors.New("unable to get handlers info from config")
 )
