@@ -15,6 +15,9 @@
 # vendor/
 /.vscode
 
+
 # Configuration files
 .env
 *.config.yaml
+
+.idea
