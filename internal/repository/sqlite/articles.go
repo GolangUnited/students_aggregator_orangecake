@@ -31,8 +31,8 @@ func cut(aText string, aLimit int) string {
 	return aText
 }
 
-func (s *SqliteStorage) WriteArticles(lArticles []core.Article) error {
-	for _, lArticle := range lArticles {
+func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
+	for _, lArticle := range aArticles {
 		//Validation length of fields
 		if len(lArticle.Title) > 300 {
 			lArticle.Title = cut(lArticle.Title, 300)
@@ -82,10 +82,44 @@ func (s *SqliteStorage) ReadArticlesByDateRange(aMin, aMax time.Time) ([]core.Ar
 	return lArticles, nil
 }
 
-func (s *SqliteStorage) UpdateArticles(aID uint) error {
+func (s *SqliteStorage) UpdateArticles(aArticles []core.Article) error {
+	var lLastWriteDate time.Time
+	var lArticleForDate core.ArticleDB
+
+	s.db.Raw("SELECT * FROM article_dbs ORDER BY publish_date DESC LIMIT 1").Last(&lArticleForDate)
+	//TODO Wrap error
+	lLastWriteDate = lArticleForDate.PublishDate
+
+	for _, lArticle := range aArticles {
+		if lArticle.PublishDate.After(lLastWriteDate) {
+			s.db.Create(&core.ArticleDB{
+				Title:       lArticle.Title,
+				Author:      lArticle.Author,
+				Link:        lArticle.Link,
+				PublishDate: lArticle.PublishDate,
+				Description: lArticle.Description})
+		}
+	}
+
+	/*//TODO Write func validate()
+	//Validation length of fields
+	if len(lArticle.Title) > 300 {
+		lArticle.Title = cut(lArticle.Title, 300)
+	}
+	if len(lArticle.Author) > 200 {
+		lArticle.Author = cut(lArticle.Author, 200)
+	}
+	if len(lArticle.Description) > 6000 {
+		lArticle.Description = cut(lArticle.Description, 6000)
+	}*/
+
 	return nil
+
+	//TODO Проверить стыковочные записи
+	//TODO ВНИМАНИЕ! Изолировать в одной транзакции чтение из базы (когда дату для стыковки определяю) и запись в базу.
 }
 
 func (s *SqliteStorage) AddOneArticle(aArticle *core.ArticleDB) error {
 	return nil
+	//Добавления Артикла вручную
 }
