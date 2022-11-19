@@ -14,3 +14,10 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 /.vscode
+
+
+# Configuration files
+.env
+*.config.yaml
+
+.idea
