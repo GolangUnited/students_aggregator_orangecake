@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+const (
+	LEN_OF_TITLE       = 300
+	LEN_OF_AUTHOR      = 200
+	LEN_OF_DESCRIPTION = 6000
+)
+
 type SqliteStorage struct {
 	db *gorm.DB
 }
@@ -34,13 +40,13 @@ func cut(aText string, aLimit int) string {
 func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	for _, lArticle := range aArticles {
 		//Validation length of fields
-		if len(lArticle.Title) > 300 {
+		if len(lArticle.Title) > LEN_OF_TITLE {
 			lArticle.Title = cut(lArticle.Title, 300)
 		}
-		if len(lArticle.Author) > 200 {
+		if len(lArticle.Author) > LEN_OF_AUTHOR {
 			lArticle.Author = cut(lArticle.Author, 200)
 		}
-		if len(lArticle.Description) > 6000 {
+		if len(lArticle.Description) > LEN_OF_DESCRIPTION {
 			lArticle.Description = cut(lArticle.Description, 6000)
 		}
 
