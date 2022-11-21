@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type GLogger struct {
+type gLogger struct {
 	Log zerolog.Logger
 }
 
@@ -17,48 +17,48 @@ type Field struct {
 	Value interface{}
 }
 
-func NewGLogger(writers ...io.Writer) GLogger {
-	multi := zerolog.MultiLevelWriter(writers...)
+func NewGLogger(aWriters ...io.Writer) gLogger {
+	lMulti := zerolog.MultiLevelWriter(aWriters...)
 	w := zerolog.ConsoleWriter{
-		Out:        multi,
+		Out:        lMulti,
 		TimeFormat: time.RFC822,
 		PartsOrder: []string{"level", "time", "message"},
 	}
-	return GLogger{log.Output(w)}
+	return gLogger{log.Output(w)}
 }
 
-func (g GLogger) Trace(msg string, keyvals ...Field) {
-	event := g.Log.Trace()
-	addFields(event, keyvals...)
-	event.Msg(msg)
+func (g gLogger) Trace(aMsg string, aKeyvals ...Field) {
+	lEvent := g.Log.Trace()
+	addFields(lEvent, aKeyvals...)
+	lEvent.Msg(aMsg)
 }
 
-func (g GLogger) Info(msg string, keyvals ...Field) {
-	event := g.Log.Info()
-	addFields(event, keyvals...)
-	event.Msg(msg)
+func (g gLogger) Info(aMsg string, aKeyvals ...Field) {
+	lEvent := g.Log.Info()
+	addFields(lEvent, aKeyvals...)
+	lEvent.Msg(aMsg)
 }
 
-func (g GLogger) Debug(msg string, keyvals ...Field) {
-	event := g.Log.Debug()
-	addFields(event, keyvals...)
-	event.Msg(msg)
+func (g gLogger) Debug(aMsg string, aKeyvals ...Field) {
+	lEvent := g.Log.Debug()
+	addFields(lEvent, aKeyvals...)
+	lEvent.Msg(aMsg)
 }
 
-func (g GLogger) Warning(msg string, keyvals ...Field) {
-	event := g.Log.Warn()
-	addFields(event, keyvals...)
-	event.Msg(msg)
+func (g gLogger) Warning(aMsg string, aKeyvals ...Field) {
+	lEvent := g.Log.Warn()
+	addFields(lEvent, aKeyvals...)
+	lEvent.Msg(aMsg)
 }
 
-func (g GLogger) Error(msg string, err error, keyvals ...Field) {
-	event := g.Log.Error().Err(err)
-	addFields(event, keyvals...)
-	event.Msg(msg)
+func (g gLogger) Error(aMsg string, aErr error, aKeyvals ...Field) {
+	lEvent := g.Log.Error().Err(aErr)
+	addFields(lEvent, aKeyvals...)
+	lEvent.Msg(aMsg)
 }
 
-func addFields(e *zerolog.Event, keyvals ...Field) {
-	for _, field := range keyvals {
+func addFields(e *zerolog.Event, aKeyvals ...Field) {
+	for _, field := range aKeyvals {
 		e = e.Interface(fmt.Sprintf("%s", field.Key), field.Value)
 	}
 }
