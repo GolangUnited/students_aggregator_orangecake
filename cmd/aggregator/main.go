@@ -2,12 +2,10 @@ package main
 
 import (
 	"fmt"
+
 	_ "github.com/PuerkitoBio/goquery" // temporary import to init go.mod and go.sum and avoid compiler errors
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
-	"os"
 )
-
-var GLogger = core.NewLogger(os.Stdout)
 
 func main() {
 	var lArticles []core.Article

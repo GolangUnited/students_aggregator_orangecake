@@ -29,6 +29,15 @@ func (r RequiredFieldError) Unwrap() error {
 	return r.ErrorType
 }
 
+// Non-essential field is empty, can be sent to log
+type EmptyFieldError struct {
+	Field     string
+}
+
+func (r EmptyFieldError) Error() string {
+	return fmt.Sprintf("error: %s, field: %s", ErrFieldIsEmpty, r.Field)
+}
+
 // ResponseError when you received any error response code
 type ResponseError struct {
 	Status string
@@ -58,4 +67,10 @@ var (
 	ErrInvalidDateFormat = errors.New("invalid Date format")
 	//ErrUrlVisit scrapper cant visit url
 	ErrUrlVisit = errors.New("unable to visit URL")
+	// ErrConfigFileIsEmpty empty config file
+	ErrConfigFileIsEmpty = errors.New("config file is empty")
+	// ErrEmptyConfig config struct is empty
+	ErrEmptyConfig = errors.New("empty config struct")
+	// ErrNoHandlersInConfig unable to unmarshal info about handlers from yaml file
+	ErrNoHandlersInConfig = errors.New("unable to get handlers info from config")
 )
