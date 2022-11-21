@@ -5,7 +5,7 @@ name: CI DockerHub Push
 
 on:
   push:
-    branches: [feature_dockerhub_ci]
+    branches: [main, develop]
     tags: "*"
 
 jobs:
