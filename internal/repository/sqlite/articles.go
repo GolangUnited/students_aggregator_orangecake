@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"errors"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gorm.io/gorm"
 	"log"
@@ -39,7 +40,7 @@ func cut(aText string, aLimit int) string {
 }
 
 // validation check length of fields and cut it, if need it.
-func validation(aArticle core.Article) {
+func validation(aArticle *core.Article) {
 	if len(aArticle.Title) > LEN_OF_TITLE {
 		aArticle.Title = cut(aArticle.Title, LEN_OF_TITLE)
 	}
@@ -75,9 +76,8 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 
 	for _, lArticle := range aArticles {
 		//Validation length of fields
-		validation(lArticle)
+		validation(&lArticle)
 
-		//TODO Добавить условие про последнюю неделю (Done), или отсчитать последние 10 артиклов из каждого хэндлера!
 		if lArticle.PublishDate.After(core.NormalizeDate(time.Now()).Add(-168 * time.Hour)) {
 
 			lResult := s.db.Create(&core.ArticleDB{
@@ -88,15 +88,14 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 				Description: lArticle.Description})
 
 			if lResult.Error != nil {
-				log.Printf("can't write articles: %v", lResult.Error)
-				return lResult.Error
+				log.Printf("can't write articles: #%v", lResult.Error)
 			}
 			lCountOfWritingArticles += int(lResult.RowsAffected)
 		}
 	}
 
 	if lCountOfWritingArticles != len(aArticles) {
-		log.Println("count of records and length of []Articles mismatch")
+		return errors.New("count of records and length of []Articles mismatch")
 	}
 
 	log.Printf("wrote %d articles", lCountOfWritingArticles)
@@ -105,8 +104,9 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 }
 
 func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
-
+	validation(&aArticle)
 	s.db.Transaction(func(tx *gorm.DB) error {
+		//TODO Добавить проверку link
 		if lErr := tx.Model(&core.ArticleDB{}).Where("id = ?", aID).
 			Updates(core.ArticleDB{
 				Title:       aArticle.Title,
