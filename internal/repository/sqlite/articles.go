@@ -63,7 +63,7 @@ func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 	})
 
 	if lResult.Error != nil {
-		log.Printf("write article returns an error: %w", lResult.Error)
+		log.Printf("write article returns an error: %v", lResult.Error)
 		return lResult.Error
 	}
 	log.Printf("wrote %d article", lResult.RowsAffected)
@@ -78,23 +78,28 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 		validation(lArticle)
 
 		//TODO Добавить условие про последнюю неделю, или отсчитать последние 10 артиклов из каждого хэндлера!
-		lResult := s.db.Create(&core.ArticleDB{
-			Title:       lArticle.Title,
-			Author:      lArticle.Author,
-			Link:        lArticle.Link,
-			PublishDate: lArticle.PublishDate,
-			Description: lArticle.Description})
+		if lArticle.PublishDate.After(core.NormalizeDate(time.Now()).Add(-168 * time.Hour)) {
 
-		if lResult.Error != nil {
-			log.Printf("can't write articles: %w", lResult.Error)
-			return lResult.Error
+			lResult := s.db.Create(&core.ArticleDB{
+				Title:       lArticle.Title,
+				Author:      lArticle.Author,
+				Link:        lArticle.Link,
+				PublishDate: lArticle.PublishDate,
+				Description: lArticle.Description})
+
+			if lResult.Error != nil {
+				log.Printf("can't write articles: %v", lResult.Error)
+				return lResult.Error
+			}
+			lCountOfWritingArticles += int(lResult.RowsAffected)
 		}
-		lCountOfWritingArticles += int(lResult.RowsAffected)
 	}
 
 	if lCountOfWritingArticles != len(aArticles) {
-		log.Println("Count of records and length of []Articles mismatch")
+		log.Println("count of records and length of []Articles mismatch")
 	}
+
+	log.Printf("wrote %d articles", lCountOfWritingArticles)
 
 	return nil
 }
@@ -128,7 +133,7 @@ func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 
 	lErr := lResult.Error
 	if lErr != nil {
-		log.Printf("error happens in row with id = %d: %w", aID, lErr)
+		log.Printf("error happens in row with id = %d: %v", aID, lErr)
 		return nil, lErr
 	}
 
@@ -141,7 +146,7 @@ func (s *SqliteStorage) ReadArticlesByDateRange(aMin, aMax time.Time) ([]core.Ar
 	lResult := s.db.Where("publish_date BETWEEN ? AND ?", aMin, aMax).Find(&lArticles)
 	lErr := lResult.Error
 	if lErr != nil {
-		log.Printf("error happens in rows between dates %s and %s: %w", aMin, aMax, lErr)
+		log.Printf("error happens in rows between dates %s and %s: %v", aMin, aMax, lErr)
 		return nil, lErr
 	}
 	log.Printf("%d rows was found.", lResult.RowsAffected)
