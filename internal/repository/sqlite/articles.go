@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gorm.io/gorm"
+	"log"
 	"time"
 )
 
@@ -21,7 +22,7 @@ func NewStorage(db *gorm.DB) *SqliteStorage {
 	return &SqliteStorage{db}
 }
 
-// NewTable create table articles with field like struct core.ArticleDB
+// NewTable create table articles with field like struct core.ArticleDB.
 func (s *SqliteStorage) NewTable(db *gorm.DB) {
 	lErr := db.AutoMigrate(&core.ArticleDB{})
 	if lErr != nil {
@@ -29,6 +30,7 @@ func (s *SqliteStorage) NewTable(db *gorm.DB) {
 	}
 }
 
+// cut decrease the length of field
 func cut(aText string, aLimit int) string {
 	lRunes := []rune(aText)
 	if len(lRunes) >= aLimit {
@@ -37,25 +39,62 @@ func cut(aText string, aLimit int) string {
 	return aText
 }
 
+// validation check length of fields and cut it, if need it.
+func validation(aArticle core.Article) {
+	if len(aArticle.Title) > LEN_OF_TITLE {
+		aArticle.Title = cut(aArticle.Title, 300)
+	}
+
+	if len(aArticle.Author) > LEN_OF_AUTHOR {
+		aArticle.Author = cut(aArticle.Author, 200)
+	}
+
+	if len(aArticle.Description) > LEN_OF_DESCRIPTION {
+		aArticle.Description = cut(aArticle.Description, 6000)
+	}
+}
+
+func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
+	lResult := s.db.Create(&core.ArticleDB{
+		Title:       aArticle.Title,
+		Author:      aArticle.Author,
+		Link:        aArticle.Link,
+		PublishDate: aArticle.PublishDate,
+		Description: aArticle.Description,
+	})
+
+	if lResult.Error != nil {
+		log.Printf("write article returns an error: %w", lResult.Error)
+		return lResult.Error
+	}
+	log.Printf("wrote %d article", lResult.RowsAffected)
+	return nil
+}
+
 func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
+	lCountOfWritingArticles := 0
+
 	for _, lArticle := range aArticles {
 		//Validation length of fields
-		if len(lArticle.Title) > LEN_OF_TITLE {
-			lArticle.Title = cut(lArticle.Title, 300)
-		}
-		if len(lArticle.Author) > LEN_OF_AUTHOR {
-			lArticle.Author = cut(lArticle.Author, 200)
-		}
-		if len(lArticle.Description) > LEN_OF_DESCRIPTION {
-			lArticle.Description = cut(lArticle.Description, 6000)
-		}
+		validation(lArticle)
 
-		s.db.Create(&core.ArticleDB{
+		//TODO Добавить условие про последнюю неделю, или отсчитать последние 10 артиклов из каждого хэндлера!
+		lResult := s.db.Create(&core.ArticleDB{
 			Title:       lArticle.Title,
 			Author:      lArticle.Author,
 			Link:        lArticle.Link,
 			PublishDate: lArticle.PublishDate,
 			Description: lArticle.Description})
+
+		if lResult.Error != nil {
+			log.Printf("can't write articles: %w", lResult.Error)
+			return lResult.Error
+		}
+		lCountOfWritingArticles += int(lResult.RowsAffected)
+	}
+
+	if lCountOfWritingArticles != len(aArticles) {
+		log.Println("Count of records and length of []Articles mismatch")
 	}
 
 	return nil
@@ -68,7 +107,7 @@ func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 
 	lErr := lResult.Error
 	if lErr != nil {
-		fmt.Errorf("Error happens in row with id = %d: %w", aID, lErr)
+		fmt.Errorf("error happens in row with id = %d: %w", aID, lErr)
 		return nil, lErr
 	}
 
@@ -81,7 +120,7 @@ func (s *SqliteStorage) ReadArticlesByDateRange(aMin, aMax time.Time) ([]core.Ar
 	lResult := s.db.Where("publish_date BETWEEN ? AND ?", aMin, aMax).Find(&lArticles)
 	lErr := lResult.Error
 	if lErr != nil {
-		fmt.Errorf("Error happens in rows between dates %s and %s: %w", aMin, aMax, lErr)
+		fmt.Errorf("error happens in rows between dates %s and %s: %w", aMin, aMax, lErr)
 		return nil, lErr
 	}
 	fmt.Printf("%d rows was found.", lResult.RowsAffected)
@@ -120,12 +159,4 @@ func (s *SqliteStorage) UpdateArticles(aArticles []core.Article) error {
 	}*/
 
 	return nil
-
-	//TODO Проверить стыковочные записи
-	//TODO ВНИМАНИЕ! Изолировать в одной транзакции чтение из базы (когда дату для стыковки определяю) и запись в базу.
-}
-
-func (s *SqliteStorage) AddOneArticle(aArticle *core.ArticleDB) error {
-	return nil
-	//Добавления Артикла вручную
 }
