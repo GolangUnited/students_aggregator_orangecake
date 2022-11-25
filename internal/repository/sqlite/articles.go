@@ -1,7 +1,6 @@
 package sqlite
 
 import (
-	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gorm.io/gorm"
 	"log"
@@ -26,7 +25,7 @@ func NewStorage(db *gorm.DB) *SqliteStorage {
 func (s *SqliteStorage) NewTable(db *gorm.DB) {
 	lErr := db.AutoMigrate(&core.ArticleDB{})
 	if lErr != nil {
-		panic("failed to migrate from Article struct")
+		panic("failed to migrate from Article struct") // or log.Fatal?
 	}
 }
 
@@ -100,6 +99,28 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	return nil
 }
 
+func (s *SqliteStorage) UpdateArticles(aArticles []core.Article) error {
+	var lLastWriteDate time.Time
+	var lArticleForDate core.ArticleDB
+	//TODO Добавить условие про последнюю неделю
+	s.db.Raw("SELECT * FROM article_dbs ORDER BY publish_date DESC LIMIT 1").Last(&lArticleForDate)
+	//TODO Wrap error
+	lLastWriteDate = lArticleForDate.PublishDate
+	//TODO Validate
+	for _, lArticle := range aArticles {
+		if lArticle.PublishDate.After(lLastWriteDate) {
+			s.db.Create(&core.ArticleDB{
+				Title:       lArticle.Title,
+				Author:      lArticle.Author,
+				Link:        lArticle.Link,
+				PublishDate: lArticle.PublishDate,
+				Description: lArticle.Description})
+		}
+	}
+
+	return nil
+}
+
 func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 	var lArticle core.ArticleDB
 
@@ -107,7 +128,7 @@ func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 
 	lErr := lResult.Error
 	if lErr != nil {
-		fmt.Errorf("error happens in row with id = %d: %w", aID, lErr)
+		log.Printf("error happens in row with id = %d: %w", aID, lErr)
 		return nil, lErr
 	}
 
@@ -120,43 +141,9 @@ func (s *SqliteStorage) ReadArticlesByDateRange(aMin, aMax time.Time) ([]core.Ar
 	lResult := s.db.Where("publish_date BETWEEN ? AND ?", aMin, aMax).Find(&lArticles)
 	lErr := lResult.Error
 	if lErr != nil {
-		fmt.Errorf("error happens in rows between dates %s and %s: %w", aMin, aMax, lErr)
+		log.Printf("error happens in rows between dates %s and %s: %w", aMin, aMax, lErr)
 		return nil, lErr
 	}
-	fmt.Printf("%d rows was found.", lResult.RowsAffected)
+	log.Printf("%d rows was found.", lResult.RowsAffected)
 	return lArticles, nil
-}
-
-func (s *SqliteStorage) UpdateArticles(aArticles []core.Article) error {
-	var lLastWriteDate time.Time
-	var lArticleForDate core.ArticleDB
-
-	s.db.Raw("SELECT * FROM article_dbs ORDER BY publish_date DESC LIMIT 1").Last(&lArticleForDate)
-	//TODO Wrap error
-	lLastWriteDate = lArticleForDate.PublishDate
-
-	for _, lArticle := range aArticles {
-		if lArticle.PublishDate.After(lLastWriteDate) {
-			s.db.Create(&core.ArticleDB{
-				Title:       lArticle.Title,
-				Author:      lArticle.Author,
-				Link:        lArticle.Link,
-				PublishDate: lArticle.PublishDate,
-				Description: lArticle.Description})
-		}
-	}
-
-	/*//TODO Write func validate()
-	//Validation length of fields
-	if len(lArticle.Title) > 300 {
-		lArticle.Title = cut(lArticle.Title, 300)
-	}
-	if len(lArticle.Author) > 200 {
-		lArticle.Author = cut(lArticle.Author, 200)
-	}
-	if len(lArticle.Description) > 6000 {
-		lArticle.Description = cut(lArticle.Description, 6000)
-	}*/
-
-	return nil
 }
