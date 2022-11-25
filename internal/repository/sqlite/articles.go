@@ -77,7 +77,7 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 		//Validation length of fields
 		validation(lArticle)
 
-		//TODO Добавить условие про последнюю неделю, или отсчитать последние 10 артиклов из каждого хэндлера!
+		//TODO Добавить условие про последнюю неделю (Done), или отсчитать последние 10 артиклов из каждого хэндлера!
 		if lArticle.PublishDate.After(core.NormalizeDate(time.Now()).Add(-168 * time.Hour)) {
 
 			lResult := s.db.Create(&core.ArticleDB{
@@ -104,25 +104,20 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	return nil
 }
 
-func (s *SqliteStorage) UpdateArticles(aArticles []core.Article) error {
-	var lLastWriteDate time.Time
-	var lArticleForDate core.ArticleDB
-	//TODO Добавить условие про последнюю неделю
-	s.db.Raw("SELECT * FROM article_dbs ORDER BY publish_date DESC LIMIT 1").Last(&lArticleForDate)
-	//TODO Wrap error
-	lLastWriteDate = lArticleForDate.PublishDate
-	//TODO Validate
-	for _, lArticle := range aArticles {
-		if lArticle.PublishDate.After(lLastWriteDate) {
-			s.db.Create(&core.ArticleDB{
-				Title:       lArticle.Title,
-				Author:      lArticle.Author,
-				Link:        lArticle.Link,
-				PublishDate: lArticle.PublishDate,
-				Description: lArticle.Description})
-		}
-	}
+func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 
+	s.db.Transaction(func(tx *gorm.DB) error {
+		if lErr := tx.Model(&core.ArticleDB{}).Where("id = ?", aID).
+			Updates(core.ArticleDB{
+				Title:       aArticle.Title,
+				Author:      aArticle.Author,
+				Link:        aArticle.Link,
+				Description: aArticle.Description,
+			}).Error; lErr != nil {
+			return lErr
+		}
+		return nil
+	})
 	return nil
 }
 
