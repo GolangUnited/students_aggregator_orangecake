@@ -41,15 +41,15 @@ func cut(aText string, aLimit int) string {
 // validation check length of fields and cut it, if need it.
 func validation(aArticle core.Article) {
 	if len(aArticle.Title) > LEN_OF_TITLE {
-		aArticle.Title = cut(aArticle.Title, 300)
+		aArticle.Title = cut(aArticle.Title, LEN_OF_TITLE)
 	}
 
 	if len(aArticle.Author) > LEN_OF_AUTHOR {
-		aArticle.Author = cut(aArticle.Author, 200)
+		aArticle.Author = cut(aArticle.Author, LEN_OF_AUTHOR)
 	}
 
 	if len(aArticle.Description) > LEN_OF_DESCRIPTION {
-		aArticle.Description = cut(aArticle.Description, 6000)
+		aArticle.Description = cut(aArticle.Description, LEN_OF_DESCRIPTION)
 	}
 }
 
