@@ -1,11 +1,13 @@
-ARG APP_NAME="UrlScrapper"
-
 FROM golang:1.19 as builder
 
 WORKDIR /build
 COPY . .
-RUN go get -v ./... && GOOS=linux go build -o /build/${APP_NAME}/${APP_NAME} ./...
+# CGO_ENABLED=0 for alpine (will not work without)
+RUN go get -v ./... && GOOS=linux CGO_ENABLED=0 go build -o /myApp/ ./...
+
 
 FROM alpine:latest
-COPY --from=builder /build/${APP_NAME}/ /bin/${APP_NAME}/
-ENTRYPOINT [ "/bin/${APP_NAME}/${APP_NAME}" ]
+
+COPY --from=builder /myApp/ /myApp/
+ENTRYPOINT [ "myApp/aggregator"]
+
