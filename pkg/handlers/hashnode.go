@@ -113,3 +113,8 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
 	h.articles = append(h.articles, lArticle)
 }
+
+// get articles from scrapper
+func (h *HashnodeScraper) GetArticles() []core.Article {
+	return h.articles
+}
