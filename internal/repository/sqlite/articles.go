@@ -30,6 +30,17 @@ func (s *SqliteStorage) NewTable(db *gorm.DB) {
 	}
 }
 
+// newArticleDB ...
+func newArticleDB(aArticle *core.Article) *core.ArticleDB {
+	return &core.ArticleDB{
+		Title:       aArticle.Title,
+		Author:      aArticle.Author,
+		Link:        aArticle.Link,
+		PublishDate: aArticle.PublishDate,
+		Description: aArticle.Description,
+	}
+}
+
 // cut decrease the length of field
 func cut(aText string, aLimit int) string {
 	lRunes := []rune(aText)
@@ -55,13 +66,7 @@ func validation(aArticle *core.Article) {
 }
 
 func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
-	lResult := s.db.Create(&core.ArticleDB{
-		Title:       aArticle.Title,
-		Author:      aArticle.Author,
-		Link:        aArticle.Link,
-		PublishDate: aArticle.PublishDate,
-		Description: aArticle.Description,
-	})
+	lResult := s.db.Create(newArticleDB(&aArticle))
 
 	if lResult.Error != nil {
 		log.Printf("write article returns an error: %v", lResult.Error)
