@@ -26,8 +26,7 @@ func NewStorage(db *gorm.DB) *SqliteStorage {
 func (s *SqliteStorage) NewTable(db *gorm.DB) {
 	lErr := db.AutoMigrate(&core.ArticleDB{})
 	if lErr != nil {
-		//TODO убрать панику, заменить лог.эррор и передать выше в мэйн
-		panic("failed to migrate from Article struct") // or log.Fatal?
+		log.Printf("failed to migrate from Article struct: %v", lErr)
 	}
 }
 
