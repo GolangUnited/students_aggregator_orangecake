@@ -26,6 +26,7 @@ func NewStorage(db *gorm.DB) *SqliteStorage {
 func (s *SqliteStorage) NewTable(db *gorm.DB) {
 	lErr := db.AutoMigrate(&core.ArticleDB{})
 	if lErr != nil {
+		//TODO убрать панику, заменить лог.эррор и передать выше в мэйн
 		panic("failed to migrate from Article struct") // or log.Fatal?
 	}
 }
@@ -73,27 +74,28 @@ func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 
 func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	lCountOfWritingArticles := 0
+	s.db.Transaction(func(tx *gorm.DB) error {
+		for _, lArticle := range aArticles {
+			//Validation length of fields
+			validation(&lArticle)
 
-	for _, lArticle := range aArticles {
-		//Validation length of fields
-		validation(&lArticle)
+			if lArticle.PublishDate.After(core.NormalizeDate(time.Now()).Add(-168 * time.Hour)) {
 
-		if lArticle.PublishDate.After(core.NormalizeDate(time.Now()).Add(-168 * time.Hour)) {
+				lResult := tx.Create(&core.ArticleDB{
+					Title:       lArticle.Title,
+					Author:      lArticle.Author,
+					Link:        lArticle.Link,
+					PublishDate: lArticle.PublishDate,
+					Description: lArticle.Description})
 
-			lResult := s.db.Create(&core.ArticleDB{
-				Title:       lArticle.Title,
-				Author:      lArticle.Author,
-				Link:        lArticle.Link,
-				PublishDate: lArticle.PublishDate,
-				Description: lArticle.Description})
-
-			if lResult.Error != nil {
-				log.Printf("can't write articles: #%v", lResult.Error)
+				if lResult.Error != nil {
+					log.Printf("can't write articles: #%v", lResult.Error)
+				}
+				lCountOfWritingArticles += int(lResult.RowsAffected)
 			}
-			lCountOfWritingArticles += int(lResult.RowsAffected)
 		}
-	}
-
+		return nil
+	})
 	if lCountOfWritingArticles != len(aArticles) {
 		return errors.New("count of records and length of []Articles mismatch")
 	}
