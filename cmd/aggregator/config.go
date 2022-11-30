@@ -28,7 +28,7 @@ func NewAggregatorConfig() (*AggregatorConfig, error) {
 
 	lConnectionString := os.Getenv(DB_CONNECTIONSTRING)
 	if len(lConnectionString) == 0 {
-		return nil, fmt.Errorf("%s: %w", ERROR_MESSAGE, core.ErrEmptyEnvVariable)
+		return nil, fmt.Errorf("%s: %s: %w", ERROR_MESSAGE, DB_CONNECTIONSTRING, core.ErrEmptyEnvVariable)
 	}
 
 	lConfig.DBConnectionString = lConnectionString
