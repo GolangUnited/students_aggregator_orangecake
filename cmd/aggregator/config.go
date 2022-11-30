@@ -16,8 +16,8 @@ const (
 )
 
 type AggregatorConfig struct {
-	ConnectionString string
-	Handlers         []struct {
+	DBConnectionString string
+	Handlers           []struct {
 		Handler string `yaml:"handler"`
 		URL     string `yaml:"url"`
 	} `yaml:"handlers"`
@@ -31,7 +31,7 @@ func NewAggregatorConfig() (*AggregatorConfig, error) {
 		return nil, fmt.Errorf("%s: %w", ERROR_MESSAGE, core.ErrEmptyEnvVariable)
 	}
 
-	lConfig.ConnectionString = lConnectionString
+	lConfig.DBConnectionString = lConnectionString
 
 	lFile, err := os.Open(HANDLERS_FILE)
 	if err != nil {
