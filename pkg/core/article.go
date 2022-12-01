@@ -11,10 +11,6 @@ type Article struct {
 }
 
 type ArticleDB struct {
-	ID          uint `gorm:"primary_key;auto_increment;not_null"`
-	Title       string
-	Author      string
-	Link        string
-	PublishDate time.Time
-	Description string
+	ID      uint    `gorm:"primary_key;auto_increment;not_null"`
+	Article Article `gorm:"embedded"`
 }

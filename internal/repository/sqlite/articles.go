@@ -32,11 +32,13 @@ func (s *SqliteStorage) NewTable(db *gorm.DB) {
 // newArticleDB ...
 func newArticleDB(aArticle *core.Article) *core.ArticleDB {
 	return &core.ArticleDB{
-		Title:       aArticle.Title,
-		Author:      aArticle.Author,
-		Link:        aArticle.Link,
-		PublishDate: aArticle.PublishDate,
-		Description: aArticle.Description,
+		Article: core.Article{
+			Title:       aArticle.Title,
+			Author:      aArticle.Author,
+			Link:        aArticle.Link,
+			PublishDate: aArticle.PublishDate,
+			Description: aArticle.Description,
+		},
 	}
 }
 
@@ -50,7 +52,7 @@ func cut(aText string, aLimit int) string {
 }
 
 // validation check length of fields and cut it, if need it.
-// TODO & is need it, like &len(&aArticle.Title)?
+// TODO "&" is need it, like &len(&aArticle.Title)?
 func validation(aArticle *core.Article) {
 	if len(aArticle.Title) > LEN_OF_TITLE {
 		aArticle.Title = cut(aArticle.Title, LEN_OF_TITLE)
