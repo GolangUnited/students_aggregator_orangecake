@@ -1,7 +1,7 @@
 package sqlite
 
 import (
-	"errors"
+	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gorm.io/gorm"
 	"log"
@@ -51,6 +51,7 @@ func cut(aText string, aLimit int) string {
 }
 
 // validation check length of fields and cut it, if need it.
+// TODO & is need it, like &len(&aArticle.Title)?
 func validation(aArticle *core.Article) {
 	if len(aArticle.Title) > LEN_OF_TITLE {
 		aArticle.Title = cut(aArticle.Title, LEN_OF_TITLE)
@@ -66,6 +67,7 @@ func validation(aArticle *core.Article) {
 }
 
 func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
+	//TODO check existing of this article in database
 	lResult := s.db.Create(newArticleDB(&aArticle))
 
 	if lResult.Error != nil {
@@ -82,15 +84,10 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 		for _, lArticle := range aArticles {
 			//Validation length of fields
 			validation(&lArticle)
+			//TODO change 1680 on 168 after check
+			if lArticle.PublishDate.After(core.NormalizeDate(time.Now()).Add(-1680 * time.Hour)) {
 
-			if lArticle.PublishDate.After(core.NormalizeDate(time.Now()).Add(-168 * time.Hour)) {
-
-				lResult := tx.Create(&core.ArticleDB{
-					Title:       lArticle.Title,
-					Author:      lArticle.Author,
-					Link:        lArticle.Link,
-					PublishDate: lArticle.PublishDate,
-					Description: lArticle.Description})
+				lResult := tx.Create(newArticleDB(&lArticle))
 
 				if lResult.Error != nil {
 					log.Printf("can't write articles: #%v", lResult.Error)
@@ -100,9 +97,10 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 		}
 		return nil
 	})
-	if lCountOfWritingArticles != len(aArticles) {
+	fmt.Println(lCountOfWritingArticles, len(aArticles))
+	/*	if lCountOfWritingArticles != len(aArticles) {
 		return errors.New("count of records and length of []Articles mismatch")
-	}
+	}*/
 
 	log.Printf("wrote %d articles", lCountOfWritingArticles)
 
@@ -114,12 +112,7 @@ func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 	s.db.Transaction(func(tx *gorm.DB) error {
 		//TODO Добавить проверку link
 		if lErr := tx.Model(&core.ArticleDB{}).Where("id = ?", aID).
-			Updates(core.ArticleDB{
-				Title:       aArticle.Title,
-				Author:      aArticle.Author,
-				Link:        aArticle.Link,
-				Description: aArticle.Description,
-			}).Error; lErr != nil {
+			Updates(newArticleDB(&aArticle)).Error; lErr != nil {
 			return lErr
 		}
 		return nil
