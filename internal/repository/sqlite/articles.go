@@ -65,6 +65,7 @@ func validation(aArticle *core.Article) {
 	}
 }
 
+// WriteArticle adds manually one article
 func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 	//TODO check existing of this article in database
 	lResult := s.db.Create(newArticleDB(&aArticle))
@@ -77,10 +78,11 @@ func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 	return nil
 }
 
+// WriteArticles adds slice of articles after scraping data
 func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	lCountOfWritingArticles := 0
 	// unhandled error in Transaction
-	s.db.Transaction(func(tx *gorm.DB) error {
+	lErrTrans := s.db.Transaction(func(tx *gorm.DB) error {
 		for _, lArticle := range aArticles {
 			//Validation length of fields
 			validation(&lArticle)
@@ -95,26 +97,27 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 					lResult := tx.Create(newArticleDB(&lArticle))
 
 					if lResult.Error != nil {
-						log.Printf("can't write articles: #%v", lResult.Error)
+						log.Printf("can't write articles: %v", lResult.Error)
 					}
 					lCountOfWritingArticles += int(lResult.RowsAffected)
 				} else {
-					log.Printf("Article with link %s already exsist", lArticle.Link)
+					log.Printf("article with link %s already exsist", lArticle.Link)
 				}
 			}
 		}
 		return nil
 	})
-	//TODO this check-up is need it?
-	/*	if lCountOfWritingArticles != len(aArticles) {
-		return errors.New("count of records and length of []Articles mismatch")
-	}*/
+
+	if lErrTrans != nil {
+		log.Printf("error of transaction: %v", lErrTrans)
+	}
 
 	log.Printf("wrote %d articles", lCountOfWritingArticles)
 
 	return nil
 }
 
+// UpdateArticle updates record with id = aID
 func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 	validation(&aArticle)
 	s.db.Transaction(func(tx *gorm.DB) error {
@@ -128,6 +131,7 @@ func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 	return nil
 }
 
+// ReadArticleByID returns record with id = aID
 func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 	var lArticle core.ArticleDB
 
@@ -142,6 +146,7 @@ func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 	return &lArticle, nil
 }
 
+// ReadArticlesByDateRange returns records, that were written between aMin and aMax time frames
 func (s *SqliteStorage) ReadArticlesByDateRange(aMin, aMax time.Time) ([]core.ArticleDB, error) {
 	lArticles := make([]core.ArticleDB, 0)
 
