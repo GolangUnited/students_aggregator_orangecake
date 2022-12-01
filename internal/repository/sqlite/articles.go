@@ -69,21 +69,29 @@ func validation(aArticle *core.Article) {
 
 // WriteArticle adds manually one article
 func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
+	lErrTrans := s.db.Transaction(func(tx *gorm.DB) error {
+		if countOfRecordsFound := tx.First(
+			&core.ArticleDB{}, "link = ?", aArticle.Link).RowsAffected; countOfRecordsFound == 0 {
 
-	if countOfRecordsFound := s.db.First(
-		&core.ArticleDB{}, "link = ?", aArticle.Link).RowsAffected; countOfRecordsFound == 0 {
+			validation(&aArticle)
 
-		validation(&aArticle)
-
-		lResult := s.db.Create(newArticleDB(&aArticle))
-		if lResult.Error != nil {
-			log.Printf("write article returns an error: %v", lResult.Error)
-			return lResult.Error
+			lResult := tx.Create(newArticleDB(&aArticle))
+			if lResult.Error != nil {
+				log.Printf("write article returns an error: %v", lResult.Error)
+				return lResult.Error
+			}
+			log.Printf("wrote %d article", lResult.RowsAffected)
+			return nil
+		} else {
+			log.Println("wrote 0 articles")
 		}
-		log.Printf("wrote %d article", lResult.RowsAffected)
 		return nil
+	})
+
+	if lErrTrans != nil {
+		log.Printf("error of transaction: %v", lErrTrans)
 	}
-	log.Println("wrote 0 articles")
+
 	return nil
 }
 
