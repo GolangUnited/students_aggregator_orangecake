@@ -1,7 +1,6 @@
 package sqlite
 
 import (
-	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gorm.io/gorm"
 	"log"
@@ -80,24 +79,33 @@ func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 
 func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	lCountOfWritingArticles := 0
+	// unhandled error in Transaction
 	s.db.Transaction(func(tx *gorm.DB) error {
 		for _, lArticle := range aArticles {
 			//Validation length of fields
 			validation(&lArticle)
+
 			//TODO change 1680 on 168 after check
 			if lArticle.PublishDate.After(core.NormalizeDate(time.Now()).Add(-1680 * time.Hour)) {
 
-				lResult := tx.Create(newArticleDB(&lArticle))
+				if countOfRecordsFound := tx.First(
+					&core.ArticleDB{},
+					"link = ?", lArticle.Link).RowsAffected; countOfRecordsFound == 0 {
 
-				if lResult.Error != nil {
-					log.Printf("can't write articles: #%v", lResult.Error)
+					lResult := tx.Create(newArticleDB(&lArticle))
+
+					if lResult.Error != nil {
+						log.Printf("can't write articles: #%v", lResult.Error)
+					}
+					lCountOfWritingArticles += int(lResult.RowsAffected)
+				} else {
+					log.Printf("Article with link %s already exsist", lArticle.Link)
 				}
-				lCountOfWritingArticles += int(lResult.RowsAffected)
 			}
 		}
 		return nil
 	})
-	fmt.Println(lCountOfWritingArticles, len(aArticles))
+	//TODO this check-up is need it?
 	/*	if lCountOfWritingArticles != len(aArticles) {
 		return errors.New("count of records and length of []Articles mismatch")
 	}*/
