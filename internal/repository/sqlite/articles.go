@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	LEN_OF_TITLE       = 300
+	LEN_OF_TITLE       = 200
 	LEN_OF_AUTHOR      = 200
 	LEN_OF_DESCRIPTION = 6000
 )
@@ -69,14 +69,21 @@ func validation(aArticle *core.Article) {
 
 // WriteArticle adds manually one article
 func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
-	//TODO check existing of this article in database
-	lResult := s.db.Create(newArticleDB(&aArticle))
 
-	if lResult.Error != nil {
-		log.Printf("write article returns an error: %v", lResult.Error)
-		return lResult.Error
+	if countOfRecordsFound := s.db.First(
+		&core.ArticleDB{}, "link = ?", aArticle.Link).RowsAffected; countOfRecordsFound == 0 {
+
+		validation(&aArticle)
+
+		lResult := s.db.Create(newArticleDB(&aArticle))
+		if lResult.Error != nil {
+			log.Printf("write article returns an error: %v", lResult.Error)
+			return lResult.Error
+		}
+		log.Printf("wrote %d article", lResult.RowsAffected)
+		return nil
 	}
-	log.Printf("wrote %d article", lResult.RowsAffected)
+	log.Println("wrote 0 articles")
 	return nil
 }
 
