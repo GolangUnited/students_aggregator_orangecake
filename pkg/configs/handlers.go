@@ -7,9 +7,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// if file not found error will be printed in std out
-//
-//go:embed handlers.config.example.yaml
 var data []byte
 
 type HandlersConfig struct {
