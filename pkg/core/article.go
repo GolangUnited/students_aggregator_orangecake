@@ -9,3 +9,8 @@ type Article struct {
 	PublishDate time.Time
 	Description string
 }
+
+type ArticleDB struct {
+	ID      uint    `gorm:"primary_key;auto_increment;not_null"`
+	Article Article `gorm:"embedded"`
+}
