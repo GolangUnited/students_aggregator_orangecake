@@ -126,7 +126,7 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	})
 
 	if lErrTrans != nil {
-		log.Printf("error of transaction: %v", lErrTrans)
+		log.Printf("error of transaction when write articles: %v", lErrTrans)
 	}
 
 	log.Printf("wrote %d articles", lCountOfWritingArticles)
@@ -137,14 +137,12 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 // UpdateArticle updates record with id = aID
 func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 	validation(&aArticle)
-	s.db.Transaction(func(tx *gorm.DB) error {
-		//TODO Добавить проверку link
-		if lErr := tx.Model(&core.ArticleDB{}).Where("id = ?", aID).
-			Updates(newArticleDB(&aArticle)).Error; lErr != nil {
-			return lErr
-		}
-		return nil
-	})
+
+	if lErr := s.db.Model(&core.ArticleDB{}).Where("id = ?", aID).
+		Updates(newArticleDB(&aArticle)).Error; lErr != nil {
+		return lErr
+	}
+	log.Printf("update article with id #%d", aID)
 	return nil
 }
 
