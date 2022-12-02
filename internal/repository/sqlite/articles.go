@@ -69,6 +69,8 @@ func validation(aArticle *core.Article) {
 
 // WriteArticle adds manually one article
 func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
+	var lRowsAffected int64 = 0
+
 	lErrTrans := s.db.Transaction(func(tx *gorm.DB) error {
 		if countOfRecordsFound := tx.First(
 			&core.ArticleDB{}, "link = ?", aArticle.Link).RowsAffected; countOfRecordsFound == 0 {
@@ -80,10 +82,11 @@ func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 				log.Printf("write article returns an error: %v", lResult.Error)
 				return lResult.Error
 			}
-			log.Printf("wrote %d article", lResult.RowsAffected)
+			lRowsAffected = lResult.RowsAffected
+			log.Printf("wrote %d article", lRowsAffected)
 			return nil
 		} else {
-			log.Println("wrote 0 articles")
+			log.Printf("wrote %d articles", lRowsAffected)
 		}
 		return nil
 	})
@@ -136,13 +139,32 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 
 // UpdateArticle updates record with id = aID
 func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
-	validation(&aArticle)
+	var lArticle core.ArticleDB
 
-	if lErr := s.db.Model(&core.ArticleDB{}).Where("id = ?", aID).
-		Updates(newArticleDB(&aArticle)).Error; lErr != nil {
-		return lErr
+	lErrTrans := s.db.Transaction(func(tx *gorm.DB) error {
+
+		lExistId := tx.First(&lArticle, aID).RowsAffected
+
+		if lExistId == 1 {
+			validation(&aArticle)
+
+			lResult := tx.Model(&core.ArticleDB{}).Where("id = ?", aID).
+				Updates(newArticleDB(&aArticle))
+			if lResult.Error != nil {
+				return lResult.Error
+			}
+
+			log.Printf("update %d articles with id #%d", lResult.RowsAffected, aID)
+		} else if lExistId == 0 {
+			log.Printf("nothing to update, id #%d isn't exist", aID)
+		}
+		return nil
+	})
+
+	if lErrTrans != nil {
+		log.Printf("error of transaction when update article with id #%d: %v", aID, lErrTrans)
 	}
-	log.Printf("update article with id #%d", aID)
+
 	return nil
 }
 
