@@ -31,7 +31,7 @@ func (r RequiredFieldError) Unwrap() error {
 
 // Non-essential field is empty, can be sent to log
 type EmptyFieldError struct {
-	Field     string
+	Field string
 }
 
 func (r EmptyFieldError) Error() string {
@@ -71,6 +71,8 @@ var (
 	ErrConfigFileIsEmpty = errors.New("config file is empty")
 	// ErrEmptyConfig config struct is empty
 	ErrEmptyConfig = errors.New("empty config struct")
+	// ErrEmptyEnvVariable env variable not found
+	ErrEmptyEnvVariable = errors.New("env variable not found")
 	// ErrNoHandlersInConfig unable to unmarshal info about handlers from yaml file
 	ErrNoHandlersInConfig = errors.New("unable to get handlers info from config")
 )
