@@ -9,8 +9,8 @@ type ArticleScraper interface {
 }
 
 type DBReader interface {
-    ReadArticleByID(ID uint) (Article, error)
-    ReadArticlesByDateRange(aMin, aMax time.Time) ([]Article, error)
+    ReadArticleByID(ID uint) (ArticleDB, error)
+    ReadArticlesByDateRange(aMin, aMax time.Time) ([]ArticleDB, error)
 }
 
 type DBWriter interface {
