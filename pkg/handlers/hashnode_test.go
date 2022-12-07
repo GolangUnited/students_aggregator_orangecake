@@ -64,10 +64,10 @@ func TestOkScrapUrl(t *testing.T) {
 
 	lHS.ScrapUrl()
 
-	assert.Equal(t, len(lOkTestCases), len(lHS.Articles))
+	assert.Equal(t, len(lOkTestCases), len(lHS.articles))
 
 	for idx, val := range lOkTestCases {
-		assert.Equal(t, val, lHS.Articles[idx])
+		assert.Equal(t, val, lHS.articles[idx])
 
 	}
 }
@@ -79,7 +79,7 @@ func TestErrorsScrapUrl(t *testing.T) {
 			testName: "URL Visit Err",
 			testData: "",
 			err:      core.ErrUrlVisit,
-			url:      "http://127.0.0.1",
+			url:      "http://",
 		},
 		{
 			testName: "No Articles Err",
@@ -93,11 +93,14 @@ func TestErrorsScrapUrl(t *testing.T) {
 		lServer := newHTTPTestServer(tCase.testData)
 		defer lServer.Close()
 
+		var lHS *HashnodeScraper
+
 		log := log.New(os.Stdout, "HS", log.Flags())
-		lHS := NewHashnodeScraper(log, lServer.URL)
 
 		if tCase.url != "" {
-			lHS.URL = tCase.url
+			lHS = NewHashnodeScraper(log, tCase.url)
+		} else {
+			lHS = NewHashnodeScraper(log, lServer.URL)
 		}
 
 		err := lHS.ScrapUrl()
