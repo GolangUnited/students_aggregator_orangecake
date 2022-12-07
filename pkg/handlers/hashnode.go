@@ -9,9 +9,9 @@ import (
 )
 
 type HashnodeScraper struct {
-	Articles      []core.Article
-	URL           string
-	Log           *log.Logger
+	articles []core.Article
+	url      string
+	log      *log.Logger
 }
 
 const (
@@ -26,9 +26,9 @@ const (
 // create Hashnode scrapper struct for "https://hashnode.com/n/go"
 func NewHashnodeScraper(log *log.Logger, aUrl string) *HashnodeScraper {
 	return &HashnodeScraper{
-		Articles:      []core.Article{},
-		URL:           aUrl,
-		Log:           log,
+		articles: []core.Article{},
+		url:      aUrl,
+		log:      log,
 	}
 }
 
@@ -40,17 +40,17 @@ func (h *HashnodeScraper) ScrapUrl() error {
 
 	lC.OnHTML(ARTICLE_CLASS, h.ElementSearch)
 
-	err := lC.Visit(h.URL)
+	err := lC.Visit(h.url)
 	if err != nil {
 		return fmt.Errorf("%s: %w", core.ErrUrlVisit.Error(), err)
 	}
 
 	lC.Wait()
 
-	if len(h.Articles) == 0 {
+	if len(h.articles) == 0 {
 		return core.ErrNoArticles
 	}
-	
+
 	return nil
 }
 
@@ -65,23 +65,23 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
 	//link inside Title field
 	if lTitle.Nodes == nil {
-		h.Log.Println("cant find Title(link) field")
+		h.log.Println("cant find Title(link) field")
 		return
 	}
 
 	lArticle.Title = lTitle.Text()
-	lArticle.Link, _ = lTitle.Attr("href")		
+	lArticle.Link, _ = lTitle.Attr("href")
 
 	lDescription := lDOM.Find(DESCR_PATH)
 	if lDescription.Nodes == nil {
-		h.Log.Printf("For article %s, %s field Description not found", lArticle.Title, lArticle.Link)
+		h.log.Printf("For article %s, %s field Description not found", lArticle.Title, lArticle.Link)
 	} else {
 		lArticle.Description = lDescription.Text()
 	}
 
 	lAuthor := lDOM.Find(AUTHOR_PATH)
 	if lAuthor.Nodes == nil {
-		h.Log.Printf("For article %s, %s field Author not found", lArticle.Title, lArticle.Link)
+		h.log.Printf("For article %s, %s field Author not found", lArticle.Title, lArticle.Link)
 	} else {
 		lArticle.Author = lAuthor.Text()
 	}
@@ -90,27 +90,31 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
 	var lDateString string
 	if lDate.Nodes == nil {
-		h.Log.Printf("For article %s, %s field Data not found", lArticle.Title, lArticle.Link)
+		h.log.Printf("For article %s, %s field Data not found", lArticle.Title, lArticle.Link)
 	} else {
-		lDateString = lDate.Text()		
-		}
+		lDateString = lDate.Text()
+	}
 
 	lPubDate, err := core.ParseDate("Jan _2, 2006", lDateString)
 	if err != nil {
-		h.Log.Printf("For article %s, %s DataErr: %s ", lArticle.Title, lArticle.Link, err.Error())
+		h.log.Printf("For article %s, %s DataErr: %s ", lArticle.Title, lArticle.Link, err.Error())
 	}
 	lArticle.PublishDate = lPubDate
 
-
 	if lArticle.Title == "" {
-		h.Log.Printf("For article %s Title field is empty", lArticle.Link)
+		h.log.Printf("For article %s Title field is empty", lArticle.Link)
 		return
 	}
 
 	if lArticle.Link == "" {
-		h.Log.Printf("For article %s Link field is empty", lArticle.Title)
+		h.log.Printf("For article %s Link field is empty", lArticle.Title)
 		return
 	}
 
-	h.Articles = append(h.Articles, lArticle)
+	h.articles = append(h.articles, lArticle)
+}
+
+// get articles from scrapper
+func (h *HashnodeScraper) GetArticles() []core.Article {
+	return h.articles
 }
