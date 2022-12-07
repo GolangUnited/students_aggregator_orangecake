@@ -24,3 +24,21 @@ jobs:
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  deploy_to_serv:
+    needs: push_to_registry
+    name: Pull and deploy Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@master
+        name: executing remote ssh commands using ssh key
+        with:
+          host: ${{ secrets.SSH_REMOTE_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_REMOTE_HOST_PORT }}
+          script: |
+            docker rm aggregator-orange-cake
+            docker image rm pavelpogo/orange_cake
+            docker pull pavelpogo/orange_cake:latest
+            docker run --name aggregator-orange-cake pavelpogo/orange_cake
