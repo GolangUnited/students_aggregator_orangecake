@@ -2,24 +2,30 @@ package main
 
 import (
 	"fmt"
-
 	_ "github.com/PuerkitoBio/goquery" // temporary import to init go.mod and go.sum and avoid compiler errors
-	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"github.com/indikator/aggregator_orange_cake/pkg/handlers"
+	"github.com/indikator/aggregator_orange_cake/pkg/storage/sqlite"
 )
 
-func main() {
-	var lArticles []core.Article
+const ConnectionString = "articles.db" // need take it from .env?
 
-	for i, lArticle := range lArticles {
-		fmt.Printf("Node %d: %s\n", i, lArticle.Title)
-		fmt.Printf("  Author: %s\n", lArticle.Author)
-		fmt.Printf("  Date: %s\n", lArticle.PublishDate.Format("Jan _2, 2006"))
-		fmt.Printf("  URL: %s\n", lArticle.Link)
-		fmt.Printf("  Description:\n    %s\n\n", lArticle.Description)
+func main() {
+
+	// scrape articles from dev.to
+	h := handlers.NewDevtoHandler("https://dev.to/t/go")
+	lArticles := h.Run()
+
+	// connect to database or create it if not exist
+	lStorage, lErr := sqlite.NewSqliteConnection(ConnectionString)
+	if lErr != nil {
+		fmt.Printf("error of new sqlite connection: %v", lErr)
 	}
 
-	fmt.Println()
-	fmt.Println()
-	fmt.Printf("  %d Articles detected.", len(lArticles))
-	fmt.Println()
+	// create new table article_dbs if it hasn't already been created
+	lStorage.NewTable(lStorage.Db)
+
+	// write articles from handler
+	if lErr := lStorage.WriteArticles(lArticles); lErr != nil {
+		fmt.Printf("error of write articles: %v", lErr)
+	}
 }
