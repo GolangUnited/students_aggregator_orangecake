@@ -29,10 +29,7 @@ jobs:
         id: lints
 
       - name: Create a ling log file
-        run: |
-          echo ${{ steps.lints.outputs.stdout }} >> lint_results.txt
-          echo ${{ steps.lints.outputs.stderr }} >> lint_results.txt
-
+        run: echo ${{join(steps.lints.outputs.*, '\n')}} >> lint_results.txt
       - name: Test
         run: |
           # Run tests
