@@ -27,7 +27,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3.3.1
         continue-on-error: true
         with:
-          - args: -o=lint_results.txt
+          - args: 2>&1 | tee lint_results.txt
 
       - name: Test
         run: |
@@ -58,5 +58,5 @@ jobs:
         with:
           name: lint-results
           path: |
-            lint_results.html
+            lint_results.txt
           retention-days: 3
