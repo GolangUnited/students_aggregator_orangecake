@@ -19,4 +19,4 @@ handlers:
     url: https://dev.to
 -
     handler: golangorg
-    url: https://tip.golang.org
+    url: https://tip.golang.org/blog/all
