@@ -53,10 +53,10 @@ func main() {
 	fmt.Println(warnings)
 }
 
-func CreateScrappers(aConfig *AggregatorConfig, lLogger *core.Logger) []core.ArticleScraper {
+func CreateScrappers(aConfig *AggregatorConfig, aLogger *core.Logger) []core.ArticleScraper {
 	lScrappers := make([]core.ArticleScraper, 0)
 	for _, value := range aConfig.Handlers {
-		scrapper := ScrappersMap[value.Handler](value.URL, nil /*TODO pass logger*/)
+		scrapper := ScrappersMap[value.Handler](value.URL, aLogger)
 		result, ok := scrapper.(core.ArticleScraper)
 		if !ok {
 			//TODO log
