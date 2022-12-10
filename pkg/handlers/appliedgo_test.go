@@ -55,7 +55,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestAppliedGoGetArticlesList(t *testing.T) {
-	lExpectedArticles := appliedGoParser{
+	lExpectedArticles := AppliedGoParser{
 		articles: []core.Article{
 			{
 				Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music",
@@ -73,7 +73,7 @@ func TestAppliedGoGetArticlesList(t *testing.T) {
 		warnings: []string{},
 		errors:   []error{}}
 
-	lReceivedArticles := newAppliedGoParser()
+	lReceivedArticles := NewAppliedGoParser()
 	lReceivedErr := lReceivedArticles.ParseAppliedGo(TestDataURL + "AppliedGoMain.htm")
 
 	assert.Equal(t, true, reflect.DeepEqual(lExpectedArticles, lReceivedArticles), "invalid articles content")
@@ -84,7 +84,7 @@ func TestAppliedGoIncorrectUrlProtocol(t *testing.T) {
 	var badUrl = ""
 	var lExpectedErr = fmt.Errorf("unsupported protocol scheme %q", badUrl)
 
-	lReceivedArticles := newAppliedGoParser()
+	lReceivedArticles := NewAppliedGoParser()
 	lReceivedErr := lReceivedArticles.ParseAppliedGo(badUrl)
 
 	assert.Equal(t, []core.Article{}, lReceivedArticles.articles, "invalid articles content")
@@ -92,14 +92,14 @@ func TestAppliedGoIncorrectUrlProtocol(t *testing.T) {
 }
 
 func TestAppliedGoScrapeEmptyRequiredFields(t *testing.T) {
-	lExpectedArticle := appliedGoParser{
+	lExpectedArticle := AppliedGoParser{
 		articles: []core.Article{},
 		errors: []error{
 			errors.New("error: link field is empty")},
 		warnings: []string{},
 	}
 
-	lReceivedArticle := newAppliedGoParser()
+	lReceivedArticle := NewAppliedGoParser()
 	lReceivedErr := lReceivedArticle.ParseAppliedGo(TestDataURL + "AppliedGoArticleEmptyRequiredFields.htm")
 
 	assert.Equal(t, lExpectedArticle, lReceivedArticle, "invalid articles content")
@@ -108,7 +108,7 @@ func TestAppliedGoScrapeEmptyRequiredFields(t *testing.T) {
 
 func TestAppliedGoScrapeEmptyNonRequiredFields(t *testing.T) {
 	lDate := time.Now()
-	lExpectedArticle := appliedGoParser{
+	lExpectedArticle := AppliedGoParser{
 		articles: []core.Article{
 			{
 				Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music",
@@ -124,7 +124,7 @@ func TestAppliedGoScrapeEmptyNonRequiredFields(t *testing.T) {
 			"warning: description field is empty",
 		}}
 
-	lReceivedArticle := newAppliedGoParser()
+	lReceivedArticle := NewAppliedGoParser()
 	lReceivedErr := lReceivedArticle.ParseAppliedGo(TestDataURL + "AppliedGoArticleEmptyNonRequiredFields.htm")
 
 	assert.Equal(t, lExpectedArticle, lReceivedArticle, "invalid articles content")
@@ -133,7 +133,7 @@ func TestAppliedGoScrapeEmptyNonRequiredFields(t *testing.T) {
 
 func TestAppliedGoScrapeInvalidDate(t *testing.T) {
 	lDate := time.Now()
-	lExpectedArticle := appliedGoParser{
+	lExpectedArticle := AppliedGoParser{
 		articles: []core.Article{
 			{
 				Title:       "How I used Go to make my radio auto-switch to AUX-IN when a Raspi plays music",
@@ -147,7 +147,7 @@ func TestAppliedGoScrapeInvalidDate(t *testing.T) {
 		},
 		warnings: []string{}}
 
-	lReceivedArticle := newAppliedGoParser()
+	lReceivedArticle := NewAppliedGoParser()
 	lReceivedErr := lReceivedArticle.ParseAppliedGo(TestDataURL + "AppliedGoArticleInvalidDate.htm")
 
 	assert.Equal(t, lExpectedArticle, lReceivedArticle, "invalid articles content")
@@ -155,12 +155,12 @@ func TestAppliedGoScrapeInvalidDate(t *testing.T) {
 }
 
 func TestAppliedGoNoArticles(t *testing.T) {
-	lExpectedArticle := appliedGoParser{
+	lExpectedArticle := AppliedGoParser{
 		articles: []core.Article{},
 		errors:   []error{},
 		warnings: []string{}}
 
-	lReceivedArticle := newAppliedGoParser()
+	lReceivedArticle := NewAppliedGoParser()
 	lReceivedErr := lReceivedArticle.ParseAppliedGo(TestDataURL + "AppliedGoNoArticles.htm")
 
 	assert.Equal(t, lExpectedArticle, lReceivedArticle, "invalid articles content")

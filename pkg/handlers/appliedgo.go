@@ -19,21 +19,21 @@ const (
 	appliedGoDescrPath   = "div[class=\"summary doc \"] > p"
 )
 
-type appliedGoParser struct {
+type AppliedGoParser struct {
 	articles []core.Article
 	warnings []string
 	errors   []error
 }
 
-func newAppliedGoParser() appliedGoParser {
-	return appliedGoParser{
+func NewAppliedGoParser() AppliedGoParser {
+	return AppliedGoParser{
 		articles: make([]core.Article, 0),
 		warnings: make([]string, 0),
 		errors:   make([]error, 0),
 	}
 }
 
-func (p *appliedGoParser) ParseAppliedGo(link string) error {
+func (p *AppliedGoParser) ParseAppliedGo(link string) error {
 	var lArticleCollector = colly.NewCollector()
 	lArticleCollector.OnHTML(appliedGoArticlePath, func(e *colly.HTMLElement) {
 		lNewArticle := core.Article{}

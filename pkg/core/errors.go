@@ -75,4 +75,6 @@ var (
 	ErrEmptyEnvVariable = errors.New("env variable not found")
 	// ErrNoHandlersInConfig unable to unmarshal info about handlers from yaml file
 	ErrNoHandlersInConfig = errors.New("unable to get handlers info from config")
+	// ErrUnableCastToInterface impossible to cast structure to interface
+	ErrUnableCastToInterface = errors.New("impossible to cast structure to interface")
 )
