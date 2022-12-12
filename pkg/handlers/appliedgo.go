@@ -40,8 +40,8 @@ func (s *appliedGoScraper) ParseArticles() ([]core.Article, []core.Warning, erro
 		//Link (required field)
 		aLink := e.ChildAttr(appliedGoLinkPath, "href")
 		if aLink == "" {
-			//TODO
-			lWarnings = append(lWarnings, "error: link field is empty")
+			lError := core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
+			lWarnings = append(lWarnings, core.Warning(lError.Error()))
 			return
 		}
 		lNewArticle.Link = aLink
@@ -49,8 +49,8 @@ func (s *appliedGoScraper) ParseArticles() ([]core.Article, []core.Warning, erro
 		//Title (required field)
 		aTitle := e.ChildText(appliedGoTitlePath)
 		if aTitle == "" {
-			//TODO
-			lWarnings = append(lWarnings, "error: title field is empty")
+			lError := core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}
+			lWarnings = append(lWarnings, core.Warning(lError.Error()))
 			return
 		}
 		lNewArticle.Title = aTitle
@@ -59,16 +59,20 @@ func (s *appliedGoScraper) ParseArticles() ([]core.Article, []core.Warning, erro
 		aPublishDateStr := e.ChildAttr(appliedGoDatePath, "datetime")
 		aPublishDate, aDateErr := core.ParseDate(appliedGoDateLayout, strings.TrimSpace(aPublishDateStr))
 		if aDateErr != nil {
-			lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("cannot parse article date '%s', %s", aPublishDate, aDateErr.Error())))
+			if aDateErr.Error() == core.ErrEmptyDate.Error() {
+				lError := core.EmptyFieldError{Field: core.PublishDateFieldName}
+				lWarnings = append(lWarnings, core.Warning(lError.Error()))
+			} else if aDateErr.Error() == core.ErrInvalidDateFormat.Error() {
+				lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("cannot parse article date '%s', %s", aPublishDate, aDateErr.Error())))
+			}
 		}
 		lNewArticle.PublishDate = aPublishDate
 
 		//Description
 		aDescription := e.ChildText(appliedGoDescrPath)
 		if aDescription == "" {
-			//TODO
-			//Link core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
-			lWarnings = append(lWarnings, "warning: description field is empty")
+			lError := core.EmptyFieldError{Field: core.DescriptionFieldName}
+			lWarnings = append(lWarnings, core.Warning(lError.Error()))
 		}
 		lNewArticle.Description = aDescription
 

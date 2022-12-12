@@ -91,7 +91,10 @@ func TestAppliedGoIncorrectUrlProtocol(t *testing.T) {
 
 // Tests the situation when the required field is empty (such as link and title)
 func TestAppliedGoScrapeEmptyRequiredFields(t *testing.T) {
-	lExpectedWarnings := []core.Warning{"error: link field is empty"}
+	lExpectedWarnings := []core.Warning{
+		"error: field is empty, field: Link",
+		"error: field is empty, field: Title",
+	}
 
 	lScraper := newAppliedGoScraper(TestDataURL + "AppliedGoArticleEmptyRequiredFields.htm")
 	lReceivedArticles, lReceivedWarnings, lReceivedErr := lScraper.ParseArticles()
@@ -114,8 +117,8 @@ func TestAppliedGoScrapeEmptyNonRequiredFields(t *testing.T) {
 		},
 	}
 	lExpectedWarnings := []core.Warning{
-		core.Warning(fmt.Sprintf("cannot parse article date '%s', empty Date", lExpectedDate)),
-		"warning: description field is empty",
+		"error: field is empty, field: PublishDate",
+		"error: field is empty, field: Description",
 	}
 
 	lScraper := newAppliedGoScraper(TestDataURL + "AppliedGoArticleEmptyNonRequiredFields.htm")
