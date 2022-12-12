@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"errors"
+	"fmt"
 	"github.com/gocolly/colly"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"net/http"
@@ -19,48 +19,47 @@ const (
 	appliedGoDescrPath   = "div[class=\"summary doc \"] > p"
 )
 
-type appliedGoParser struct {
-	articles []core.Article
-	warnings []string
-	errors   []error
+type appliedGoScraper struct {
+	url string
 }
 
-func newAppliedGoParser() appliedGoParser {
-	return appliedGoParser{
-		articles: make([]core.Article, 0),
-		warnings: make([]string, 0),
-		errors:   make([]error, 0),
+func newAppliedGoScraper(url string) core.ArticleScraper {
+	return &appliedGoScraper{
+		url: url,
 	}
 }
 
-func (p *appliedGoParser) ParseAppliedGo(link string) error {
+func (s *appliedGoScraper) ParseArticles() ([]core.Article, []core.Warning, error) {
+	lArticles := make([]core.Article, 0)
+	lWarnings := make([]core.Warning, 0)
+
 	var lArticleCollector = colly.NewCollector()
 	lArticleCollector.OnHTML(appliedGoArticlePath, func(e *colly.HTMLElement) {
 		lNewArticle := core.Article{}
 
-		//Link
+		//Link (required field)
 		aLink := e.ChildAttr(appliedGoLinkPath, "href")
 		if aLink == "" {
 			//TODO
-			p.errors = append(p.errors, errors.New("error: link field is empty"))
+			lWarnings = append(lWarnings, "error: link field is empty")
 			return
 		}
 		lNewArticle.Link = aLink
 
-		//Title
+		//Title (required field)
 		aTitle := e.ChildText(appliedGoTitlePath)
 		if aTitle == "" {
 			//TODO
-			p.errors = append(p.errors, errors.New("error: title field is empty"))
+			lWarnings = append(lWarnings, "error: title field is empty")
 			return
 		}
 		lNewArticle.Title = aTitle
 
 		//Date
 		aPublishDateStr := e.ChildAttr(appliedGoDatePath, "datetime")
-		aPublishDate, dateErr := core.ParseDate(appliedGoDateLayout, strings.TrimSpace(aPublishDateStr))
-		if dateErr != nil {
-			p.errors = append(p.errors, dateErr)
+		aPublishDate, aDateErr := core.ParseDate(appliedGoDateLayout, strings.TrimSpace(aPublishDateStr))
+		if aDateErr != nil {
+			lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("cannot parse article date '%s', %s", aPublishDate, aDateErr.Error())))
 		}
 		lNewArticle.PublishDate = aPublishDate
 
@@ -68,26 +67,25 @@ func (p *appliedGoParser) ParseAppliedGo(link string) error {
 		aDescription := e.ChildText(appliedGoDescrPath)
 		if aDescription == "" {
 			//TODO
-			p.warnings = append(p.warnings, "warning: description field is empty")
+			//Link core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
+			lWarnings = append(lWarnings, "warning: description field is empty")
 		}
 		lNewArticle.Description = aDescription
 
-		p.articles = append(p.articles, lNewArticle)
+		lArticles = append(lArticles, lNewArticle)
 	})
 
-	_, lCallErr := http.Get(link)
+	_, lCallErr := http.Get(s.url)
 	if lCallErr != nil {
-		return lCallErr
+		return nil, nil, lCallErr
 	}
 
-	lVisitErr := lArticleCollector.Visit(link)
+	lVisitErr := lArticleCollector.Visit(s.url)
 	lArticleCollector.Wait()
 
-	if len(p.articles) == 0 && len(p.errors) == 0 {
-		return core.ErrNoArticles
+	if len(lArticles) == 0 && len(lWarnings) == 0 {
+		return nil, nil, core.ErrNoArticles
 	}
 
-	return lVisitErr
+	return lArticles, lWarnings, lVisitErr
 }
-
-//Link core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
