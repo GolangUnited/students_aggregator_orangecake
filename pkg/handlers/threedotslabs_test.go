@@ -105,7 +105,7 @@ func TestThreeDotsLabsData(t *testing.T) {
 		{Author: /*e*/ "", Title: "Title 6", Link: "LinkUrl", Description: /*em*/ "", PublishDate: core.NormalizeDate(time.Now())},
 	}
 
-	lExpectedWarnings := [...]string{
+	lExpectedWarnings := [...]core.Warning{
 		"Warning[1,0]: article Header is empty",
 		"Warning[2,0]: invalid article Header format",
 		"Warning[3,0]: cannot parse article date 'Feb 31, 2022'. invalid Date format",
@@ -151,7 +151,7 @@ func TestThreeDotsLabsUrl(t *testing.T) {
 
 	lHandler := NewThreeDotsLabsHandler(THREE_DOTS_LABS_URL)
 
-	lArticles, lWarnings, lErr := lHandler.GetArticles()
+	lArticles, lWarnings, lErr := lHandler.ParseArticles()
 
 	assert.Nil(t, lErr, "Error")
 	assert.Equal(t, EXPECTED_COUNT, len(lArticles), "ArticleCount")
@@ -162,7 +162,7 @@ func TestThreeDotsLabsEmptyUrl(t *testing.T) {
 	// test HTTP Error (empty URL)
 	lHandler := NewThreeDotsLabsHandler("")
 
-	lArticles, lWarnings, lErr := lHandler.GetArticles()
+	lArticles, lWarnings, lErr := lHandler.ParseArticles()
 
 	assert.Empty(t, lArticles, "Articles")
 	assert.Empty(t, lWarnings, "Warnings")
@@ -177,7 +177,7 @@ func TestThreeDotsLabsHttpStatusError(t *testing.T) {
 	defer lTestServer.Close()
 
 	lHandler := NewThreeDotsLabsHandler(lTestServer.URL + "/not_found.html")
-	lArticles, lWarnings, lErr := lHandler.GetArticles()
+	lArticles, lWarnings, lErr := lHandler.ParseArticles()
 
 	assert.Nil(t, lArticles, "Articles")
 	assert.Nil(t, lWarnings, "Warnings")

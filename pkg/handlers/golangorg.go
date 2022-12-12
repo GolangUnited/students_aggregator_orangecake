@@ -19,26 +19,26 @@ const (
 type GolangOrgHandler struct {
 	url      string
 	articles []core.Article
-	warnings []string
+	warnings []core.Warning
 }
 
 func NewGolangOrgHandler(aUrl string) GolangOrgHandler {
 	return GolangOrgHandler{
 		url:      aUrl,
 		articles: make([]core.Article, 0),
-		warnings: make([]string, 0),
+		warnings: make([]core.Warning, 0),
 	}
 }
 
 type golangOrgParser struct {
 	article  core.Article
-	warnings []string
+	warnings []core.Warning
 }
 
 func newGolangOrgParser() golangOrgParser {
 	return golangOrgParser{
 		article:  core.Article{},
-		warnings: make([]string, 0),
+		warnings: make([]core.Warning, 0),
 	}
 }
 
@@ -98,7 +98,7 @@ func (g *golangOrgParser) parseDate(aSelection *goquery.Selection) {
 		lDateStr = strings.TrimSpace(lDateStr)
 		lDate, lErr = core.ParseDate("_2 January 2006", lDateStr)
 		if lErr != nil {
-			g.addWarning(fmt.Sprintf("cannot parse article date '%s'. %s", lDateStr, lErr.Error()))
+			g.addWarning(core.Warning(fmt.Sprintf("cannot parse article date '%s'. %s", lDateStr, lErr.Error())))
 		}
 	} else {
 		g.addWarning("article date node not found")
@@ -124,7 +124,7 @@ func (g *golangOrgParser) parseDescription(aSelection *goquery.Selection) {
 	}
 }
 
-func (g GolangOrgHandler) GetArticles() (aArticles []core.Article, aWarnings []string, aError error) {
+func (g GolangOrgHandler) ParseArticles() (aArticles []core.Article, aWarnings []core.Warning, aError error) {
 
 	lResp, lErr := http.Get(g.url)
 	if lErr != nil {
@@ -157,10 +157,10 @@ func (p *golangOrgParser) parseArticle(aSelection *goquery.Selection) error {
 }
 
 // GolangOrgScraper takes data from tip.golang.com/blog/all and converts it into a structure of json.
-func (g *GolangOrgHandler) GolangOrgScraper(aHtmlReader io.Reader) ([]core.Article, []string, error) {
+func (g *GolangOrgHandler) GolangOrgScraper(aHtmlReader io.Reader) ([]core.Article, []core.Warning, error) {
 
 	lArticles := make([]core.Article, 0)
-	lWarnings := make([]string, 0)
+	lWarnings := make([]core.Warning, 0)
 
 	lDoc, lErr := goquery.NewDocumentFromReader(aHtmlReader)
 	if lErr != nil {
@@ -176,11 +176,11 @@ func (g *GolangOrgHandler) GolangOrgScraper(aHtmlReader io.Reader) ([]core.Artic
 			lArticles = append(lArticles, lParser.article)
 			if len(lParser.warnings) > 0 {
 				for i, lWarning := range lParser.warnings {
-					lWarnings = append(lWarnings, fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning))
+					lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning)))
 				}
 			}
 		} else {
-			lWarnings = append(lWarnings, fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error()))
+			lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error())))
 		}
 	})
 
@@ -188,7 +188,7 @@ func (g *GolangOrgHandler) GolangOrgScraper(aHtmlReader io.Reader) ([]core.Artic
 
 }
 
-func (g *golangOrgParser) addWarning(aWarning string) {
+func (g *golangOrgParser) addWarning(aWarning core.Warning) {
 	g.warnings = append(g.warnings, aWarning)
 }
 

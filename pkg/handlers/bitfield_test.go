@@ -36,7 +36,7 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 		{Author: "", Title: "Title", Link: lDefaultLink, Description: "", PublishDate: lDefaultDate},
 	}
 
-	lExpectedWarnings := []string{
+	lExpectedWarnings := []core.Warning{
 		"Warning[1,0]: article date attribute not exists",
 		"Warning[2,0]: article date node not found",
 		"Warning[3,0]: cannot parse article date ''. empty Date",
@@ -52,7 +52,7 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 	}
 
 	bitfieldHandler := NewBitfieldScrapper(testServer.URL + "/bitfield_test.html")
-	lArticles, lWarnings, lErr := bitfieldHandler.GetArticles()
+	lArticles, lWarnings, lErr := bitfieldHandler.ParseArticles()
 	if lErr != nil {
 		t.Error(lErr.Error())
 		return
@@ -74,7 +74,7 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 
 func TestBitfieldHandler_EmptyUrl(t *testing.T) {
 	bitfieldHandler := NewBitfieldScrapper("")
-	lArticles, lWarnings, lErr := bitfieldHandler.GetArticles()
+	lArticles, lWarnings, lErr := bitfieldHandler.ParseArticles()
 	if lArticles != nil && lWarnings != nil {
 		t.Errorf("articles and warnings must be nil")
 	}

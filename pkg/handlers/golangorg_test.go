@@ -62,7 +62,7 @@ func TestGolangOrgData(t *testing.T) {
 		},
 	}
 
-	lExpectedWarnings := []string{
+	lExpectedWarnings := []core.Warning{
 		"Warning[0,0]: article's author is empty",
 		"Warning[1,0]: cannot parse article date ''. empty Date",
 		"Warning[1,1]: article description is empty",
@@ -74,7 +74,7 @@ func TestGolangOrgData(t *testing.T) {
 	}
 
 	h := NewGolangOrgHandler(testServer.URL + GolangOrgHtml)
-	lArticles, lWarnings, lErr := h.GetArticles()
+	lArticles, lWarnings, lErr := h.ParseArticles()
 	if lErr != nil {
 		t.Error(lErr.Error())
 		return
@@ -95,7 +95,7 @@ func TestGolangOrgData(t *testing.T) {
 
 func TestGolangOrgHandler_EmptyUrl(t *testing.T) {
 	golangOrgHandler := NewGolangOrgHandler("")
-	lArticles, lWarnings, lErr := golangOrgHandler.GetArticles()
+	lArticles, lWarnings, lErr := golangOrgHandler.ParseArticles()
 	if lArticles != nil && lWarnings != nil {
 		t.Errorf("articles and warnings must be nil")
 	}

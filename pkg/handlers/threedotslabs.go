@@ -26,23 +26,23 @@ func NewThreeDotsLabsHandler(aUrl string) ThreeDotsLabsHandler {
 
 type threeDotsLabsParser struct {
 	Article  core.Article
-	Warnings []string
+	Warnings []core.Warning
 }
 
 func newThreeDotsLabsParser() threeDotsLabsParser {
 	return threeDotsLabsParser{
 		Article:  core.Article{},
-		Warnings: make([]string, 0),
+		Warnings: make([]core.Warning, 0),
 	}
 }
 
-func (p *threeDotsLabsParser) addWarning(aWarning string) {
+func (p *threeDotsLabsParser) addWarning(aWarning core.Warning) {
 	// TODO: write warning to log
 	p.Warnings = append(p.Warnings, aWarning)
 }
 
 func (p *threeDotsLabsParser) addWarningf(aFormat string, aArgs ...any) {
-	p.addWarning(fmt.Sprintf(aFormat, aArgs...))
+	p.addWarning(core.Warning(fmt.Sprintf(aFormat, aArgs...)))
 }
 
 func (p *threeDotsLabsParser) parseAuthorAndDateHeader(aNode *goquery.Selection) {
@@ -136,14 +136,14 @@ func (p *threeDotsLabsParser) parseArticle(aNode *goquery.Selection) error {
 	return nil
 }
 
-func (h ThreeDotsLabsHandler) ParseHtml(aHtmlReader io.Reader) (aArticle []core.Article, aWarnings []string, aError error) {
+func (h ThreeDotsLabsHandler) ParseHtml(aHtmlReader io.Reader) (aArticle []core.Article, aWarnings []core.Warning, aError error) {
 	lHtml, lError := goquery.NewDocumentFromReader(aHtmlReader)
 	if lError != nil {
 		return nil, nil, lError
 	}
 
 	lArticles := make([]core.Article, 0)
-	lWarnings := make([]string, 0)
+	lWarnings := make([]core.Warning, 0)
 
 	lHtml.Find("article.post-entry").Each(func(aIndex int, aNode *goquery.Selection) {
 		lParser := newThreeDotsLabsParser()
@@ -152,18 +152,18 @@ func (h ThreeDotsLabsHandler) ParseHtml(aHtmlReader io.Reader) (aArticle []core.
 			lArticles = append(lArticles, lParser.Article)
 			if len(lParser.Warnings) > 0 {
 				for i, lWarning := range lParser.Warnings {
-					lWarnings = append(lWarnings, fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning))
+					lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning)))
 				}
 			}
 		} else {
-			lWarnings = append(lWarnings, fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error()))
+			lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error())))
 		}
 	})
 
 	return lArticles, lWarnings, nil
 }
 
-func (h ThreeDotsLabsHandler) GetArticles() (aArticles []core.Article, aWarnings []string, aError error) {
+func (h ThreeDotsLabsHandler) ParseArticles() (aArticles []core.Article, aWarnings []core.Warning, aError error) {
 
 	lResponse, lError := http.Get(h.url)
 	if lError != nil {

@@ -16,7 +16,7 @@ const BITFIELD_URL = "https://bitfieldconsulting.com/golang"
 type BitfieldHandler struct {
 	url      string
 	articles []core.Article
-	warnings []string
+	warnings []core.Warning
 }
 
 // NewBitfieldScrapper - return new bitfield scrapper struct
@@ -24,19 +24,19 @@ func NewBitfieldScrapper(aurl string) *BitfieldHandler {
 	return &BitfieldHandler{
 		url:      aurl,
 		articles: make([]core.Article, 0),
-		warnings: make([]string, 0),
+		warnings: make([]core.Warning, 0),
 	}
 }
 
 type bitfieldParser struct {
 	article  core.Article
-	warnings []string
+	warnings []core.Warning
 }
 
 func newBitfieldParser() bitfieldParser {
 	return bitfieldParser{
 		article:  core.Article{},
-		warnings: make([]string, 0),
+		warnings: make([]core.Warning, 0),
 	}
 }
 
@@ -114,7 +114,7 @@ func (b *bitfieldParser) parseDate(selection *goquery.Selection) {
 			lDateStr = strings.TrimSpace(lDateStr)
 			lDate, lErr = core.ParseDate("2006-01-02", lDateStr)
 			if lErr != nil {
-				b.addWarning(fmt.Sprintf("cannot parse article date '%s'. %s", lDateStr, lErr.Error()))
+				b.addWarning(core.Warning(fmt.Sprintf("cannot parse article date '%s'. %s", lDateStr, lErr.Error())))
 			}
 		}
 	} else {
@@ -124,7 +124,7 @@ func (b *bitfieldParser) parseDate(selection *goquery.Selection) {
 	b.article.PublishDate = lDate
 }
 
-func (b *bitfieldParser) addWarning(aWarning string) {
+func (b *bitfieldParser) addWarning(aWarning core.Warning) {
 	b.warnings = append(b.warnings, aWarning)
 }
 
@@ -139,12 +139,12 @@ func (b *BitfieldHandler) articlesSearching() error {
 			b.articles = append(b.articles, lParser.article)
 			if len(lParser.warnings) > 0 {
 				for i, warning := range lParser.warnings {
-					b.warnings = append(b.warnings, fmt.Sprintf("Warning[%d,%d]: %s", element.Index, i, warning))
+					b.warnings = append(b.warnings, core.Warning(fmt.Sprintf("Warning[%d,%d]: %s", element.Index, i, warning)))
 				}
 			}
 		}
 		if lErr != nil {
-			b.warnings = append(b.warnings, fmt.Sprintf("Error[%d]: %s", element.Index, lErr.Error()))
+			b.warnings = append(b.warnings, core.Warning(fmt.Sprintf("Error[%d]: %s", element.Index, lErr.Error())))
 		}
 	})
 
@@ -170,8 +170,8 @@ func (b *bitfieldParser) parseArticle(element *colly.HTMLElement) error {
 	return nil
 }
 
-// GetArticles - return array of articles
-func (b *BitfieldHandler) GetArticles() ([]core.Article, []string, error) {
+// ArticleScraper - return array of articles
+func (b *BitfieldHandler) ParseArticles() ([]core.Article, []core.Warning, error) {
 	lErr := b.articlesSearching()
 	if lErr != nil {
 		return nil, nil, lErr
