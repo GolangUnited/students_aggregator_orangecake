@@ -69,7 +69,7 @@ func TestAppliedGoGetArticlesList(t *testing.T) {
 			PublishDate: time.Date(2022, time.January, 28, 0, 0, 0, 0, time.UTC),
 		},
 	}
-	lScraper := newAppliedGoScraper(TestDataURL + "AppliedGoMain.htm")
+	lScraper := NewAppliedGoScraper(TestDataURL+"AppliedGoMain.htm", nil)
 	lReceivedArticles, lReceivedWarnings, lReceivedErr := lScraper.ParseArticles()
 
 	assert.Equal(t, true, reflect.DeepEqual(lExpectedArticles, lReceivedArticles), "invalid articles content")
@@ -81,7 +81,7 @@ func TestAppliedGoIncorrectUrlProtocol(t *testing.T) {
 	var badUrl = ""
 	var lExpectedErr = fmt.Errorf("unsupported protocol scheme %q", badUrl)
 
-	lScraper := newAppliedGoScraper(badUrl)
+	lScraper := NewAppliedGoScraper(badUrl, nil)
 	lReceivedArticles, lReceivedWarnings, lReceivedErr := lScraper.ParseArticles()
 
 	assert.Equal(t, []core.Article(nil), lReceivedArticles, "there should be no articles")
@@ -96,7 +96,7 @@ func TestAppliedGoScrapeEmptyRequiredFields(t *testing.T) {
 		"error: field is empty, field: Title",
 	}
 
-	lScraper := newAppliedGoScraper(TestDataURL + "AppliedGoArticleEmptyRequiredFields.htm")
+	lScraper := NewAppliedGoScraper(TestDataURL+"AppliedGoArticleEmptyRequiredFields.htm", nil)
 	lReceivedArticles, lReceivedWarnings, lReceivedErr := lScraper.ParseArticles()
 
 	assert.Equal(t, []core.Article{}, lReceivedArticles, "there should be no articles")
@@ -121,7 +121,7 @@ func TestAppliedGoScrapeEmptyNonRequiredFields(t *testing.T) {
 		"error: field is empty, field: Description",
 	}
 
-	lScraper := newAppliedGoScraper(TestDataURL + "AppliedGoArticleEmptyNonRequiredFields.htm")
+	lScraper := NewAppliedGoScraper(TestDataURL+"AppliedGoArticleEmptyNonRequiredFields.htm", nil)
 	lReceivedArticles, lReceivedWarnings, lReceivedErr := lScraper.ParseArticles()
 
 	assert.Equal(t, lExpectedArticle, lReceivedArticles, "invalid articles content")
@@ -144,7 +144,7 @@ func TestAppliedGoScrapeInvalidDate(t *testing.T) {
 		core.Warning(fmt.Sprintf("cannot parse article date '%s', invalid Date format", lExpectedDate)),
 	}
 
-	lScraper := newAppliedGoScraper(TestDataURL + "AppliedGoArticleInvalidDate.htm")
+	lScraper := NewAppliedGoScraper(TestDataURL+"AppliedGoArticleInvalidDate.htm", nil)
 	lReceivedArticles, lReceivedWarnings, lReceivedErr := lScraper.ParseArticles()
 
 	assert.Equal(t, lExpectedArticle, lReceivedArticles, "invalid articles content")
@@ -153,7 +153,7 @@ func TestAppliedGoScrapeInvalidDate(t *testing.T) {
 }
 
 func TestAppliedGoNoArticles(t *testing.T) {
-	lScraper := newAppliedGoScraper(TestDataURL + "AppliedGoNoArticles.htm")
+	lScraper := NewAppliedGoScraper(TestDataURL+"AppliedGoNoArticles.htm", nil)
 	lReceivedArticles, lReceivedWarnings, lReceivedErr := lScraper.ParseArticles()
 
 	assert.Equal(t, []core.Article(nil), lReceivedArticles, "there should be no articles")
@@ -161,8 +161,8 @@ func TestAppliedGoNoArticles(t *testing.T) {
 	assert.Equal(t, core.ErrNoArticles, lReceivedErr, "invalid error message")
 }
 
-func TestScraperConformityToLoggerInterface(t *testing.T) {
-	lScraper := newAppliedGoScraper("SomeUrl")
+func TestScraperConformityToScraperInterface(t *testing.T) {
+	lScraper := NewAppliedGoScraper("SomeUrl", nil)
 	_, ok := lScraper.(core.ArticleScraper)
 	assert.True(t, ok, "The scraper doesn't conform to the core.ArticleScraper interface.")
 }

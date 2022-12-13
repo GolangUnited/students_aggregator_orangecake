@@ -20,12 +20,14 @@ const (
 )
 
 type appliedGoScraper struct {
-	url string
+	url    string
+	logger core.Logger
 }
 
-func newAppliedGoScraper(url string) core.ArticleScraper {
+func NewAppliedGoScraper(url string, logger core.Logger) core.ArticleScraper {
 	return &appliedGoScraper{
-		url: url,
+		url:    url,
+		logger: logger,
 	}
 }
 
