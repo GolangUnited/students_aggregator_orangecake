@@ -2,24 +2,28 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	_ "github.com/PuerkitoBio/goquery" // temporary import to init go.mod and go.sum and avoid compiler errors
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
 func main() {
+	var logger core.Logger = core.NewZeroLogger(os.Stdout)
+	logger.Info("Starting the aggregator's work.")
+
 	var lArticles []core.Article
 
 	for i, lArticle := range lArticles {
-		fmt.Printf("Node %d: %s\n", i, lArticle.Title)
-		fmt.Printf("  Author: %s\n", lArticle.Author)
-		fmt.Printf("  Date: %s\n", lArticle.PublishDate.Format("Jan _2, 2006"))
-		fmt.Printf("  URL: %s\n", lArticle.Link)
-		fmt.Printf("  Description:\n    %s\n\n", lArticle.Description)
+		lArticleDescr := fmt.Sprintf("Article %d: %s\n", i, lArticle.Title)
+		lArticleDescr += fmt.Sprintf("  Author: %s\n", lArticle.Author)
+		lArticleDescr += fmt.Sprintf("  Date: %s\n", lArticle.PublishDate.Format("Jan _2, 2006"))
+		lArticleDescr += fmt.Sprintf("  URL: %s\n", lArticle.Link)
+		lArticleDescr += fmt.Sprintf("  Description:\n    %s\n\n", lArticle.Description)
+
+		logger.Info(lArticleDescr)
 	}
 
-	fmt.Println()
-	fmt.Println()
-	fmt.Printf("  %d Articles detected.", len(lArticles))
-	fmt.Println()
+	logger.Info("\n\n")
+	logger.Info(fmt.Sprintf("  %d Articles detected.\n", len(lArticles)))
 }
