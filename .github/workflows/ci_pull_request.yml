@@ -27,9 +27,10 @@ jobs:
         uses: golangci/golangci-lint-action@v3.3.1
         continue-on-error: true
         id: lints
+        run: echo "::set-output name=lint_res::$prefix"
 
       - name: Create a ling log file
-        run: echo ${{steps.lints.outputs.output}} > lint_results.txt
+        run: echo ${{ steps.lints.outputs.stderr }} > lint_results.txt
 
       - name: Test
         run: |
