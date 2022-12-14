@@ -20,13 +20,13 @@ var ScrappersMap = map[string]ScrapperConstruct{
 		return handlers.NewThreeDotsLabsHandler(url, logger)
 	},
 	"hashnode": func(url string, logger core.Logger) core.ArticleScraper {
-		return nil //handlers.NewHashnodeScraper(&log.Logger{} /*TODO change log.logger to core.logger*/, url)
+		return nil //handlers.NewHashnodeScraper(url, logger)
 	},
 	"appliedgo": func(url string, logger core.Logger) core.ArticleScraper {
 		return handlers.NewAppliedGoScraper(url, logger)
 	},
 	"golangorg": func(url string, logger core.Logger) core.ArticleScraper {
-		return handlers.NewGolangOrgHandler(url /*TODO add logger to constructor*/)
+		return nil //handlers.NewGolangOrgHandler(url /*TODO add logger to constructor*/)
 	},
 }
 
@@ -60,8 +60,15 @@ func main() {
 func CreateScrappers(aConfig *AggregatorConfig, aLogger core.Logger) []core.ArticleScraper {
 	lScrappers := make([]core.ArticleScraper, 0)
 	for _, value := range aConfig.Handlers {
-		scrapper := ScrappersMap[value.Handler](value.URL, aLogger)
-		lScrappers = append(lScrappers, scrapper)
+		scrapperConstruct, ok := ScrappersMap[value.Handler]
+		if ok {
+			scrapper := scrapperConstruct(value.URL, aLogger)
+			if scrapper == nil {
+				aLogger.Warn(fmt.Sprintf("handler: %s error: %s", value, "is nil"))
+				continue
+			}
+			lScrappers = append(lScrappers, scrapper)
+		}
 	}
 
 	return lScrappers
