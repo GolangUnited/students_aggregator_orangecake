@@ -15,50 +15,53 @@ const BITFIELD_URL = "https://bitfieldconsulting.com/golang"
 
 type BitfieldHandler struct {
 	url      string
+	log      core.Logger
 	articles []core.Article
 	warnings []core.Warning
 }
 
 // NewBitfieldScrapper - return new bitfield scrapper struct
-func NewBitfieldScrapper(aurl string) *BitfieldHandler {
+func NewBitfieldScrapper(aUrl string, aLog core.Logger) core.ArticleScraper {
 	return &BitfieldHandler{
-		url:      aurl,
+		url:      aUrl,
+		log:      aLog,
 		articles: make([]core.Article, 0),
 		warnings: make([]core.Warning, 0),
 	}
 }
 
 type bitfieldParser struct {
+	log      core.Logger
 	article  core.Article
 	warnings []core.Warning
 }
 
-func newBitfieldParser() bitfieldParser {
+func newBitfieldParser(aLog core.Logger) bitfieldParser {
 	return bitfieldParser{
+		log:      aLog,
 		article:  core.Article{},
 		warnings: make([]core.Warning, 0),
 	}
 }
 
 func (b *bitfieldParser) parseTitleLink(selection *goquery.Selection) error {
-	// TODO: replace errors
 	if selection.Nodes == nil {
-		return errors.New("article title and url node not found")
+		return core.RequiredFieldError{ErrorType: core.ErrNodeNotFound, Field: core.TitleFieldName}
 	}
 
 	lTitle := strings.TrimSpace(selection.First().Clone().Children().Remove().End().Text())
 	if len(lTitle) == 0 {
-		return errors.New("article title is empty")
+		return core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}
 	}
 
 	lUrl, lExists := selection.Attr("href")
 	if !lExists {
-		return errors.New("article link attribute not found")
+		return core.RequiredFieldError{ErrorType: core.ErrAttributeNotExists, Field: core.LinkFieldName}
 	}
 
 	lLink := strings.TrimSpace(lUrl)
 	if len(lLink) == 0 {
-		return errors.New("article link is empty")
+		return core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
 	}
 
 	lLink, lErr := resolveURL(BITFIELD_URL, lLink)
@@ -125,6 +128,7 @@ func (b *bitfieldParser) parseDate(selection *goquery.Selection) {
 }
 
 func (b *bitfieldParser) addWarning(aWarning core.Warning) {
+	b.log.Info(string(aWarning))
 	b.warnings = append(b.warnings, aWarning)
 }
 
@@ -133,7 +137,7 @@ func (b *BitfieldHandler) articlesSearching() error {
 	lCollector := colly.NewCollector()
 
 	lCollector.OnHTML("article > div.entry-text", func(element *colly.HTMLElement) {
-		lParser := newBitfieldParser()
+		lParser := newBitfieldParser(b.log)
 		lErr := lParser.parseArticle(element)
 		if lErr == nil {
 			b.articles = append(b.articles, lParser.article)
@@ -144,6 +148,7 @@ func (b *BitfieldHandler) articlesSearching() error {
 			}
 		}
 		if lErr != nil {
+			b.log.Warn(lErr.Error())
 			b.warnings = append(b.warnings, core.Warning(fmt.Sprintf("Error[%d]: %s", element.Index, lErr.Error())))
 		}
 	})
@@ -170,7 +175,7 @@ func (b *bitfieldParser) parseArticle(element *colly.HTMLElement) error {
 	return nil
 }
 
-// ArticleScraper - return array of articles
+// ParseArticles - return array of articles
 func (b *BitfieldHandler) ParseArticles() ([]core.Article, []core.Warning, error) {
 	lErr := b.articlesSearching()
 	if lErr != nil {
