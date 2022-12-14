@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	_ "github.com/PuerkitoBio/goquery" // temporary import to init go.mod and go.sum and avoid compiler errors
+	"os"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"github.com/indikator/aggregator_orange_cake/pkg/handlers"
-	"log"
 )
 
 type ScrapperConstruct func(string, *core.Logger) interface{}
@@ -21,10 +20,10 @@ var ScrappersMap = map[string]ScrapperConstruct{
 		return handlers.NewThreeDotsLabsHandler(url /*TODO add logger to constructor*/)
 	},
 	"hashnode": func(url string, logger *core.Logger) interface{} {
-		return handlers.NewHashnodeScraper(&log.Logger{} /*TODO change log.logger to core.logger*/, url)
+		return nil //handlers.NewHashnodeScraper(&log.Logger{} /*TODO change log.logger to core.logger*/, url)
 	},
 	"appliedgo": func(url string, logger *core.Logger) interface{} {
-		return handlers.NewAppliedGoParser( /*TODO add url to constructor*/ /*TODO add logger to constructor*/ )
+		return handlers.NewAppliedGoScraper(url, *logger)
 	},
 	"golangorg": func(url string, logger *core.Logger) interface{} {
 		return handlers.NewGolangOrgHandler(url /*TODO add logger to constructor*/)
@@ -32,6 +31,9 @@ var ScrappersMap = map[string]ScrapperConstruct{
 }
 
 func main() {
+	var logger core.Logger = core.NewZeroLogger(os.Stdout)
+	logger.Info("Starting the aggregator's work.")
+
 	lConfig, err := NewAggregatorConfig()
 	if err != nil {
 		fmt.Println(err)
@@ -39,18 +41,22 @@ func main() {
 
 	scrappers := CreateScrappers(lConfig, nil)
 
-	articles, warnings := GetArticles(scrappers, nil)
+	lArticles, lWarnings := GetArticles(scrappers, nil)
 
-	for _, article := range articles {
-		fmt.Printf("Node %s:\n", article.Title)
-		fmt.Printf("  Author: %s\n", article.Author)
-		fmt.Printf("  Date: %s\n", article.PublishDate.Format("Jan _2, 2006"))
-		fmt.Printf("  URL: %s\n", article.Link)
-		fmt.Printf("  Description:\n    %s\n\n", article.Description)
+	for i, lArticle := range lArticles {
+		lArticleDescr := fmt.Sprintf("Article %d: %s\n", i, lArticle.Title)
+		lArticleDescr += fmt.Sprintf("  Author: %s\n", lArticle.Author)
+		lArticleDescr += fmt.Sprintf("  Date: %s\n", lArticle.PublishDate.Format("Jan _2, 2006"))
+		lArticleDescr += fmt.Sprintf("  URL: %s\n", lArticle.Link)
+		lArticleDescr += fmt.Sprintf("  Description:\n    %s\n\n", lArticle.Description)
+
+		logger.Info(lArticleDescr)
 	}
 
+	logger.Info("\n\n")
+	logger.Info(fmt.Sprintf("  %d Articles detected.\n", len(lArticles)))
 	fmt.Println("----WARNINGS----")
-	fmt.Println(warnings)
+	fmt.Println(lWarnings)
 }
 
 func CreateScrappers(aConfig *AggregatorConfig, aLogger *core.Logger) []core.ArticleScraper {
