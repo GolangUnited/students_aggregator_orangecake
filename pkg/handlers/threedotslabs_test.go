@@ -113,10 +113,10 @@ func TestThreeDotsLabsData(t *testing.T) {
 		"Warning[4,1]: cannot parse article date ''. empty Date",
 		"Warning[5,0]: article Header node not found",
 		"Warning[5,1]: article Description is empty",
-		"Error[6]: article Link node not found",
-		"Error[7]: article Title is empty",
-		"Error[8]: article Link URL not found",
-		"Error[9]: article Link URL is empty",
+		"Error[6]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrNodeNotFound, Field: core.LinkFieldName}.Error()),
+		"Error[7]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}.Error()),
+		"Error[8]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrAttributeNotExists, Field: core.LinkFieldName}.Error()),
+		"Error[9]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}.Error()),
 	}
 
 	lTestData, lErr := readTestFile("threedotslabs_test.html")
@@ -181,5 +181,5 @@ func TestThreeDotsLabsHttpStatusError(t *testing.T) {
 
 	assert.Nil(t, lArticles, "Articles")
 	assert.Nil(t, lWarnings, "Warnings")
-	assert.EqualError(t, lErr, "status code error: 404 404 Not Found")
+	assert.EqualError(t, lErr, "response error code: 404 status: 404 Not Found")
 }

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -101,22 +100,22 @@ func (p *threeDotsLabsParser) parseTitleAndLink(aNode *goquery.Selection) error 
 	// Title and Link are both required
 
 	if len(aNode.Nodes) == 0 {
-		return errors.New("article Link node not found")
+		return core.RequiredFieldError{ErrorType: core.ErrNodeNotFound, Field: core.LinkFieldName}
 	}
 
 	lTitle := strings.TrimSpace(aNode.Text())
 	if len(lTitle) <= 0 {
-		return errors.New("article Title is empty")
+		return core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}
 	}
 
 	lUrl, lExists := aNode.Attr("href")
 	if !lExists {
-		return errors.New("article Link URL not found")
+		return core.RequiredFieldError{ErrorType: core.ErrAttributeNotExists, Field: core.LinkFieldName}
 	}
 
 	lLink := strings.TrimSpace(lUrl)
 	if len(lLink) <= 0 {
-		return errors.New("article Link URL is empty")
+		return core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
 	}
 
 	p.Article.Title = lTitle
@@ -177,8 +176,9 @@ func (h ThreeDotsLabsHandler) ParseArticles() (aArticles []core.Article, aWarnin
 	defer lResponse.Body.Close()
 
 	if lResponse.StatusCode != 200 {
-		lMsg := fmt.Sprintf("status code error: %d %s", lResponse.StatusCode, lResponse.Status)
-		return nil, nil, errors.New(lMsg)
+
+		lMsg := core.ResponseError{Status: lResponse.Status, Code: lResponse.StatusCode}
+		return nil, nil, lMsg
 	}
 
 	return h.ParseHtml(lResponse.Body)
