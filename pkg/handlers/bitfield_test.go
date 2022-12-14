@@ -4,6 +4,7 @@ import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -45,13 +46,13 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 		"Warning[5,1]: article author node not found",
 		"Warning[6,0]: article description is empty",
 		"Warning[6,1]: article author is empty",
-		"Error[7]: article title and url node not found",
-		"Error[8]: article link attribute not found",
-		"Error[9]: article link is empty",
-		"Error[10]: article title is empty",
+		"Error[7]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrNodeNotFound, Field: core.TitleFieldName}.Error()),
+		"Error[8]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrAttributeNotExists, Field: core.LinkFieldName}.Error()),
+		"Error[9]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}.Error()),
+		"Error[10]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}.Error()),
 	}
 
-	bitfieldHandler := NewBitfieldScrapper(testServer.URL + "/bitfield_test.html")
+	bitfieldHandler := NewBitfieldScrapper(testServer.URL+"/bitfield_test.html", core.NewZeroLogger(os.Stdout))
 	lArticles, lWarnings, lErr := bitfieldHandler.ParseArticles()
 	if lErr != nil {
 		t.Error(lErr.Error())
@@ -73,7 +74,7 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 }
 
 func TestBitfieldHandler_EmptyUrl(t *testing.T) {
-	bitfieldHandler := NewBitfieldScrapper("")
+	bitfieldHandler := NewBitfieldScrapper("", core.NewZeroLogger())
 	lArticles, lWarnings, lErr := bitfieldHandler.ParseArticles()
 	if lArticles != nil && lWarnings != nil {
 		t.Errorf("articles and warnings must be nil")
