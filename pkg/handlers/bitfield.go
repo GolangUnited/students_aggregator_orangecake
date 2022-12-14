@@ -128,7 +128,6 @@ func (b *bitfieldParser) parseDate(selection *goquery.Selection) {
 }
 
 func (b *bitfieldParser) addWarning(aWarning core.Warning) {
-	b.log.Info(string(aWarning))
 	b.warnings = append(b.warnings, aWarning)
 }
 
@@ -143,13 +142,16 @@ func (b *BitfieldHandler) articlesSearching() error {
 			b.articles = append(b.articles, lParser.article)
 			if len(lParser.warnings) > 0 {
 				for i, warning := range lParser.warnings {
-					b.warnings = append(b.warnings, core.Warning(fmt.Sprintf("Warning[%d,%d]: %s", element.Index, i, warning)))
+					strWarning := fmt.Sprintf("Warning[%d,%d]: %s", element.Index, i, warning)
+					b.log.Info(strWarning)
+					b.warnings = append(b.warnings, core.Warning(strWarning))
 				}
 			}
 		}
 		if lErr != nil {
-			b.log.Warn(lErr.Error())
-			b.warnings = append(b.warnings, core.Warning(fmt.Sprintf("Error[%d]: %s", element.Index, lErr.Error())))
+			strError := fmt.Sprintf(fmt.Sprintf("Error[%d]: %s", element.Index, lErr.Error()))
+			b.log.Warn(strError)
+			b.warnings = append(b.warnings, core.Warning(strError))
 		}
 	})
 
