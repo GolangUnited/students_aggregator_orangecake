@@ -18,13 +18,15 @@ const (
 
 type GolangOrgHandler struct {
 	url      string
+	log      core.Logger
 	articles []core.Article
 	warnings []core.Warning
 }
 
-func NewGolangOrgHandler(aUrl string) GolangOrgHandler {
+func NewGolangOrgHandler(aUrl string, aLogger core.Logger) GolangOrgHandler {
 	return GolangOrgHandler{
 		url:      aUrl,
+		log:      aLogger,
 		articles: make([]core.Article, 0),
 		warnings: make([]core.Warning, 0),
 	}
@@ -45,22 +47,22 @@ func newGolangOrgParser() golangOrgParser {
 func (p *golangOrgParser) parseTitleLink(aSelection *goquery.Selection) error {
 	// TODO: replace errors
 	if aSelection.Nodes == nil {
-		return errors.New("article title and url node not found")
+		return core.RequiredFieldError{ErrorType: core.ErrNodeNotFound, Field: core.TitleFieldName}
 	}
 
 	lTitle := aSelection.Find("a[href]").Text()
 	if len(lTitle) == 0 {
-		return errors.New("article's title is empty")
+		return core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}
 	}
 
 	lUrl, lOk := aSelection.Find("a").Attr("href")
 	if !lOk {
-		return errors.New("article's link attribute not found")
+		return core.RequiredFieldError{ErrorType: core.ErrAttributeNotExists, Field: core.LinkFieldName}
 	}
 
 	lLink := strings.TrimSpace(lUrl)
 	if len(lLink) == 0 {
-		return errors.New("article's link is empty")
+		return core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
 	}
 
 	lLink, lErr := resolveGolangOrgURL(GOLANG_ORG_URL, lLink)
@@ -176,11 +178,15 @@ func (g *GolangOrgHandler) GolangOrgScraper(aHtmlReader io.Reader) ([]core.Artic
 			lArticles = append(lArticles, lParser.article)
 			if len(lParser.warnings) > 0 {
 				for i, lWarning := range lParser.warnings {
-					lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning)))
+					strWarning := fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning)
+					g.log.Info(strWarning)
+					lWarnings = append(lWarnings, core.Warning(strWarning))
 				}
 			}
 		} else {
-			lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error())))
+			strError := fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error())
+			g.log.Warn(strError)
+			lWarnings = append(lWarnings, core.Warning(strError))
 		}
 	})
 

@@ -20,13 +20,13 @@ var ScrappersMap = map[string]ScrapperConstruct{
 		return handlers.NewThreeDotsLabsHandler(url, logger)
 	},
 	"hashnode": func(url string, logger core.Logger) core.ArticleScraper {
-		return nil //handlers.NewHashnodeScraper(url, logger)
+		return handlers.NewHashnodeScraper(url, logger)
 	},
 	"appliedgo": func(url string, logger core.Logger) core.ArticleScraper {
 		return handlers.NewAppliedGoScraper(url, logger)
 	},
 	"golangorg": func(url string, logger core.Logger) core.ArticleScraper {
-		return nil //handlers.NewGolangOrgHandler(url /*TODO add logger to constructor*/)
+		return handlers.NewGolangOrgHandler(url, logger)
 	},
 }
 
