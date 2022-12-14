@@ -87,7 +87,7 @@ func TestThreeDotsLabsParseError(t *testing.T) {
 	const READ_ERROR = "internal read error"
 	lReader := threeDotsLabsErrorIOReader{Error: errors.New(READ_ERROR)}
 
-	lHandler := NewThreeDotsLabsHandler("")
+	lHandler := NewThreeDotsLabsHandler("", core.NewZeroLogger(io.Discard))
 	lArticles, lWarnings, lErr := lHandler.ParseHtml(lReader)
 
 	assert.EqualError(t, lErr, READ_ERROR)
@@ -125,7 +125,7 @@ func TestThreeDotsLabsData(t *testing.T) {
 		return
 	}
 
-	lHandler := NewThreeDotsLabsHandler("")
+	lHandler := NewThreeDotsLabsHandler("", core.NewZeroLogger(io.Discard))
 	lArticles, lWarnings, lErr := lHandler.ParseHtml(lTestData)
 	if lErr != nil {
 		t.Error(lErr.Error())
@@ -149,7 +149,7 @@ func TestThreeDotsLabsUrl(t *testing.T) {
 	// test we can parse the actual web page, it should contain 10 articles and no warnings
 	const EXPECTED_COUNT = 10
 
-	lHandler := NewThreeDotsLabsHandler(THREE_DOTS_LABS_URL)
+	lHandler := NewThreeDotsLabsHandler(THREE_DOTS_LABS_URL, core.NewZeroLogger(io.Discard))
 
 	lArticles, lWarnings, lErr := lHandler.ParseArticles()
 
@@ -160,7 +160,7 @@ func TestThreeDotsLabsUrl(t *testing.T) {
 
 func TestThreeDotsLabsEmptyUrl(t *testing.T) {
 	// test HTTP Error (empty URL)
-	lHandler := NewThreeDotsLabsHandler("")
+	lHandler := NewThreeDotsLabsHandler("", core.NewZeroLogger(io.Discard))
 
 	lArticles, lWarnings, lErr := lHandler.ParseArticles()
 
@@ -176,7 +176,7 @@ func TestThreeDotsLabsHttpStatusError(t *testing.T) {
 	}
 	defer lTestServer.Close()
 
-	lHandler := NewThreeDotsLabsHandler(lTestServer.URL + "/not_found.html")
+	lHandler := NewThreeDotsLabsHandler(lTestServer.URL+"/not_found.html", core.NewZeroLogger(io.Discard))
 	lArticles, lWarnings, lErr := lHandler.ParseArticles()
 
 	assert.Nil(t, lArticles, "Articles")

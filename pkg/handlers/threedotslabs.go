@@ -16,11 +16,13 @@ const THREE_DOTS_LABS_URL = "https://threedots.tech/"
 
 type ThreeDotsLabsHandler struct {
 	url string
+	log core.Logger
 }
 
-func NewThreeDotsLabsHandler(aUrl string) ThreeDotsLabsHandler {
+func NewThreeDotsLabsHandler(aUrl string, aLog core.Logger) ThreeDotsLabsHandler {
 	return ThreeDotsLabsHandler{
 		url: aUrl,
+		log: aLog,
 	}
 }
 
@@ -37,7 +39,6 @@ func newThreeDotsLabsParser() threeDotsLabsParser {
 }
 
 func (p *threeDotsLabsParser) addWarning(aWarning core.Warning) {
-	// TODO: write warning to log
 	p.Warnings = append(p.Warnings, aWarning)
 }
 
@@ -46,7 +47,7 @@ func (p *threeDotsLabsParser) addWarningf(aFormat string, aArgs ...any) {
 }
 
 func (p *threeDotsLabsParser) parseAuthorAndDateHeader(aNode *goquery.Selection) {
-	// Author and PublishDate are optional fields so we add warning if we cannot import them
+	// Author and PublishDate are optional fields, so we add warning if we cannot import them
 	//  - Author can be empty
 	//  - PublishDate filled with the default value (current UTC date) by core.ParseDate
 	p.Article.Author = ""
@@ -84,7 +85,7 @@ func (p *threeDotsLabsParser) parseAuthorAndDateHeader(aNode *goquery.Selection)
 }
 
 func (p *threeDotsLabsParser) parseDescription(aNode *goquery.Selection) {
-	// lDescription is an optional field so we add warning if we cannot import it
+	// lDescription is an optional field, so we add warning if we cannot import it
 	lDescription := ""
 	if aNode != nil {
 		lDescription = strings.TrimSpace(aNode.Text())
@@ -152,11 +153,15 @@ func (h ThreeDotsLabsHandler) ParseHtml(aHtmlReader io.Reader) (aArticle []core.
 			lArticles = append(lArticles, lParser.Article)
 			if len(lParser.Warnings) > 0 {
 				for i, lWarning := range lParser.Warnings {
-					lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning)))
+					strWarning := fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning)
+					h.log.Info(strWarning)
+					lWarnings = append(lWarnings, core.Warning(strWarning))
 				}
 			}
 		} else {
-			lWarnings = append(lWarnings, core.Warning(fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error())))
+			strError := fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error())
+			h.log.Warn(strError)
+			lWarnings = append(lWarnings, core.Warning(strError))
 		}
 	})
 

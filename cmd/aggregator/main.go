@@ -17,7 +17,7 @@ var ScrappersMap = map[string]ScrapperConstruct{
 		return handlers.NewBitfieldScrapper(url, logger)
 	},
 	"threedotslabs": func(url string, logger core.Logger) core.ArticleScraper {
-		return handlers.NewThreeDotsLabsHandler(url /*TODO add logger to constructor*/)
+		return handlers.NewThreeDotsLabsHandler(url, logger)
 	},
 	"hashnode": func(url string, logger core.Logger) core.ArticleScraper {
 		return nil //handlers.NewHashnodeScraper(&log.Logger{} /*TODO change log.logger to core.logger*/, url)
