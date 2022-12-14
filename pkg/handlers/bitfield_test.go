@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -52,7 +52,7 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 		"Error[10]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}.Error()),
 	}
 
-	bitfieldHandler := NewBitfieldScrapper(testServer.URL+"/bitfield_test.html", core.NewZeroLogger(os.Stdout))
+	bitfieldHandler := NewBitfieldScrapper(testServer.URL+"/bitfield_test.html", core.NewZeroLogger(io.Discard))
 	lArticles, lWarnings, lErr := bitfieldHandler.ParseArticles()
 	if lErr != nil {
 		t.Error(lErr.Error())
@@ -74,7 +74,7 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 }
 
 func TestBitfieldHandler_EmptyUrl(t *testing.T) {
-	bitfieldHandler := NewBitfieldScrapper("", core.NewZeroLogger())
+	bitfieldHandler := NewBitfieldScrapper("", core.NewZeroLogger(io.Discard))
 	lArticles, lWarnings, lErr := bitfieldHandler.ParseArticles()
 	if lArticles != nil && lWarnings != nil {
 		t.Errorf("articles and warnings must be nil")
