@@ -22,10 +22,16 @@ type RequiredFieldError struct {
 }
 
 func (r RequiredFieldError) Error() string {
+	if r.ErrorType == nil {
+		r.ErrorType = ErrUnknown
+	}
 	return fmt.Sprintf("error: %s, field: %s", r.ErrorType, r.Field)
 }
 
 func (r RequiredFieldError) Unwrap() error {
+	if r.ErrorType == nil {
+		return ErrUnknown
+	}
 	return r.ErrorType
 }
 
@@ -75,6 +81,8 @@ var (
 	ErrEmptyEnvVariable = errors.New("env variable not found")
 	// ErrNoHandlersInConfig unable to unmarshal info about handlers from yaml file
 	ErrNoHandlersInConfig = errors.New("unable to get handlers info from config")
+	// ErrUnknown unknown error
+	ErrUnknown = errors.New("unknown error")
 	// ErrUnableCastToInterface impossible to cast structure to interface
 	ErrUnableCastToInterface = errors.New("impossible to cast structure to interface")
 )
