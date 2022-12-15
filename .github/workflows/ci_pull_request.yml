@@ -28,7 +28,8 @@ jobs:
 
       - name: Lint
         continue-on-error: true
-        run: golangci-lint run ./... --timeout=3m 2>&1 | tee lint_results.txt
+        run: golangci-lint run ./... 2>&1 | tee lint_results.txt
+        timeout-minutes: 3
 
       - name: Test
         run: |
