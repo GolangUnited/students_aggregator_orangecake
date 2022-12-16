@@ -25,16 +25,16 @@ const C_OPENAPI_UI_HTML = `<!DOCTYPE html>
 </body>
 </html>`
 
-func RegisterOpenApiUI(aPath string, aBulder WebServerBuilder, aFailed *bool) {
+func RegisterOpenApiUI(aPath string, aBuilder WebServerBuilder, aFailed *bool) {
 	if *aFailed {
 		return
 	}
 
 	// initialize closures variables
-	lServer := aBulder.Server()
+	lServer := aBuilder.Server()
 
 	// Do not register Open API UI in OpenApi documentation
-	aBulder.ServeMux().HandleFunc(aPath, func(w http.ResponseWriter, r *http.Request) {
+	aBuilder.ServeMux().HandleFunc(aPath, func(w http.ResponseWriter, r *http.Request) {
 		handleOpenApiUI(lServer, w, r)
 	})
 }

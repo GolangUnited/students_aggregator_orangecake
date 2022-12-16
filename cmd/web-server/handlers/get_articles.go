@@ -10,7 +10,7 @@ import (
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
-func RegisterGetArticles(aPath string, aBulder WebServerBuilder, aFailed *bool) {
+func RegisterGetArticles(aPath string, aBuilder WebServerBuilder, aFailed *bool) {
 	if *aFailed {
 		return
 	}
@@ -21,13 +21,13 @@ func RegisterGetArticles(aPath string, aBulder WebServerBuilder, aFailed *bool) 
 	}
 
 	// initialize closures variables
-	lServer := aBulder.Server()
-	aBulder.ServeMux().HandleFunc(aPath, func(w http.ResponseWriter, r *http.Request) {
+	lServer := aBuilder.Server()
+	aBuilder.ServeMux().HandleFunc(aPath, func(w http.ResponseWriter, r *http.Request) {
 		handleGetArticles(lServer, w, r)
 	})
 
 	lGet := openapi3.Operation{}
-	lOpenApi := aBulder.OpenApi()
+	lOpenApi := aBuilder.OpenApi()
 	lOpenApi.SetRequest(&lGet, new(requestParams), http.MethodGet)
 	lOpenApi.SetJSONResponse(&lGet, new([]core.Article), http.StatusOK)
 	lOpenApi.SetJSONResponse(&lGet, ApiError{}, http.StatusBadRequest)
