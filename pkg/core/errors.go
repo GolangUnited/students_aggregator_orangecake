@@ -83,4 +83,6 @@ var (
 	ErrNoHandlersInConfig = errors.New("unable to get handlers info from config")
 	// ErrUnknown unknown error
 	ErrUnknown = errors.New("unknown error")
+	// ErrUnableCastToInterface impossible to cast structure to interface
+	ErrUnableCastToInterface = errors.New("impossible to cast structure to interface")
 )
