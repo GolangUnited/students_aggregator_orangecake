@@ -77,10 +77,10 @@ func CreateScrappers(aConfig *AggregatorConfig, aLogger core.Logger) []core.Arti
 func GetArticles(aScrappers []core.ArticleScraper, logger core.Logger) ([]core.Article, []core.Warning) {
 	lArticles := make([]core.Article, 0)
 	lWarnings := make([]core.Warning, 0)
-	for _, scrapper := range aScrappers {
+	for i, scrapper := range aScrappers {
 		articles, warnings, err := scrapper.ParseArticles()
 		if err != nil {
-			logger.Warn(err.Error())
+			logger.Warn(fmt.Sprintf("[%d] scrapper error: %s", i, err.Error()))
 			continue
 		}
 		lArticles = append(lArticles, articles...)
