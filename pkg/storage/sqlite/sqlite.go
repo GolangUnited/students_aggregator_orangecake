@@ -5,12 +5,12 @@ import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	gormLogger "gorm.io/gorm/logger"
 	"log"
 )
 
 func NewSqliteConnection(aConnectionString string) (*SqliteStorage, error) {
-	dbArticles, lErr := gorm.Open(sqlite.Open(aConnectionString), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	dbArticles, lErr := gorm.Open(sqlite.Open(aConnectionString), &gorm.Config{Logger: gormLogger.Default.LogMode(gormLogger.Silent)})
 	if lErr != nil {
 		return nil, fmt.Errorf("can't open database: %w", lErr)
 	}

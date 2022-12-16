@@ -3,7 +3,7 @@ package sqlite
 import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gorm.io/gorm"
-	"log"
+	"os"
 	"time"
 )
 
@@ -12,6 +12,8 @@ const (
 	LEN_OF_AUTHOR      = 200
 	LEN_OF_DESCRIPTION = 6000
 )
+
+var logger core.Logger = core.NewZeroLogger(os.Stdout)
 
 type SqliteStorage struct {
 	db *gorm.DB
@@ -67,20 +69,21 @@ func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 
 			lResult := tx.Create(newArticleDB(&aArticle))
 			if lResult.Error != nil {
-				log.Printf("write article returns an error: %v", lResult.Error)
+				logger.Error("write article returns an error: %v", lResult.Error)
 				return lResult.Error
 			}
 			lRowsAffected = lResult.RowsAffected
-			log.Printf("wrote %d article", lRowsAffected)
+			logger.Info("wrote %d article", lRowsAffected)
 			return nil
 		} else {
-			log.Printf("wrote %d articles", lRowsAffected)
+			logger.Info("wrote %d articles", lRowsAffected)
 		}
 		return nil
 	})
 
 	if lErrTrans != nil {
-		log.Printf("error of transaction: %v", lErrTrans)
+		logger.Error("error of transaction: %v", lErrTrans)
+		return lErrTrans
 	}
 
 	return nil
@@ -89,7 +92,7 @@ func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 // WriteArticles adds slice of articles after scraping data
 func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	lCountOfWritingArticles := 0
-	// unhandled error in Transaction
+
 	lErrTrans := s.db.Transaction(func(tx *gorm.DB) error {
 		for _, lArticle := range aArticles {
 			//Validation length of fields
@@ -105,12 +108,12 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 					lResult := tx.Create(newArticleDB(&lArticle))
 
 					if lResult.Error != nil {
-						log.Printf("can't write articles: %v", lResult.Error)
+						logger.Error("can't write articles: %v", lResult.Error)
 						return lResult.Error
 					}
 					lCountOfWritingArticles += int(lResult.RowsAffected)
 				} else {
-					log.Printf("article with link %s already exsist", lArticle.Link)
+					logger.Info("article with link %s already exsist", lArticle.Link)
 				}
 			}
 		}
@@ -118,11 +121,11 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	})
 
 	if lErrTrans != nil {
-		log.Printf("error of transaction when write articles: %v", lErrTrans)
+		logger.Error("error of transaction when write articles: %v", lErrTrans)
 		return lErrTrans
 	}
 
-	log.Printf("wrote %d articles", lCountOfWritingArticles)
+	logger.Info("%d records were written to the database", lCountOfWritingArticles)
 
 	return nil
 }
@@ -144,15 +147,15 @@ func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 				return lResult.Error
 			}
 
-			log.Printf("update %d articles with id #%d", lResult.RowsAffected, aID)
+			logger.Info("update %d articles with id #%d", lResult.RowsAffected, aID)
 		} else if lExistId == 0 {
-			log.Printf("nothing to update, id #%d isn't exist", aID)
+			logger.Info("nothing to update, id #%d isn't exist", aID)
 		}
 		return nil
 	})
 
 	if lErrTrans != nil {
-		log.Printf("error of transaction when update article with id #%d: %v", aID, lErrTrans)
+		logger.Error("error of transaction when update article with id #%d: %v", aID, lErrTrans)
 		return lErrTrans
 	}
 
@@ -167,7 +170,7 @@ func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 
 	lErr := lResult.Error
 	if lErr != nil {
-		log.Printf("error happens in row with id = %d: %v", aID, lErr)
+		logger.Error("error happens in row with id = %d: %v", aID, lErr)
 		return nil, lErr
 	}
 
@@ -181,9 +184,9 @@ func (s *SqliteStorage) ReadArticlesByDateRange(aMin, aMax time.Time) ([]core.Ar
 	lResult := s.db.Where("publish_date BETWEEN ? AND ?", aMin, aMax).Find(&lArticles)
 	lErr := lResult.Error
 	if lErr != nil {
-		log.Printf("error happens in rows between dates %s and %s: %v", aMin, aMax, lErr)
+		logger.Error("error happens in rows between dates %s and %s: %v", aMin, aMax, lErr)
 		return nil, lErr
 	}
-	log.Printf("%d rows was found.", lResult.RowsAffected)
+	logger.Info("%d rows was found.", lResult.RowsAffected)
 	return lArticles, nil
 }
