@@ -87,7 +87,7 @@ func TestThreeDotsLabsParseError(t *testing.T) {
 	const READ_ERROR = "internal read error"
 	lReader := threeDotsLabsErrorIOReader{Error: errors.New(READ_ERROR)}
 
-	lHandler := NewThreeDotsLabsHandler("")
+	lHandler := NewThreeDotsLabsHandler("", core.NewZeroLogger(io.Discard))
 	lArticles, lWarnings, lErr := lHandler.ParseHtml(lReader)
 
 	assert.EqualError(t, lErr, READ_ERROR)
@@ -105,7 +105,7 @@ func TestThreeDotsLabsData(t *testing.T) {
 		{Author: /*e*/ "", Title: "Title 6", Link: "LinkUrl", Description: /*em*/ "", PublishDate: core.NormalizeDate(time.Now())},
 	}
 
-	lExpectedWarnings := [...]string{
+	lExpectedWarnings := [...]core.Warning{
 		"Warning[1,0]: article Header is empty",
 		"Warning[2,0]: invalid article Header format",
 		"Warning[3,0]: cannot parse article date 'Feb 31, 2022'. invalid Date format",
@@ -113,10 +113,10 @@ func TestThreeDotsLabsData(t *testing.T) {
 		"Warning[4,1]: cannot parse article date ''. empty Date",
 		"Warning[5,0]: article Header node not found",
 		"Warning[5,1]: article Description is empty",
-		"Error[6]: article Link node not found",
-		"Error[7]: article Title is empty",
-		"Error[8]: article Link URL not found",
-		"Error[9]: article Link URL is empty",
+		"Error[6]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrNodeNotFound, Field: core.LinkFieldName}.Error()),
+		"Error[7]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}.Error()),
+		"Error[8]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrAttributeNotExists, Field: core.LinkFieldName}.Error()),
+		"Error[9]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}.Error()),
 	}
 
 	lTestData, lErr := readTestFile("threedotslabs_test.html")
@@ -125,7 +125,7 @@ func TestThreeDotsLabsData(t *testing.T) {
 		return
 	}
 
-	lHandler := NewThreeDotsLabsHandler("")
+	lHandler := NewThreeDotsLabsHandler("", core.NewZeroLogger(io.Discard))
 	lArticles, lWarnings, lErr := lHandler.ParseHtml(lTestData)
 	if lErr != nil {
 		t.Error(lErr.Error())
@@ -149,9 +149,9 @@ func TestThreeDotsLabsUrl(t *testing.T) {
 	// test we can parse the actual web page, it should contain 10 articles and no warnings
 	const EXPECTED_COUNT = 10
 
-	lHandler := NewThreeDotsLabsHandler(THREE_DOTS_LABS_URL)
+	lHandler := NewThreeDotsLabsHandler(THREE_DOTS_LABS_URL, core.NewZeroLogger(io.Discard))
 
-	lArticles, lWarnings, lErr := lHandler.GetArticles()
+	lArticles, lWarnings, lErr := lHandler.ParseArticles()
 
 	assert.Nil(t, lErr, "Error")
 	assert.Equal(t, EXPECTED_COUNT, len(lArticles), "ArticleCount")
@@ -160,9 +160,9 @@ func TestThreeDotsLabsUrl(t *testing.T) {
 
 func TestThreeDotsLabsEmptyUrl(t *testing.T) {
 	// test HTTP Error (empty URL)
-	lHandler := NewThreeDotsLabsHandler("")
+	lHandler := NewThreeDotsLabsHandler("", core.NewZeroLogger(io.Discard))
 
-	lArticles, lWarnings, lErr := lHandler.GetArticles()
+	lArticles, lWarnings, lErr := lHandler.ParseArticles()
 
 	assert.Empty(t, lArticles, "Articles")
 	assert.Empty(t, lWarnings, "Warnings")
@@ -176,10 +176,10 @@ func TestThreeDotsLabsHttpStatusError(t *testing.T) {
 	}
 	defer lTestServer.Close()
 
-	lHandler := NewThreeDotsLabsHandler(lTestServer.URL + "/not_found.html")
-	lArticles, lWarnings, lErr := lHandler.GetArticles()
+	lHandler := NewThreeDotsLabsHandler(lTestServer.URL+"/not_found.html", core.NewZeroLogger(io.Discard))
+	lArticles, lWarnings, lErr := lHandler.ParseArticles()
 
 	assert.Nil(t, lArticles, "Articles")
 	assert.Nil(t, lWarnings, "Warnings")
-	assert.EqualError(t, lErr, "status code error: 404 404 Not Found")
+	assert.EqualError(t, lErr, "response error code: 404 status: 404 Not Found")
 }

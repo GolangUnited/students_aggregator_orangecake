@@ -2,10 +2,8 @@ package handlers
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
@@ -30,7 +28,7 @@ func newHTTPTestServer(data string) *httptest.Server {
 	return lServer
 }
 
-func TestOkScrapUrl(t *testing.T) {
+func TestHashnodeOkScrapUrl(t *testing.T) {
 
 	lServer := newHTTPTestServer(test.OK_TEST_DATA)
 	defer lServer.Close()
@@ -59,10 +57,10 @@ func TestOkScrapUrl(t *testing.T) {
 		},
 	}
 
-	log := log.New(os.Stdout, "HS", log.Flags())
-	lHS := NewHashnodeScraper(log, lServer.URL)
+	log := core.NewZeroLogger(io.Discard)
+	lHS := NewHashnodeScraper(lServer.URL, log)
 
-	lHS.ScrapUrl()
+	lHS.scrapUrl()
 
 	assert.Equal(t, len(lOkTestCases), len(lHS.articles))
 
@@ -72,7 +70,7 @@ func TestOkScrapUrl(t *testing.T) {
 	}
 }
 
-func TestErrorsScrapUrl(t *testing.T) {
+func TestHashnodeErrorsScrapUrl(t *testing.T) {
 
 	lTestCases := []hashnodeTestCase{
 		{
@@ -91,22 +89,21 @@ func TestErrorsScrapUrl(t *testing.T) {
 	for _, tCase := range lTestCases {
 
 		lServer := newHTTPTestServer(tCase.testData)
-		defer lServer.Close()
 
 		var lHS *HashnodeScraper
 
-		log := log.New(os.Stdout, "HS", log.Flags())
+		log := core.NewZeroLogger(io.Discard)
 
 		if tCase.url != "" {
-			lHS = NewHashnodeScraper(log, tCase.url)
+			lHS = NewHashnodeScraper(tCase.url, log)
 		} else {
-			lHS = NewHashnodeScraper(log, lServer.URL)
+			lHS = NewHashnodeScraper(lServer.URL, log)
 		}
 
-		err := lHS.ScrapUrl()
+		err := lHS.scrapUrl()
 
 		assert.Contains(t, err.Error(), tCase.err.Error())
 
+		lServer.Close()
 	}
-
 }
