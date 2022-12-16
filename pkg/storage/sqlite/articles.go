@@ -3,7 +3,6 @@ package sqlite
 import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gorm.io/gorm"
-	"os"
 	"time"
 )
 
@@ -13,10 +12,9 @@ const (
 	LEN_OF_DESCRIPTION = 6000
 )
 
-var logger core.Logger = core.NewZeroLogger(os.Stdout)
-
 type SqliteStorage struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger core.Logger
 }
 
 // newArticleDB ...
@@ -69,20 +67,20 @@ func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 
 			lResult := tx.Create(newArticleDB(&aArticle))
 			if lResult.Error != nil {
-				logger.Error("write article returns an error: %v", lResult.Error)
+				s.logger.Error("write article returns an error: %v", lResult.Error)
 				return lResult.Error
 			}
 			lRowsAffected = lResult.RowsAffected
-			logger.Info("wrote %d article", lRowsAffected)
+			s.logger.Info("wrote %d article", lRowsAffected)
 			return nil
 		} else {
-			logger.Info("wrote %d articles", lRowsAffected)
+			s.logger.Info("wrote %d articles", lRowsAffected)
 		}
 		return nil
 	})
 
 	if lErrTrans != nil {
-		logger.Error("error of transaction: %v", lErrTrans)
+		s.logger.Error("error of transaction: %v", lErrTrans)
 		return lErrTrans
 	}
 
@@ -108,12 +106,12 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 					lResult := tx.Create(newArticleDB(&lArticle))
 
 					if lResult.Error != nil {
-						logger.Error("can't write articles: %v", lResult.Error)
+						s.logger.Error("can't write articles: %v", lResult.Error)
 						return lResult.Error
 					}
 					lCountOfWritingArticles += int(lResult.RowsAffected)
 				} else {
-					logger.Info("article with link %s already exsist", lArticle.Link)
+					s.logger.Info("article with link %s already exsist", lArticle.Link)
 				}
 			}
 		}
@@ -121,11 +119,11 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	})
 
 	if lErrTrans != nil {
-		logger.Error("error of transaction when write articles: %v", lErrTrans)
+		s.logger.Error("error of transaction when write articles: %v", lErrTrans)
 		return lErrTrans
 	}
 
-	logger.Info("%d records were written to the database", lCountOfWritingArticles)
+	s.logger.Info("%d records were written to the database", lCountOfWritingArticles)
 
 	return nil
 }
@@ -147,15 +145,15 @@ func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 				return lResult.Error
 			}
 
-			logger.Info("update %d articles with id #%d", lResult.RowsAffected, aID)
+			s.logger.Info("update %d articles with id #%d", lResult.RowsAffected, aID)
 		} else if lExistId == 0 {
-			logger.Info("nothing to update, id #%d isn't exist", aID)
+			s.logger.Info("nothing to update, id #%d isn't exist", aID)
 		}
 		return nil
 	})
 
 	if lErrTrans != nil {
-		logger.Error("error of transaction when update article with id #%d: %v", aID, lErrTrans)
+		s.logger.Error("error of transaction when update article with id #%d: %v", aID, lErrTrans)
 		return lErrTrans
 	}
 
@@ -170,7 +168,7 @@ func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 
 	lErr := lResult.Error
 	if lErr != nil {
-		logger.Error("error happens in row with id = %d: %v", aID, lErr)
+		s.logger.Error("error happens in row with id = %d: %v", aID, lErr)
 		return nil, lErr
 	}
 
@@ -184,9 +182,9 @@ func (s *SqliteStorage) ReadArticlesByDateRange(aMin, aMax time.Time) ([]core.Ar
 	lResult := s.db.Where("publish_date BETWEEN ? AND ?", aMin, aMax).Find(&lArticles)
 	lErr := lResult.Error
 	if lErr != nil {
-		logger.Error("error happens in rows between dates %s and %s: %v", aMin, aMax, lErr)
+		s.logger.Error("error happens in rows between dates %s and %s: %v", aMin, aMax, lErr)
 		return nil, lErr
 	}
-	logger.Info("%d rows was found.", lResult.RowsAffected)
+	s.logger.Info("%d rows was found.", lResult.RowsAffected)
 	return lArticles, nil
 }

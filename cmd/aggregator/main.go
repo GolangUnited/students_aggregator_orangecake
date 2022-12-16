@@ -46,7 +46,7 @@ func main() {
 	lArticles, _ := GetArticles(scrappers, logger)
 
 	//connect to database
-	lStorage, lErr := sqlite.NewSqliteConnection(lConfig.DBConnectionString)
+	lStorage, lErr := sqlite.NewSqliteConnection(lConfig.DBConnectionString, logger)
 	if lErr != nil {
 		logger.Error(lErr.Error())
 	}
