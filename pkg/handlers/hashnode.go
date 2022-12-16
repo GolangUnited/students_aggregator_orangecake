@@ -2,16 +2,15 @@ package handlers
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/gocolly/colly"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
 type HashnodeScraper struct {
 	articles []core.Article
+	warnings []core.Warning
 	url      string
-	log      *log.Logger
+	log      core.Logger
 }
 
 const (
@@ -23,22 +22,22 @@ const (
 	DATE_PATH     = "div.css-dxz0om div.css-tel74u div.css-2wkyxu div.css-1n08q4e a.css-1u6dh35"
 )
 
-// create Hashnode scrapper struct for "https://hashnode.com/n/go"
-func NewHashnodeScraper(log *log.Logger, aUrl string) *HashnodeScraper {
+// NewHashnodeScraper create Hashnode scrapper struct for "https://hashnode.com/n/go"
+func NewHashnodeScraper(aUrl string, logger core.Logger) *HashnodeScraper {
 	return &HashnodeScraper{
 		articles: []core.Article{},
+		warnings: []core.Warning{},
 		url:      aUrl,
-		log:      log,
+		log:      logger,
 	}
 }
 
-// TODO: log will be replaced
-// srappin url
-func (h *HashnodeScraper) ScrapUrl() error {
+// ScrapUrl scrapping url
+func (h *HashnodeScraper) scrapUrl() error {
 
 	lC := colly.NewCollector()
 
-	lC.OnHTML(ARTICLE_CLASS, h.ElementSearch)
+	lC.OnHTML(ARTICLE_CLASS, h.elementSearch)
 
 	err := lC.Visit(h.url)
 	if err != nil {
@@ -54,9 +53,8 @@ func (h *HashnodeScraper) ScrapUrl() error {
 	return nil
 }
 
-// TODO: log will be replaced
-// colly searching func
-func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
+// ElementSearch colly searching func
+func (h *HashnodeScraper) elementSearch(el *colly.HTMLElement) {
 
 	lArticle := core.Article{}
 	lDOM := el.DOM
@@ -65,7 +63,9 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
 	//link inside Title field
 	if lTitle.Nodes == nil {
-		h.log.Println("cant find Title(link) field")
+		strError := core.RequiredFieldError{ErrorType: core.ErrNodeNotFound, Field: core.TitleFieldName}.Error()
+		h.log.Warn(strError)
+		h.warnings = append(h.warnings, core.Warning(strError))
 		return
 	}
 
@@ -74,14 +74,18 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
 	lDescription := lDOM.Find(DESCR_PATH)
 	if lDescription.Nodes == nil {
-		h.log.Printf("For article %s, %s field Description not found", lArticle.Title, lArticle.Link)
+		strWarning := fmt.Sprintf("For article %s, %s field Description not found", lArticle.Title, lArticle.Link)
+		h.log.Info(strWarning)
+		h.warnings = append(h.warnings, core.Warning(strWarning))
 	} else {
 		lArticle.Description = lDescription.Text()
 	}
 
 	lAuthor := lDOM.Find(AUTHOR_PATH)
 	if lAuthor.Nodes == nil {
-		h.log.Printf("For article %s, %s field Author not found", lArticle.Title, lArticle.Link)
+		strWarning := fmt.Sprintf("For article %s, %s field Author not found", lArticle.Title, lArticle.Link)
+		h.log.Info(strWarning)
+		h.warnings = append(h.warnings, core.Warning(strWarning))
 	} else {
 		lArticle.Author = lAuthor.Text()
 	}
@@ -90,31 +94,44 @@ func (h *HashnodeScraper) ElementSearch(el *colly.HTMLElement) {
 
 	var lDateString string
 	if lDate.Nodes == nil {
-		h.log.Printf("For article %s, %s field Data not found", lArticle.Title, lArticle.Link)
+		strWarning := fmt.Sprintf("For article %s, %s field Data not found", lArticle.Title, lArticle.Link)
+		h.log.Info(strWarning)
+		h.warnings = append(h.warnings, core.Warning(strWarning))
 	} else {
 		lDateString = lDate.Text()
 	}
 
 	lPubDate, err := core.ParseDate("Jan _2, 2006", lDateString)
 	if err != nil {
-		h.log.Printf("For article %s, %s DataErr: %s ", lArticle.Title, lArticle.Link, err.Error())
+		strWarning := fmt.Sprintf("For article %s, %s DateErr: %s ", lArticle.Title, lArticle.Link, err.Error())
+		h.log.Info(strWarning)
+		h.warnings = append(h.warnings, core.Warning(strWarning))
 	}
 	lArticle.PublishDate = lPubDate
 
 	if lArticle.Title == "" {
-		h.log.Printf("For article %s Title field is empty", lArticle.Link)
+		strError := core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}.Error()
+		h.log.Warn(strError)
+		h.warnings = append(h.warnings, core.Warning(strError))
 		return
 	}
 
 	if lArticle.Link == "" {
-		h.log.Printf("For article %s Link field is empty", lArticle.Title)
+		strError := core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}.Error()
+		h.log.Warn(strError)
+		h.warnings = append(h.warnings, core.Warning(strError))
 		return
 	}
 
 	h.articles = append(h.articles, lArticle)
 }
 
-// get articles from scrapper
-func (h *HashnodeScraper) GetArticles() []core.Article {
-	return h.articles
+// ParseArticles get articles from scrapper
+func (h *HashnodeScraper) ParseArticles() ([]core.Article, []core.Warning, error) {
+	err := h.scrapUrl()
+	if err != nil {
+		return nil, h.warnings, err
+	}
+
+	return h.articles, h.warnings, nil
 }

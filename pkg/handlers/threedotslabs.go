@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,37 +15,38 @@ const THREE_DOTS_LABS_URL = "https://threedots.tech/"
 
 type ThreeDotsLabsHandler struct {
 	url string
+	log core.Logger
 }
 
-func NewThreeDotsLabsHandler(aUrl string) ThreeDotsLabsHandler {
+func NewThreeDotsLabsHandler(aUrl string, aLog core.Logger) ThreeDotsLabsHandler {
 	return ThreeDotsLabsHandler{
 		url: aUrl,
+		log: aLog,
 	}
 }
 
 type threeDotsLabsParser struct {
 	Article  core.Article
-	Warnings []string
+	Warnings []core.Warning
 }
 
 func newThreeDotsLabsParser() threeDotsLabsParser {
 	return threeDotsLabsParser{
 		Article:  core.Article{},
-		Warnings: make([]string, 0),
+		Warnings: make([]core.Warning, 0),
 	}
 }
 
-func (p *threeDotsLabsParser) addWarning(aWarning string) {
-	// TODO: write warning to log
+func (p *threeDotsLabsParser) addWarning(aWarning core.Warning) {
 	p.Warnings = append(p.Warnings, aWarning)
 }
 
 func (p *threeDotsLabsParser) addWarningf(aFormat string, aArgs ...any) {
-	p.addWarning(fmt.Sprintf(aFormat, aArgs...))
+	p.addWarning(core.Warning(fmt.Sprintf(aFormat, aArgs...)))
 }
 
 func (p *threeDotsLabsParser) parseAuthorAndDateHeader(aNode *goquery.Selection) {
-	// Author and PublishDate are optional fields so we add warning if we cannot import them
+	// Author and PublishDate are optional fields, so we add warning if we cannot import them
 	//  - Author can be empty
 	//  - PublishDate filled with the default value (current UTC date) by core.ParseDate
 	p.Article.Author = ""
@@ -84,7 +84,7 @@ func (p *threeDotsLabsParser) parseAuthorAndDateHeader(aNode *goquery.Selection)
 }
 
 func (p *threeDotsLabsParser) parseDescription(aNode *goquery.Selection) {
-	// lDescription is an optional field so we add warning if we cannot import it
+	// lDescription is an optional field, so we add warning if we cannot import it
 	lDescription := ""
 	if aNode != nil {
 		lDescription = strings.TrimSpace(aNode.Text())
@@ -100,22 +100,22 @@ func (p *threeDotsLabsParser) parseTitleAndLink(aNode *goquery.Selection) error 
 	// Title and Link are both required
 
 	if len(aNode.Nodes) == 0 {
-		return errors.New("article Link node not found")
+		return core.RequiredFieldError{ErrorType: core.ErrNodeNotFound, Field: core.LinkFieldName}
 	}
 
 	lTitle := strings.TrimSpace(aNode.Text())
 	if len(lTitle) <= 0 {
-		return errors.New("article Title is empty")
+		return core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}
 	}
 
 	lUrl, lExists := aNode.Attr("href")
 	if !lExists {
-		return errors.New("article Link URL not found")
+		return core.RequiredFieldError{ErrorType: core.ErrAttributeNotExists, Field: core.LinkFieldName}
 	}
 
 	lLink := strings.TrimSpace(lUrl)
 	if len(lLink) <= 0 {
-		return errors.New("article Link URL is empty")
+		return core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
 	}
 
 	p.Article.Title = lTitle
@@ -136,14 +136,14 @@ func (p *threeDotsLabsParser) parseArticle(aNode *goquery.Selection) error {
 	return nil
 }
 
-func (h ThreeDotsLabsHandler) ParseHtml(aHtmlReader io.Reader) (aArticle []core.Article, aWarnings []string, aError error) {
+func (h ThreeDotsLabsHandler) ParseHtml(aHtmlReader io.Reader) (aArticle []core.Article, aWarnings []core.Warning, aError error) {
 	lHtml, lError := goquery.NewDocumentFromReader(aHtmlReader)
 	if lError != nil {
 		return nil, nil, lError
 	}
 
 	lArticles := make([]core.Article, 0)
-	lWarnings := make([]string, 0)
+	lWarnings := make([]core.Warning, 0)
 
 	lHtml.Find("article.post-entry").Each(func(aIndex int, aNode *goquery.Selection) {
 		lParser := newThreeDotsLabsParser()
@@ -152,18 +152,22 @@ func (h ThreeDotsLabsHandler) ParseHtml(aHtmlReader io.Reader) (aArticle []core.
 			lArticles = append(lArticles, lParser.Article)
 			if len(lParser.Warnings) > 0 {
 				for i, lWarning := range lParser.Warnings {
-					lWarnings = append(lWarnings, fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning))
+					strWarning := fmt.Sprintf("Warning[%d,%d]: %s", aIndex, i, lWarning)
+					h.log.Info(strWarning)
+					lWarnings = append(lWarnings, core.Warning(strWarning))
 				}
 			}
 		} else {
-			lWarnings = append(lWarnings, fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error()))
+			strError := fmt.Sprintf("Error[%d]: %s", aIndex, lErr.Error())
+			h.log.Warn(strError)
+			lWarnings = append(lWarnings, core.Warning(strError))
 		}
 	})
 
 	return lArticles, lWarnings, nil
 }
 
-func (h ThreeDotsLabsHandler) GetArticles() (aArticles []core.Article, aWarnings []string, aError error) {
+func (h ThreeDotsLabsHandler) ParseArticles() (aArticles []core.Article, aWarnings []core.Warning, aError error) {
 
 	lResponse, lError := http.Get(h.url)
 	if lError != nil {
@@ -172,8 +176,9 @@ func (h ThreeDotsLabsHandler) GetArticles() (aArticles []core.Article, aWarnings
 	defer lResponse.Body.Close()
 
 	if lResponse.StatusCode != 200 {
-		lMsg := fmt.Sprintf("status code error: %d %s", lResponse.StatusCode, lResponse.Status)
-		return nil, nil, errors.New(lMsg)
+
+		lMsg := core.ResponseError{Status: lResponse.Status, Code: lResponse.StatusCode}
+		return nil, nil, lMsg
 	}
 
 	return h.ParseHtml(lResponse.Body)

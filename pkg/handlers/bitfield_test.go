@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -36,7 +37,7 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 		{Author: "", Title: "Title", Link: lDefaultLink, Description: "", PublishDate: lDefaultDate},
 	}
 
-	lExpectedWarnings := []string{
+	lExpectedWarnings := []core.Warning{
 		"Warning[1,0]: article date attribute not exists",
 		"Warning[2,0]: article date node not found",
 		"Warning[3,0]: cannot parse article date ''. empty Date",
@@ -45,14 +46,14 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 		"Warning[5,1]: article author node not found",
 		"Warning[6,0]: article description is empty",
 		"Warning[6,1]: article author is empty",
-		"Error[7]: article title and url node not found",
-		"Error[8]: article link attribute not found",
-		"Error[9]: article link is empty",
-		"Error[10]: article title is empty",
+		"Error[7]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrNodeNotFound, Field: core.TitleFieldName}.Error()),
+		"Error[8]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrAttributeNotExists, Field: core.LinkFieldName}.Error()),
+		"Error[9]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}.Error()),
+		"Error[10]: " + core.Warning(core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}.Error()),
 	}
 
-	bitfieldHandler := NewBitfieldScrapper(testServer.URL + "/bitfield_test.html")
-	lArticles, lWarnings, lErr := bitfieldHandler.GetArticles()
+	bitfieldHandler := NewBitfieldScrapper(testServer.URL+"/bitfield_test.html", core.NewZeroLogger(io.Discard))
+	lArticles, lWarnings, lErr := bitfieldHandler.ParseArticles()
 	if lErr != nil {
 		t.Error(lErr.Error())
 		return
@@ -73,8 +74,8 @@ func TestBitfieldHandler_GetArticles(t *testing.T) {
 }
 
 func TestBitfieldHandler_EmptyUrl(t *testing.T) {
-	bitfieldHandler := NewBitfieldScrapper("")
-	lArticles, lWarnings, lErr := bitfieldHandler.GetArticles()
+	bitfieldHandler := NewBitfieldScrapper("", core.NewZeroLogger(io.Discard))
+	lArticles, lWarnings, lErr := bitfieldHandler.ParseArticles()
 	if lArticles != nil && lWarnings != nil {
 		t.Errorf("articles and warnings must be nil")
 	}
