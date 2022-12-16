@@ -2,42 +2,28 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	_ "github.com/PuerkitoBio/goquery" // temporary import to init go.mod and go.sum and avoid compiler errors
-	"github.com/indikator/aggregator_orange_cake/pkg/handlers"
-	"github.com/indikator/aggregator_orange_cake/pkg/storage/sqlite"
+	"github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
-const ConnectionString = "articles.db" // need take it from .env?
-
 func main() {
+	var logger core.Logger = core.NewZeroLogger(os.Stdout)
+	logger.Info("Starting the aggregator's work.")
 
-	// scrape articles from dev.to
-	h := handlers.NewDevtoHandler("https://dev.to/t/go")
-	lArticles := h.Run()
+	var lArticles []core.Article
 
-	// connect to database or create it if not exist
-	lStorage, lErr := sqlite.NewSqliteConnection(ConnectionString)
-	if lErr != nil {
-		fmt.Printf("error of new sqlite connection: %v", lErr)
+	for i, lArticle := range lArticles {
+		lArticleDescr := fmt.Sprintf("Article %d: %s\n", i, lArticle.Title)
+		lArticleDescr += fmt.Sprintf("  Author: %s\n", lArticle.Author)
+		lArticleDescr += fmt.Sprintf("  Date: %s\n", lArticle.PublishDate.Format("Jan _2, 2006"))
+		lArticleDescr += fmt.Sprintf("  URL: %s\n", lArticle.Link)
+		lArticleDescr += fmt.Sprintf("  Description:\n    %s\n\n", lArticle.Description)
+
+		logger.Info(lArticleDescr)
 	}
 
-	// create new table article_dbs if it hasn't already been created
-	lStorage.NewTable(lStorage.Db)
-
-	// write articles from handler
-	if lErr := lStorage.WriteArticles(lArticles); lErr != nil {
-		fmt.Printf("error of WriteArticles: %v", lErr)
-	}
-
-	//read article with id = 1 from database
-	lArticle, lErr := lStorage.ReadArticleByID(1)
-	if lErr != nil {
-		fmt.Printf("error of ReadArticleByID: %v", lErr)
-	}
-
-	fmt.Printf("Node %d: %s\n", lArticle.ID, lArticle.Article.Title)
-	fmt.Printf("  Author: %s\n", lArticle.Article.Author)
-	fmt.Printf("  Date: %s\n", lArticle.Article.PublishDate.Format("Jan _2, 2006"))
-	fmt.Printf("  URL: %s\n", lArticle.Article.Link)
-	fmt.Printf("  Description:\n    %s\n\n", lArticle.Article.Description)
+	logger.Info("\n\n")
+	logger.Info(fmt.Sprintf("  %d Articles detected.\n", len(lArticles)))
 }

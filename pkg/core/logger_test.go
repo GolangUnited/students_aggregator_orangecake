@@ -1,0 +1,96 @@
+package core
+
+import (
+	"bytes"
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
+)
+
+func TestLoggerConformityToLoggerInterface(t *testing.T) {
+	logger := NewZeroLogger(new(bytes.Buffer))
+	_, ok := logger.(Logger)
+	assert.True(t, ok, "The logger doesn't conform to the core.Logger interface.")
+}
+
+func TestWritingToMultipleWriters(t *testing.T) {
+	buffer1 := new(bytes.Buffer)
+	buffer2 := new(bytes.Buffer)
+	logger := NewZeroLogger(buffer1, buffer2)
+
+	logger.Info("Some important info...")
+
+	expectedMsg := fmt.Sprintf("\x1b[32mINF\x1b[0m \x1b[90m%s\x1b[0m Some important info...\n", time.Now().Format(time.RFC822))
+	// INF 11 Dec 22 13:59 +03 Some important info...
+	assert.Equal(t, expectedMsg, buffer1.String(), "Wrong logged message.")
+	assert.Equal(t, buffer1.String(), buffer2.String(), "Log results in writer1 and writer2 are not the same.")
+}
+
+func TestLoggingExtraValues(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	logger := NewZeroLogger(buffer)
+
+	logger.Info("Some info.", 5, true, make([]Article, 0))
+
+	expectedMsg := fmt.Sprintf(
+		"\x1b[32mINF\x1b[0m \x1b[90m%s\x1b[0m Some info. \x1b[36mv0=\x1b[0m5 \x1b[36mv1=\x1b[0mtrue \x1b[36mv2=\x1b[0m[]\n",
+		time.Now().Format(time.RFC822))
+	// INF 11 Dec 22 15:19 +03 Some info. v0=5 v1=true v2=[]
+	assert.Equal(t, expectedMsg, buffer.String(), "Values given to logger are shown incorrect.")
+}
+
+func TestLoggingTraceLevel(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	logger := NewZeroLogger(buffer)
+
+	logger.Trace("Trace...")
+
+	expectedMsg := fmt.Sprintf("\x1b[35mTRC\x1b[0m \x1b[90m%s\x1b[0m Trace...\n", time.Now().Format(time.RFC822))
+	// TRC 11 Dec 22 13:59 +03 Trace...
+	assert.Equal(t, expectedMsg, buffer.String(), "Wrong logged Trace string.")
+}
+
+func TestLoggingInfoLevel(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	logger := NewZeroLogger(buffer)
+
+	logger.Info("Some important info...")
+
+	expectedMsg := fmt.Sprintf("\x1b[32mINF\x1b[0m \x1b[90m%s\x1b[0m Some important info...\n", time.Now().Format(time.RFC822))
+	// INF 11 Dec 22 13:59 +03 Some important info...
+	assert.Equal(t, expectedMsg, buffer.String(), "Wrong logged Info string.")
+}
+
+func TestLoggingDebugLevel(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	logger := NewZeroLogger(buffer)
+
+	logger.Debug("Debug...")
+
+	expectedMsg := fmt.Sprintf("\x1b[33mDBG\x1b[0m \x1b[90m%s\x1b[0m Debug...\n", time.Now().Format(time.RFC822))
+	// DBG 11 Dec 22 13:59 +03 Debug...
+	assert.Equal(t, expectedMsg, buffer.String(), "Wrong logged Debug string.")
+}
+
+func TestLoggingWarnLevel(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	logger := NewZeroLogger(buffer)
+
+	logger.Warn("Warn...")
+
+	expectedMsg := fmt.Sprintf("\x1b[31mWRN\x1b[0m \x1b[90m%s\x1b[0m Warn...\n", time.Now().Format(time.RFC822))
+	// WRN 11 Dec 22 13:59 +03 Warn...
+	assert.Equal(t, expectedMsg, buffer.String(), "Wrong logged Warning string.")
+}
+
+func TestLoggingErrorLevel(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	logger := NewZeroLogger(buffer)
+
+	logger.Error("Error...")
+
+	expectedMsg := fmt.Sprintf("\x1b[1m\x1b[31mERR\x1b[0m\x1b[0m \x1b[90m%s\x1b[0m Error...\n", time.Now().Format(time.RFC822))
+	// ERR 11 Dec 22 13:59 +03 Error...
+	assert.Equal(t, expectedMsg, buffer.String(), "Wrong logged Error string.")
+}
