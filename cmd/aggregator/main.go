@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"github.com/indikator/aggregator_orange_cake/pkg/handlers"
+	"github.com/indikator/aggregator_orange_cake/pkg/storage/sqlite"
 	"os"
 )
 
@@ -43,6 +44,15 @@ func main() {
 	scrappers := CreateScrappers(lConfig, logger)
 
 	lArticles, _ := GetArticles(scrappers, logger)
+
+	//connect to database
+	lStorage, lErr := sqlite.NewSqliteConnection(lConfig.DBConnectionString)
+	if lErr != nil {
+		logger.Error(lErr.Error())
+	}
+
+	//write articles to database
+	lStorage.WriteArticles(lArticles)
 
 	for i, lArticle := range lArticles {
 		lArticleDescr := fmt.Sprintf("Article %d: %s\n", i, lArticle.Title)
