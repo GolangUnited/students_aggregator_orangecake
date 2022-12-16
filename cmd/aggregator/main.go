@@ -51,20 +51,11 @@ func main() {
 		logger.Error(lErr.Error())
 	}
 
-	//write articles to database
-	lStorage.WriteArticles(lArticles)
-
-	for i, lArticle := range lArticles {
-		lArticleDescr := fmt.Sprintf("Article %d: %s\n", i, lArticle.Title)
-		lArticleDescr += fmt.Sprintf("  Author: %s\n", lArticle.Author)
-		lArticleDescr += fmt.Sprintf("  Date: %s\n", lArticle.PublishDate.Format("Jan _2, 2006"))
-		lArticleDescr += fmt.Sprintf("  URL: %s\n", lArticle.Link)
-		lArticleDescr += fmt.Sprintf("  Description:\n    %s\n\n", lArticle.Description)
-
-		logger.Info(lArticleDescr)
+	//write articles to database: takes articles for the last 70 days (cause for this period there are only 10 articles)
+	lErr = lStorage.WriteArticles(lArticles)
+	if lErr != nil {
+		logger.Error(lErr.Error())
 	}
-
-	logger.Info(fmt.Sprintf("  %d Articles detected.\n", len(lArticles)))
 }
 
 func CreateScrappers(aConfig *AggregatorConfig, aLogger core.Logger) []core.ArticleScraper {
