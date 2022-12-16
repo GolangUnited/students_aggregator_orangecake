@@ -14,20 +14,7 @@ const (
 )
 
 type SqliteStorage struct {
-	Db *gorm.DB
-}
-
-// TODO delete it cause new SqliteStorage created in NewSqliteConnection
-func NewStorage(db *gorm.DB) *SqliteStorage {
-	return &SqliteStorage{db}
-}
-
-// NewTable create table articles with field like struct core.ArticleDB.
-func (s *SqliteStorage) NewTable(db *gorm.DB) {
-	lErr := db.AutoMigrate(&core.ArticleDB{})
-	if lErr != nil {
-		log.Printf("failed to migrate from Article struct: %v", lErr)
-	}
+	db *gorm.DB
 }
 
 // newArticleDB ...
@@ -72,7 +59,7 @@ func validation(aArticle *core.Article) {
 func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 	var lRowsAffected int64 = 0
 
-	lErrTrans := s.Db.Transaction(func(tx *gorm.DB) error {
+	lErrTrans := s.db.Transaction(func(tx *gorm.DB) error {
 		if countOfRecordsFound := tx.First(
 			&core.ArticleDB{}, "link = ?", aArticle.Link).RowsAffected; countOfRecordsFound == 0 {
 
@@ -103,7 +90,7 @@ func (s *SqliteStorage) WriteArticle(aArticle core.Article) error {
 func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 	lCountOfWritingArticles := 0
 	// unhandled error in Transaction
-	lErrTrans := s.Db.Transaction(func(tx *gorm.DB) error {
+	lErrTrans := s.db.Transaction(func(tx *gorm.DB) error {
 		for _, lArticle := range aArticles {
 			//Validation length of fields
 			validation(&lArticle)
@@ -119,6 +106,7 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 
 					if lResult.Error != nil {
 						log.Printf("can't write articles: %v", lResult.Error)
+						return lResult.Error
 					}
 					lCountOfWritingArticles += int(lResult.RowsAffected)
 				} else {
@@ -131,6 +119,7 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 
 	if lErrTrans != nil {
 		log.Printf("error of transaction when write articles: %v", lErrTrans)
+		return lErrTrans
 	}
 
 	log.Printf("wrote %d articles", lCountOfWritingArticles)
@@ -142,7 +131,7 @@ func (s *SqliteStorage) WriteArticles(aArticles []core.Article) error {
 func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 	var lArticle core.ArticleDB
 
-	lErrTrans := s.Db.Transaction(func(tx *gorm.DB) error {
+	lErrTrans := s.db.Transaction(func(tx *gorm.DB) error {
 
 		lExistId := tx.First(&lArticle, aID).RowsAffected
 
@@ -164,6 +153,7 @@ func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 
 	if lErrTrans != nil {
 		log.Printf("error of transaction when update article with id #%d: %v", aID, lErrTrans)
+		return lErrTrans
 	}
 
 	return nil
@@ -173,7 +163,7 @@ func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 	var lArticle core.ArticleDB
 
-	lResult := s.Db.Where("id = ?", aID).First(&lArticle)
+	lResult := s.db.Where("id = ?", aID).First(&lArticle)
 
 	lErr := lResult.Error
 	if lErr != nil {
@@ -188,7 +178,7 @@ func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 func (s *SqliteStorage) ReadArticlesByDateRange(aMin, aMax time.Time) ([]core.ArticleDB, error) {
 	lArticles := make([]core.ArticleDB, 0)
 
-	lResult := s.Db.Where("publish_date BETWEEN ? AND ?", aMin, aMax).Find(&lArticles)
+	lResult := s.db.Where("publish_date BETWEEN ? AND ?", aMin, aMax).Find(&lArticles)
 	lErr := lResult.Error
 	if lErr != nil {
 		log.Printf("error happens in rows between dates %s and %s: %v", aMin, aMax, lErr)

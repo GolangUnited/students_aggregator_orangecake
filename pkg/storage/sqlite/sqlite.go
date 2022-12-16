@@ -2,9 +2,11 @@ package sqlite
 
 import (
 	"fmt"
+	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"log"
 )
 
 func NewSqliteConnection(aConnectionString string) (*SqliteStorage, error) {
@@ -13,11 +15,11 @@ func NewSqliteConnection(aConnectionString string) (*SqliteStorage, error) {
 		return nil, fmt.Errorf("can't open database: %w", lErr)
 	}
 
-	sqlDb, lErr := dbArticles.DB()
-
-	if err := sqlDb.Ping(); err != nil {
-		return nil, fmt.Errorf("can't connect to database: %w", err)
+	lErr = dbArticles.AutoMigrate(&core.ArticleDB{})
+	if lErr != nil {
+		log.Printf("failed to migrate from Article struct: %v", lErr)
+		return nil, lErr
 	}
 
-	return &SqliteStorage{Db: dbArticles}, nil
+	return &SqliteStorage{db: dbArticles}, nil
 }
