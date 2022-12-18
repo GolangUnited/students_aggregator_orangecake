@@ -10,7 +10,6 @@ import (
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"github.com/indikator/aggregator_orange_cake/test"
 	"github.com/stretchr/testify/assert"
-	"os"
 )
 
 type hashnodeTestCase struct {
@@ -59,7 +58,7 @@ func TestHashnodeOkScrapUrl(t *testing.T) {
 		},
 	}
 
-	var lExpectedWarnings []core.Warning
+	lExpectedWarnings := []core.Warning{}
 	var lExpectedError error = nil
 
 	log := core.NewZeroLogger(io.Discard)
@@ -105,7 +104,7 @@ func TestHashnodeErrorsScrapUrl(t *testing.T) {
 
 		var lHS *HashnodeScraper
 
-		log := core.NewZeroLogger(os.Stdout)
+		log := core.NewZeroLogger(io.Discard)
 
 		if tCase.url != "" {
 			lHS = NewHashnodeScraper(tCase.url, log)

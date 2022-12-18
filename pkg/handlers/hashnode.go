@@ -32,7 +32,7 @@ func NewHashnodeScraper(aUrl string, logger core.Logger) *HashnodeScraper {
 	}
 }
 
-// ScrapUrl scrapping url
+// scrapUrl scrapping url
 func (h *HashnodeScraper) scrapUrl() error {
 
 	lC := colly.NewCollector()
@@ -53,7 +53,7 @@ func (h *HashnodeScraper) scrapUrl() error {
 	return nil
 }
 
-// ElementSearch colly searching func
+// elementSearch colly searching func
 func (h *HashnodeScraper) elementSearch(el *colly.HTMLElement) {
 
 	lArticle := core.Article{}
