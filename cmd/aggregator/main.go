@@ -54,7 +54,7 @@ func main() {
 		logger.Info(lArticleDescr)
 	}
 
-	logger.Info(fmt.Sprintf("  %d Articles detected.\n", len(lArticles)))
+	logger.Info("  %d Articles detected.\n", len(lArticles))
 }
 
 func CreateScrappers(aConfig *AggregatorConfig, aLogger core.Logger) []core.ArticleScraper {
@@ -64,7 +64,7 @@ func CreateScrappers(aConfig *AggregatorConfig, aLogger core.Logger) []core.Arti
 		if ok {
 			scrapper := scrapperConstruct(value.URL, aLogger)
 			if scrapper == nil {
-				aLogger.Warn(fmt.Sprintf("handler: %s error: %s", value, "is nil"))
+				aLogger.Warn("handler: %s error: %s", value, "is nil")
 				continue
 			}
 			lScrappers = append(lScrappers, scrapper)
@@ -80,7 +80,7 @@ func GetArticles(aScrappers []core.ArticleScraper, logger core.Logger) ([]core.A
 	for i, scrapper := range aScrappers {
 		articles, warnings, err := scrapper.ParseArticles()
 		if err != nil {
-			logger.Warn(fmt.Sprintf("[%d] scrapper error: %s", i, err.Error()))
+			logger.Warn("[%d] scrapper error: %s", i, err.Error())
 			continue
 		}
 		lArticles = append(lArticles, articles...)
