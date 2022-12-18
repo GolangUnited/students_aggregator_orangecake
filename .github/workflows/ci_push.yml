@@ -7,7 +7,6 @@ on:
   push:
 
 jobs:
-
   build:
 
     runs-on: ubuntu-latest
@@ -22,6 +21,10 @@ jobs:
 
       - name: Display Go version
         run: go version
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3.3.1
+        continue-on-error: true
 
       - name: Test
         run: |

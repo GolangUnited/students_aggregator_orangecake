@@ -23,6 +23,14 @@ jobs:
       - name: Display Go version
         run: go version
 
+      - name: Install linter
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
+
+      - name: Lint
+        continue-on-error: true
+        run: golangci-lint run ./... 2>&1 | tee lint_results.txt
+        timeout-minutes: 3
+
       - name: Test
         run: |
           # Run tests
@@ -45,4 +53,11 @@ jobs:
           path: |
             coverage_core.html
             coverage_handlers.html
+          retention-days: 3
+
+      - name: Upload Lint Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: lint_results
+          path: lint_results.txt
           retention-days: 3
