@@ -2,8 +2,8 @@ package sqlite
 
 import (
 	"fmt"
+	"github.com/glebarez/sqlite"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
