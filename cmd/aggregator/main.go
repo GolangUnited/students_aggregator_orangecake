@@ -41,15 +41,15 @@ func main() {
 		return
 	}
 
-	scrappers := CreateScrappers(lConfig, logger)
-
-	lArticles, _ := GetArticles(scrappers, logger)
-
 	//connect to database
 	lStorage, lErr := sqlite.NewSqliteConnection(lConfig.DBConnectionString, logger)
 	if lErr != nil {
 		logger.Error(lErr.Error())
 	}
+
+	scrappers := CreateScrappers(lConfig, logger)
+
+	lArticles, _ := GetArticles(scrappers, logger)
 
 	//write articles to database: takes articles for the last 70 days (cause for this period there are only 10 articles)
 	lErr = lStorage.WriteArticles(lArticles)
