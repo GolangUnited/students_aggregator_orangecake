@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"github.com/indikator/aggregator_orange_cake/pkg/handlers"
+	"github.com/indikator/aggregator_orange_cake/pkg/storage/sqlite"
 	"os"
 )
 
@@ -40,21 +41,21 @@ func main() {
 		return
 	}
 
+	//connect to database
+	lStorage, lErr := sqlite.NewSqliteConnection(lConfig.DBConnectionString, logger)
+	if lErr != nil {
+		logger.Error(lErr.Error())
+	}
+
 	scrappers := CreateScrappers(lConfig, logger)
 
 	lArticles, _ := GetArticles(scrappers, logger)
 
-	for i, lArticle := range lArticles {
-		lArticleDescr := fmt.Sprintf("Article %d: %s\n", i, lArticle.Title)
-		lArticleDescr += fmt.Sprintf("  Author: %s\n", lArticle.Author)
-		lArticleDescr += fmt.Sprintf("  Date: %s\n", lArticle.PublishDate.Format("Jan _2, 2006"))
-		lArticleDescr += fmt.Sprintf("  URL: %s\n", lArticle.Link)
-		lArticleDescr += fmt.Sprintf("  Description:\n    %s\n\n", lArticle.Description)
-
-		logger.Info(lArticleDescr)
+	//write articles to database: takes articles for the last 70 days (cause for this period there are only 10 articles)
+	lErr = lStorage.WriteArticles(lArticles)
+	if lErr != nil {
+		logger.Error(lErr.Error())
 	}
-
-	logger.Info(fmt.Sprintf("  %d Articles detected.\n", len(lArticles)))
 }
 
 func CreateScrappers(aConfig *AggregatorConfig, aLogger core.Logger) []core.ArticleScraper {
