@@ -36,15 +36,19 @@ jobs:
           # Run tests
           go test -v ./pkg/core -coverprofile coverage_core.out
           go test -v ./pkg/handlers -coverprofile coverage_handlers.out
+          go test -v ./cmd/web-server/handlers -coverprofile coverage_webserver_handlers.out
           # Generate Coverage report
           go tool cover -html=coverage_core.out -o=coverage_core.html
           go tool cover -html=coverage_handlers.out -o=coverage_handlers.html
+          go tool cover -html=coverage_webserver_handlers.out -o=coverage_webserver_handlers.html
 
       - name: Build
         run: |
           GOOS=linux GOARCH=amd64 go build -v ./pkg/core
           GOOS=linux GOARCH=amd64 go build -v ./pkg/handlers
           GOOS=linux GOARCH=amd64 go build -v ./cmd/aggregator
+          GOOS=linux GOARCH=amd64 go build -v ./cmd/web-server/handlers
+          GOOS=linux GOARCH=amd64 go build -v ./cmd/web-server
 
       - name: Upload Code Coverage
         uses: actions/upload-artifact@v3
@@ -53,6 +57,7 @@ jobs:
           path: |
             coverage_core.html
             coverage_handlers.html
+            coverage_webserver_handlers.html
           retention-days: 3
 
       - name: Upload Lint Results

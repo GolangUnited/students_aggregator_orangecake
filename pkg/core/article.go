@@ -3,11 +3,11 @@ package core
 import "time"
 
 type Article struct {
-	Title       string
-	Author      string
-	Link        string
-	PublishDate time.Time
-	Description string
+	Title       string    `json:"title"`
+	Author      string    `json:"author"`
+	Link        string    `json:"link"`
+	PublishDate time.Time `json:"date"`
+	Description string    `json:"desc"`
 }
 
 type ArticleDB struct {
