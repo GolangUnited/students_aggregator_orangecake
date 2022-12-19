@@ -15,11 +15,11 @@ type HashnodeScraper struct {
 
 const (
 	HASHNODE_URL  = "https://hashnode.com/n/go"
-	ARTICLE_CLASS = "div.css-4gdbui"
-	TITLE_PATH    = "div.css-1wg9be8 div.css-16fbhyp h1.css-1j1qyv3 a.css-4zleql"
-	DESCR_PATH    = "div.css-1wg9be8 div.css-16fbhyp p.css-1072ocs a.css-4zleql"
-	AUTHOR_PATH   = "div.css-dxz0om div.css-tel74u div.css-2wkyxu div.css-1ajtyzd a.css-c3r4j7"
-	DATE_PATH     = "div.css-dxz0om div.css-tel74u div.css-2wkyxu div.css-1n08q4e a.css-1u6dh35"
+	ARTICLE_CLASS = "div.css-1s8wn94"
+	TITLE_PATH    = "div.css-1wg9be8 div.css-1abv9a9 h1.css-1yrl49b a.css-4zleql"
+	DESCR_PATH    = "div.css-1wg9be8 div.css-1abv9a9 p.css-1m4ptby a.css-4zleql"
+	AUTHOR_PATH   = "div.css-dxz0om div.css-cj4uuj div.css-2wkyxu div.css-1ajtyzd a.css-9ssaz8"
+	DATE_PATH     = "div.css-dxz0om div.css-cj4uuj div.css-2wkyxu div.css-1cyn8lj a.css-15gyiyx"
 )
 
 // NewHashnodeScraper create Hashnode scrapper struct for "https://hashnode.com/n/go"
@@ -32,7 +32,7 @@ func NewHashnodeScraper(aUrl string, logger core.Logger) *HashnodeScraper {
 	}
 }
 
-// ScrapUrl scrapping url
+// scrapUrl scrapping url
 func (h *HashnodeScraper) scrapUrl() error {
 
 	lC := colly.NewCollector()
@@ -53,7 +53,7 @@ func (h *HashnodeScraper) scrapUrl() error {
 	return nil
 }
 
-// ElementSearch colly searching func
+// elementSearch colly searching func
 func (h *HashnodeScraper) elementSearch(el *colly.HTMLElement) {
 
 	lArticle := core.Article{}
@@ -70,7 +70,16 @@ func (h *HashnodeScraper) elementSearch(el *colly.HTMLElement) {
 	}
 
 	lArticle.Title = lTitle.Text()
-	lArticle.Link, _ = lTitle.Attr("href")
+
+	lLink, lExists := lTitle.Attr("href")
+	if !lExists {
+		strError := core.RequiredFieldError{ErrorType: core.ErrAttributeNotExists, Field: core.LinkFieldName}.Error()
+		h.log.Warn(strError)
+		h.warnings = append(h.warnings, core.Warning(strError))
+		return
+	}
+
+	lArticle.Link = lLink
 
 	lDescription := lDOM.Find(DESCR_PATH)
 	if lDescription.Nodes == nil {
@@ -103,7 +112,7 @@ func (h *HashnodeScraper) elementSearch(el *colly.HTMLElement) {
 
 	lPubDate, err := core.ParseDate("Jan _2, 2006", lDateString)
 	if err != nil {
-		strWarning := fmt.Sprintf("For article %s, %s DateErr: %s ", lArticle.Title, lArticle.Link, err.Error())
+		strWarning := fmt.Sprintf("For article %s, %s DateErr: %s", lArticle.Title, lArticle.Link, err.Error())
 		h.log.Info(strWarning)
 		h.warnings = append(h.warnings, core.Warning(strWarning))
 	}
