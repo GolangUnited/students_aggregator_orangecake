@@ -20,7 +20,7 @@ func startServer(aLogger core.Logger, aServer *http.Server, aStopFunc context.Ca
 		return
 	}
 
-	//TODO: should we print the following messages to consile?
+	//TODO: should we print the following messages to console?
 	// please note that we use console for the log output so the messages might be missed
 	//fmt.Println("Starting server at " + aServer.Addr)
 	//fmt.Println("Press Ctrl+C to exit")

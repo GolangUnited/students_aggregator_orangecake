@@ -3,9 +3,10 @@ package core
 import (
 	"bytes"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLoggerConformityToLoggerInterface(t *testing.T) {
@@ -93,4 +94,12 @@ func TestLoggingErrorLevel(t *testing.T) {
 	expectedMsg := fmt.Sprintf("\x1b[1m\x1b[31mERR\x1b[0m\x1b[0m \x1b[90m%s\x1b[0m Error...\n", time.Now().Format(time.RFC822))
 	// ERR 11 Dec 22 13:59 +03 Error...
 	assert.Equal(t, expectedMsg, buffer.String(), "Wrong logged Error string.")
+}
+
+func TestDebugLogger(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	logger := NewDebugZeroLogger(buffer)
+
+	logger.Error("Error...")
+	assert.Equal(t, "ERR Error...\n", buffer.String(), "Wrong logged Error string.")
 }

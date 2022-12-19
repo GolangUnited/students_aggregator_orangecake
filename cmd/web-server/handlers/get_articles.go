@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -44,29 +42,20 @@ func handleGetArticles(aServer WebServer, aWriter http.ResponseWriter, aRequest 
 
 	lFromDate, lErr := parseParamDate(lQuery.Get("from"), lDefDate.AddDate(0, 0, -7))
 	if lErr != nil {
-		http.Error(aWriter, fmt.Sprintf("Invalid From parameter. %s", lErr.Error()), http.StatusBadRequest)
+		SetApiErrorResponsef(aWriter, aServer.Log(), http.StatusBadRequest, "Invalid From parameter. %s", lErr.Error())
 		return
 	}
 	lToDate, lErr := parseParamDate(lQuery.Get("to"), lDefDate)
 	if lErr != nil {
-		http.Error(aWriter, fmt.Sprintf("Invalid To parameter. %s", lErr.Error()), http.StatusBadRequest)
+		SetApiErrorResponsef(aWriter, aServer.Log(), http.StatusBadRequest, "Invalid To parameter. %s", lErr.Error())
 		return
 	}
 
-	//TODO: load arrticles
-	lArticles := [...]core.Article{
-		{Author: "Author", Title: "Title 1", Link: "LinkUrl", Description: "Summary", PublishDate: lFromDate},
-		{Author: "Author", Title: "Title 2", Link: "LinkUrl", Description: "Summary", PublishDate: lFromDate},
-		{Author: /*e*/ "", Title: "Title 3", Link: "LinkUrl", Description: /*em*/ "", PublishDate: lToDate},
-	}
-
-	lJson, lErr := json.Marshal(lArticles)
+	lArticles, lErr := aServer.DBReader().ReadArticlesByDateRange(lFromDate, lToDate)
 	if lErr != nil {
-		//go:cover ignore
-		http.Error(aWriter, "Cannot Marshal", http.StatusNotImplemented)
+		SetApiErrorResponsef(aWriter, aServer.Log(), http.StatusInternalServerError, "Cannot read articles. %s", lErr.Error())
 		return
 	}
 
-	aWriter.Header().Set("Content-Type", "application/json")
-	aWriter.Write(lJson)
+	SetApiJsonResponse(aWriter, aServer.Log(), http.StatusOK, lArticles)
 }

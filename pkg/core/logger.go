@@ -1,11 +1,12 @@
 package core
 
 import (
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"io"
 	"strconv"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 type zeroLogger struct {
@@ -18,6 +19,16 @@ func NewZeroLogger(aWriters ...io.Writer) Logger {
 		Out:        lMulti,
 		TimeFormat: time.RFC822,
 		PartsOrder: []string{"level", "time", "message"},
+	}
+	return zeroLogger{log.Output(w)}
+}
+
+func NewDebugZeroLogger(aWriters ...io.Writer) Logger {
+	lMulti := zerolog.MultiLevelWriter(aWriters...)
+	w := zerolog.ConsoleWriter{
+		Out:        lMulti,
+		PartsOrder: []string{"level", "message"},
+		NoColor:    true,
 	}
 	return zeroLogger{log.Output(w)}
 }

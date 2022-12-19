@@ -7,6 +7,7 @@ import (
 
 	http_handlers "github.com/indikator/aggregator_orange_cake/cmd/web-server/handlers"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"github.com/indikator/aggregator_orange_cake/pkg/storage/sqlite"
 )
 
 func initLogger(aFailed *bool) core.Logger {
@@ -40,15 +41,13 @@ func initWebServerBuilder(aLogger core.Logger, aConfig *ServiceConfig, aFailed *
 		return nil
 	}
 
-	//TODO: use an SqliteStorage storage
-	lStorage := core.MockDBStorage{}
-	/*
-		if lErr != nil {
-			*aFailed = true
-			aLogger.Error(fmt.Sprintf("Init storage Error: %s\n", lErr.Error()))
-			return nil
-		}
-	*/
+	//connect to database
+	lStorage, lErr := sqlite.NewSqliteConnection(aConfig.DBConnectionString, aLogger)
+	if lErr != nil {
+		*aFailed = true
+		aLogger.Error(fmt.Sprintf("Init storage Error: %s\n", lErr.Error()))
+		return nil
+	}
 
 	lWebServer, lErr := http_handlers.NewWebServer(aLogger, lStorage, lStorage)
 	if lErr != nil {
