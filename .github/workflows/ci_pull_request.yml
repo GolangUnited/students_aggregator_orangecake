@@ -23,20 +23,32 @@ jobs:
       - name: Display Go version
         run: go version
 
+      - name: Install linter
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
+
+      - name: Lint
+        continue-on-error: true
+        run: golangci-lint run ./... 2>&1 | tee lint_results.txt
+        timeout-minutes: 3
+
       - name: Test
         run: |
           # Run tests
           go test -v ./pkg/core -coverprofile coverage_core.out
           go test -v ./pkg/handlers -coverprofile coverage_handlers.out
+          go test -v ./cmd/web-server/handlers -coverprofile coverage_webserver_handlers.out
           # Generate Coverage report
           go tool cover -html=coverage_core.out -o=coverage_core.html
           go tool cover -html=coverage_handlers.out -o=coverage_handlers.html
+          go tool cover -html=coverage_webserver_handlers.out -o=coverage_webserver_handlers.html
 
       - name: Build
         run: |
           GOOS=linux GOARCH=amd64 go build -v ./pkg/core
           GOOS=linux GOARCH=amd64 go build -v ./pkg/handlers
           GOOS=linux GOARCH=amd64 go build -v ./cmd/aggregator
+          GOOS=linux GOARCH=amd64 go build -v ./cmd/web-server/handlers
+          GOOS=linux GOARCH=amd64 go build -v ./cmd/web-server
 
       - name: Upload Code Coverage
         uses: actions/upload-artifact@v3
@@ -45,4 +57,12 @@ jobs:
           path: |
             coverage_core.html
             coverage_handlers.html
+            coverage_webserver_handlers.html
+          retention-days: 3
+
+      - name: Upload Lint Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: lint_results
+          path: lint_results.txt
           retention-days: 3
