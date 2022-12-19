@@ -161,7 +161,7 @@ func (s *SqliteStorage) UpdateArticle(aID uint, aArticle core.Article) error {
 }
 
 // ReadArticleByID returns record with id = aID
-func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
+func (s *SqliteStorage) ReadArticleByID(aID uint) (core.ArticleDB, error) {
 	var lArticle core.ArticleDB
 
 	lResult := s.db.Where("id = ?", aID).First(&lArticle)
@@ -169,10 +169,10 @@ func (s *SqliteStorage) ReadArticleByID(aID uint) (*core.ArticleDB, error) {
 	lErr := lResult.Error
 	if lErr != nil {
 		s.logger.Error("error happens in row with id = %d: %v", aID, lErr)
-		return nil, lErr
+		return core.ArticleDB{}, lErr
 	}
 
-	return &lArticle, nil
+	return lArticle, nil
 }
 
 // ReadArticlesByDateRange returns records, that were written between aMin and aMax time frames
