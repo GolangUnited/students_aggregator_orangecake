@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"github.com/indikator/aggregator_orange_cake/pkg/handlers"
 	"github.com/indikator/aggregator_orange_cake/pkg/storage/sqlite"

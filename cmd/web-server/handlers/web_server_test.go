@@ -10,7 +10,7 @@ import (
 
 func newMockLogger() core.Logger {
 	lLog := new(strings.Builder)
-	return core.NewZeroLogger(lLog)
+	return core.NewDebugZeroLogger(lLog)
 }
 
 func TestNewWebServerWithoutLog(t *testing.T) {

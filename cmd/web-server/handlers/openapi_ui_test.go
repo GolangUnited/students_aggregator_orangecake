@@ -44,5 +44,4 @@ func TestOpenApiUIRegistered(t *testing.T) {
 	lResponse := httptest.NewRecorder()
 	lBuilder.ServeMux().ServeHTTP(lResponse, lRequest)
 	assert.Equal(t, http.StatusOK, lResponse.Code, "Response status")
-	//TODO: check response data
 }
