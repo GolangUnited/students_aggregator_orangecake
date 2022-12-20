@@ -85,4 +85,14 @@ var (
 	ErrUnknown = errors.New("unknown error")
 	// ErrUnableCastToInterface impossible to cast structure to interface
 	ErrUnableCastToInterface = errors.New("impossible to cast structure to interface")
+	// ErrInvalidConfigValue invalid config value
+	ErrInvalidConfigValue = errors.New("invalid config value")
+	// ErrLoggerNotAssigned logger is not assigned
+	ErrLoggerNotAssigned = errors.New("logger is not specified")
+	// ErrDBReaderNotAssigned DBReader is not assigned
+	ErrDBReaderNotAssigned = errors.New("db reader is not specified")
+	// ErrDBWriterNotAssigned DBWriter is not assigned
+	ErrDBWriterNotAssigned = errors.New("db reader is not specified")
+	// ErrNotImplemented not implemented (used in mock implementation)
+	ErrNotImplemented = errors.New("not implemented")
 )
