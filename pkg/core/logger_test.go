@@ -27,16 +27,16 @@ func TestWritingToMultipleWriters(t *testing.T) {
 	assert.Equal(t, buffer1.String(), buffer2.String(), "Log results in writer1 and writer2 are not the same.")
 }
 
-func TestLoggingExtraValues(t *testing.T) {
+func TestLoggingWithFormatValues(t *testing.T) {
 	buffer := new(bytes.Buffer)
 	logger := NewZeroLogger(buffer)
 
-	logger.Info("Some info.", 5, true, make([]Article, 0))
+	logger.Info("Article %d: %s.", 5, "some article name")
 
 	expectedMsg := fmt.Sprintf(
-		"\x1b[32mINF\x1b[0m \x1b[90m%s\x1b[0m Some info. \x1b[36mv0=\x1b[0m5 \x1b[36mv1=\x1b[0mtrue \x1b[36mv2=\x1b[0m[]\n",
+		"\x1b[32mINF\x1b[0m \x1b[90m%s\x1b[0m Article 5: some article name.\n",
 		time.Now().Format(time.RFC822))
-	// INF 11 Dec 22 15:19 +03 Some info. v0=5 v1=true v2=[]
+	// INF 11 Dec 22 15:19 +03 Article 5: some article name.
 	assert.Equal(t, expectedMsg, buffer.String(), "Values given to logger are shown incorrect.")
 }
 
