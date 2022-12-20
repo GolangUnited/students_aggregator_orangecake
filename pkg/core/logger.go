@@ -1,8 +1,8 @@
 package core
 
 import (
+	"fmt"
 	"io"
-	"strconv"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -34,37 +34,26 @@ func NewDebugZeroLogger(aWriters ...io.Writer) Logger {
 }
 
 func (zero zeroLogger) Trace(aMessage string, aValues ...interface{}) {
-	lEvent := zero.log.Trace()
-	addFields(lEvent, aValues...)
-	lEvent.Msg(aMessage)
+	lFormattedMessage := fmt.Sprintf(aMessage, aValues...)
+	zero.log.Trace().Msg(lFormattedMessage)
 }
 
 func (zero zeroLogger) Info(aMessage string, aValues ...interface{}) {
-	lEvent := zero.log.Info()
-	addFields(lEvent, aValues...)
-	lEvent.Msg(aMessage)
+	lFormattedMessage := fmt.Sprintf(aMessage, aValues...)
+	zero.log.Info().Msg(lFormattedMessage)
 }
 
 func (zero zeroLogger) Debug(aMessage string, aValues ...interface{}) {
-	lEvent := zero.log.Debug()
-	addFields(lEvent, aValues...)
-	lEvent.Msg(aMessage)
+	lFormattedMessage := fmt.Sprintf(aMessage, aValues...)
+	zero.log.Debug().Msg(lFormattedMessage)
 }
 
 func (zero zeroLogger) Warn(aMessage string, aValues ...interface{}) {
-	lEvent := zero.log.Warn()
-	addFields(lEvent, aValues...)
-	lEvent.Msg(aMessage)
+	lFormattedMessage := fmt.Sprintf(aMessage, aValues...)
+	zero.log.Warn().Msg(lFormattedMessage)
 }
 
 func (zero zeroLogger) Error(aMessage string, aValues ...interface{}) {
-	lEvent := zero.log.Error()
-	addFields(lEvent, aValues...)
-	lEvent.Msg(aMessage)
-}
-
-func addFields(e *zerolog.Event, aValues ...interface{}) {
-	for i, value := range aValues {
-		e = e.Interface("v"+strconv.Itoa(i), value)
-	}
+	lFormattedMessage := fmt.Sprintf(aMessage, aValues...)
+	zero.log.Error().Msg(lFormattedMessage)
 }
