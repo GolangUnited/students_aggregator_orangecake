@@ -9,5 +9,6 @@ RUN go get -v ./... && GOOS=linux CGO_ENABLED=0 go build -o /myApp/ ./cmd/web-se
 FROM alpine:latest
 
 COPY --from=builder /myApp/ /myApp/
-ENTRYPOINT [ "myApp/web-server"]
+WORKDIR /myApp
+ENTRYPOINT ["web-server"]
 

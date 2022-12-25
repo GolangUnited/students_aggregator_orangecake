@@ -59,8 +59,8 @@ jobs:
             docker rm aggregator-orange-cake
             docker image rm pavelpogo/orange_cake
             docker pull pavelpogo/orange_cake:latest
-            docker run --name aggregator-orange-cake -v /home/orangecake/aggregator_data/db:/myApp/db -v /home/orangecake/aggregator_data/handlers.config.yaml:/myApp/handlers.config.yaml pavelpogo/orange_cake
+            docker run --name aggregator-orange-cake -v /home/orangecake/aggregator_data/db:/myApp/db -v /home/orangecake/aggregator_data/handlers.config.yaml:/myApp/handlers.config.yaml -v /home/orangecake/aggregator_data/.env_agg:/myApp/.env pavelpogo/orange_cake
             docker rm aggregator-web
             docker image rm pavelpogo/web
             docker pull pavelpogo/web:latest
-            docker run --name aggregator-web -v /home/orangecake/aggregator_data/db:/myApp/db -p 8080:8080 pavelpogo/web
+            docker run --name aggregator-web -v /home/orangecake/aggregator_data/db:/myApp/db -v /home/orangecake/aggregator_data/.env_srv:/myApp/.env -p 8080:8080 pavelpogo/web
