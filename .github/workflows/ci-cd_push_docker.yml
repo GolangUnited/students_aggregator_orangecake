@@ -5,7 +5,7 @@ name: CI DockerHub Push
 
 on:
   push:
-    branches: [main, develop, feature_docker_images]
+    branches: [main, develop]
     tags: "*"
 
 jobs:
@@ -63,4 +63,4 @@ jobs:
             docker rm orange-cake-web
             docker image rm pavelpogo/web
             docker pull pavelpogo/web:latest
-            docker run --name orange-cake-web -v /home/orangecake/aggregator_data/db:/myApp/db -v /home/orangecake/aggregator_data/.env_srv:/myApp/.env -p 8080:8080 pavelpogo/web
+            docker run --name orange-cake-web -d -v /home/orangecake/aggregator_data/db:/myApp/db -v /home/orangecake/aggregator_data/.env_srv:/myApp/.env -p 8080:8080 pavelpogo/web
