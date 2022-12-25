@@ -10,5 +10,5 @@ FROM alpine:latest
 
 COPY --from=builder /myApp/ /myApp/
 WORKDIR /myApp
-ENTRYPOINT ["web-server"]
+ENTRYPOINT ["./web-server"]
 

@@ -10,5 +10,5 @@ FROM alpine:latest
 
 COPY --from=builder /myApp/ /myApp/
 WORKDIR /myApp
-ENTRYPOINT ["aggregator"]
+ENTRYPOINT ["./aggregator"]
 
