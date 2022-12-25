@@ -9,7 +9,7 @@ on:
     tags: "*"
 
 jobs:
-  push_to_registry:
+  push_aggregator_image:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     steps:
@@ -22,11 +22,29 @@ jobs:
           image: pavelpogo/orange_cake
           tags: ${{  github.ref_name }}, latest
           registry: docker.io
+          dockerfile: aggregator.Dockerfile
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  push_web_image:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Check out code
+
+      - uses: mr-smithers-excellent/docker-build-push@v5
+        name: Build & push Docker image
+        with:
+          image: pavelpogo/web
+          tags: ${{  github.ref_name }}, latest
+          registry: docker.io
+          dockerfile: web.Dockerfile
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
   deploy_to_serv:
-    needs: push_to_registry
+    needs: [push_aggregator_image, push_web_image]
     name: Pull and deploy Docker image
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +56,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_REMOTE_HOST_PORT }}
           script: |
-            docker rm aggregator-orange-cake
+            docker rm orange-cake-agg
             docker image rm pavelpogo/orange_cake
             docker pull pavelpogo/orange_cake:latest
-            docker run --name aggregator-orange-cake pavelpogo/orange_cake
+            docker run --name orange-cake-agg -v /home/orangecake/aggregator_data/db:/myApp/db -v /home/orangecake/aggregator_data/handlers.config.yaml:/myApp/handlers.config.yaml -v /home/orangecake/aggregator_data/.env_agg:/myApp/.env pavelpogo/orange_cake
+            docker rm orange-cake-web
+            docker image rm pavelpogo/web
+            docker pull pavelpogo/web:latest
+            docker run --name orange-cake-web -d -v /home/orangecake/aggregator_data/db:/myApp/db -v /home/orangecake/aggregator_data/.env_srv:/myApp/.env -p 8080:8080 pavelpogo/web
