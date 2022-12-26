@@ -57,10 +57,10 @@ jobs:
           port: ${{ secrets.SSH_REMOTE_HOST_PORT }}
           script: |
             docker rm orange-cake-agg
-            docker image rm pavelpogo/orange_cake
+            docker image rm --force pavelpogo/orange_cake
             docker pull pavelpogo/orange_cake:latest
             docker run --name orange-cake-agg -v /home/orangecake/aggregator_data/db:/myApp/db -v /home/orangecake/aggregator_data/handlers.config.yaml:/myApp/handlers.config.yaml -v /home/orangecake/aggregator_data/.env_agg:/myApp/.env pavelpogo/orange_cake
-            docker rm orange-cake-web
+            docker rm --force orange-cake-web
             docker image rm pavelpogo/web
             docker pull pavelpogo/web:latest
             docker run --name orange-cake-web -d -v /home/orangecake/aggregator_data/db:/myApp/db -v /home/orangecake/aggregator_data/.env_srv:/myApp/.env -p 8080:8080 pavelpogo/web
