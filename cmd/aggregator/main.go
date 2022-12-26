@@ -11,7 +11,7 @@ type ScrapperConstruct func(string, core.Logger) core.ArticleScraper
 
 var ScrappersMap = map[string]ScrapperConstruct{
 	"devto": func(url string, logger core.Logger) core.ArticleScraper {
-		return nil //handlers.NewDevtoHandler(url /*TODO add logger to constructor*/)
+		return handlers.NewDevtoHandler(url, logger)
 	},
 	"bitfield": func(url string, logger core.Logger) core.ArticleScraper {
 		return handlers.NewBitfieldScrapper(url, logger)

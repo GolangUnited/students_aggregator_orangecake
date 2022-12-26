@@ -106,7 +106,7 @@ func TestAppliedGoScrapeEmptyRequiredFields(t *testing.T) {
 
 // Tests the situation when the required field is empty (such as date and description)
 func TestAppliedGoScrapeEmptyNonRequiredFields(t *testing.T) {
-	lDate := time.Now()
+	lDate := time.Now().UTC()
 	lExpectedDate := time.Date(lDate.Year(), lDate.Month(), lDate.Day(), 0, 0, 0, 0, time.UTC)
 	lExpectedArticle := []core.Article{
 		{
@@ -130,7 +130,7 @@ func TestAppliedGoScrapeEmptyNonRequiredFields(t *testing.T) {
 }
 
 func TestAppliedGoScrapeInvalidDate(t *testing.T) {
-	lDate := time.Now()
+	lDate := time.Now().UTC()
 	lExpectedDate := time.Date(lDate.Year(), lDate.Month(), lDate.Day(), 0, 0, 0, 0, time.UTC)
 	lExpectedArticle := []core.Article{
 		{

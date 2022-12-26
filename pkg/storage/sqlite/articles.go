@@ -40,7 +40,7 @@ func cut(aText string, aLimit int) string {
 }
 
 // validation check length of fields and cut it, if need it.
-// TODO "&" is need it, like &len(&aArticle.Title)?
+// TODO "&" is need it, like len(&aArticle.Title)?
 func validation(aArticle *core.Article) {
 	if len(aArticle.Title) > LEN_OF_TITLE {
 		aArticle.Title = cut(aArticle.Title, LEN_OF_TITLE)

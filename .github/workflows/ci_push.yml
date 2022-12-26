@@ -31,6 +31,7 @@ jobs:
           go test -v ./pkg/core 
           go test -v ./pkg/handlers
           go test -v ./cmd/web-server/handlers
+          go test -v ./pkg/storage/sqlite
 
       - name: Build
         run: |

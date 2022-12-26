@@ -37,10 +37,12 @@ jobs:
           go test -v ./pkg/core -coverprofile coverage_core.out
           go test -v ./pkg/handlers -coverprofile coverage_handlers.out
           go test -v ./cmd/web-server/handlers -coverprofile coverage_webserver_handlers.out
+          go test -v ./pkg/storage/sqlite -coverprofile coverage_sqlite_storage.out
           # Generate Coverage report
           go tool cover -html=coverage_core.out -o=coverage_core.html
           go tool cover -html=coverage_handlers.out -o=coverage_handlers.html
           go tool cover -html=coverage_webserver_handlers.out -o=coverage_webserver_handlers.html
+          go tool cover -html=coverage_sqlite_storage.out -o=coverage_sqlite_storage.html
 
       - name: Build
         run: |
@@ -55,6 +57,7 @@ jobs:
             coverage_core.html
             coverage_handlers.html
             coverage_webserver_handlers.html
+            coverage_sqlite_storage.html
           retention-days: 3
 
       - name: Upload Lint Results

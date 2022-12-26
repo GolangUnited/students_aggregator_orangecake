@@ -9,7 +9,7 @@ import (
     "github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
-var Devto_URL = "https://dev.to" // To be able to redefine later for testing purposes
+var Devto_URL = "https://dev.to/" // To be able to redefine later for testing purposes
 
 const (
     DEVTO_GO_URL           = "https://dev.to/t/go"
@@ -26,22 +26,22 @@ type DevtoHandler struct {
     url      string
     articles []core.Article
     colly    *colly.Collector
+    warnings []core.Warning
     err      error
+    log      core.Logger
 }
 
-func NewDevtoHandler(aURL string) DevtoHandler {
-    return DevtoHandler{url: aURL, articles: make([]core.Article, 0), colly: colly.NewCollector()}
-}
-
-// Runs scrapping of URL provided
-func (aHandler *DevtoHandler) Run() []core.Article {
-    aHandler.Scrap()
-
-    return aHandler.articles
+func NewDevtoHandler(aURL string, aLog core.Logger) core.ArticleScraper {
+    return &DevtoHandler {
+        url:      aURL,
+        articles: make([]core.Article, 0),
+        colly:    colly.NewCollector(),
+        log:      aLog,
+    }
 }
 
 // Runs scrapping and fills Handler field with Articles info
-func (aHandler *DevtoHandler) Scrap() error {
+func (aHandler *DevtoHandler) ParseArticles() ([]core.Article, []core.Warning, error) {
 
     lArticle := core.Article{}
 
@@ -53,6 +53,7 @@ func (aHandler *DevtoHandler) Scrap() error {
             lArticle.Title = strings.TrimSpace(h.ChildText(DEVTO_TITLE_CLASS))
             if len(lArticle.Title) == 0 {
                 aHandler.err = core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.TitleFieldName}
+                aHandler.log.Error(aHandler.err.Error())
                 return false
             }
 
@@ -60,25 +61,25 @@ func (aHandler *DevtoHandler) Scrap() error {
             lLink := h.ChildAttr("a", "href")
             if len(lLink) == 0 {
                 aHandler.err = core.RequiredFieldError{ErrorType: core.ErrFieldIsEmpty, Field: core.LinkFieldName}
+                aHandler.log.Error(aHandler.err.Error())
                 return false
-            }
-            if !strings.HasPrefix(lLink, "/") && !strings.HasPrefix(lLink, FILE_PREFIX) {
-                lLink = "/" + lLink
             }
             lArticle.Link = Devto_URL + lLink
             
             lArticle.Author = strings.TrimSpace(h.ChildText(DEVTO_AUTHOR_CLASS))
             if len(lArticle.Author) == 0 {
-                // TODO: log
-                fmt.Printf("%s\n", core.EmptyFieldError{Field: core.AuthorFieldName})
+                lWarning := fmt.Sprintf("%s", core.EmptyFieldError{Field: core.AuthorFieldName})
+                aHandler.warnings = append(aHandler.warnings, core.Warning(lWarning))
+                aHandler.log.Warn(lWarning)
             }
 
             lDate := h.ChildAttr("time", "datetime")
             var lErr error
             lArticle.PublishDate, lErr = core.ParseDate(time.RFC3339, lDate)
             if lErr != nil {
-                // TODO: log
-                fmt.Printf("date cannot be parsed: %s\n", lErr.Error())
+                lWarning := fmt.Sprintf("date cannot be parsed: %s", lErr.Error())
+                aHandler.warnings = append(aHandler.warnings, core.Warning(lWarning))
+                aHandler.log.Warn(lWarning)
             }
 
             // Following link to an Article itself to get the description
@@ -96,14 +97,14 @@ func (aHandler *DevtoHandler) Scrap() error {
 
     lErr := aHandler.colly.Visit(aHandler.url)
     if lErr != nil {
-        return core.ErrHTMLAccess
+        aHandler.log.Error(core.ErrHTMLAccess.Error())
+        return nil, aHandler.warnings, core.ErrHTMLAccess
     }
 
     // Checking Handler for any Articles errors
     if aHandler.err != nil {
-        // TODO: log
-        return aHandler.err
+        return nil, aHandler.warnings, aHandler.err
     }
 
-    return nil
+    return aHandler.articles, aHandler.warnings, nil
 }
