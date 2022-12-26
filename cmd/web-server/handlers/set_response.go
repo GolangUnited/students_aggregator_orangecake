@@ -36,7 +36,8 @@ func internalSetJsonResponse(aWriter http.ResponseWriter, aLogger core.Logger, a
 
 	aWriter.Header().Set(HTTP_HEADER_CONTENT_TYPE, HTTP_CONTENT_TYPE_JSON_UTF8)
 	aWriter.WriteHeader(aStatusCode)
-	aWriter.Write(lValueData)
+	//TODO: handle Write() result properly
+	_, _ = aWriter.Write(lValueData)
 }
 
 // func Marshal(v any) ([]byte, error) {

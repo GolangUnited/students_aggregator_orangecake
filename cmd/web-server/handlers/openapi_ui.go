@@ -43,5 +43,6 @@ func handleOpenApiUI(aServer WebServer, aWriter http.ResponseWriter, aRequest *h
 	aServer.Log().Trace("Get OpenApi UI handler")
 
 	aWriter.Header().Set("Content-Type", "text/html")
-	aWriter.Write([]byte(C_OPENAPI_UI_HTML))
+	//TODO: handle Write() result properly
+	_, _ = aWriter.Write([]byte(C_OPENAPI_UI_HTML))
 }

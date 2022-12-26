@@ -32,5 +32,6 @@ func handleOpenApiJson(aServer WebServer, aOpenApiJson []byte, aWriter http.Resp
 	aServer.Log().Trace("Get OpenApi Json handler")
 
 	aWriter.Header().Set("Content-Type", "application/json")
-	aWriter.Write(aOpenApiJson)
+	//TODO: handle Write() result properly
+	_, _ = aWriter.Write(aOpenApiJson)
 }

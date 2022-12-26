@@ -3,8 +3,6 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/indikator/aggregator_orange_cake/pkg/core"
-	"github.com/stretchr/testify/assert"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +12,9 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -159,10 +160,4 @@ func TestAppliedGoNoArticles(t *testing.T) {
 	assert.Equal(t, []core.Article(nil), lReceivedArticles, "there should be no articles")
 	assert.Equal(t, []core.Warning(nil), lReceivedWarnings, "warnings should be nil")
 	assert.Equal(t, core.ErrNoArticles, lReceivedErr, "invalid error message")
-}
-
-func TestScraperConformityToScraperInterface(t *testing.T) {
-	lScraper := NewAppliedGoScraper("SomeUrl", nil)
-	_, ok := lScraper.(core.ArticleScraper)
-	assert.True(t, ok, "The scraper doesn't conform to the core.ArticleScraper interface.")
 }

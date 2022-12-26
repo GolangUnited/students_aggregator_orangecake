@@ -26,10 +26,11 @@ func RegisterGetArticles(aPath string, aBuilder WebServerBuilder, aFailed *bool)
 
 	lGet := openapi3.Operation{}
 	lOpenApi := aBuilder.OpenApi()
-	lOpenApi.SetRequest(&lGet, new(requestParams), http.MethodGet)
-	lOpenApi.SetJSONResponse(&lGet, new([]core.Article), http.StatusOK)
-	lOpenApi.SetJSONResponse(&lGet, ApiError{}, http.StatusBadRequest)
-	lOpenApi.Spec.AddOperation(http.MethodGet, aPath, lGet)
+	//TODO: handle result values properly
+	_ = lOpenApi.SetRequest(&lGet, new(requestParams), http.MethodGet)
+	_ = lOpenApi.SetJSONResponse(&lGet, new([]core.Article), http.StatusOK)
+	_ = lOpenApi.SetJSONResponse(&lGet, ApiError{}, http.StatusBadRequest)
+	_ = lOpenApi.Spec.AddOperation(http.MethodGet, aPath, lGet)
 }
 
 func handleGetArticles(aServer WebServer, aWriter http.ResponseWriter, aRequest *http.Request) {

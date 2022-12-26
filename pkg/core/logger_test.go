@@ -9,12 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLoggerConformityToLoggerInterface(t *testing.T) {
-	logger := NewZeroLogger(new(bytes.Buffer))
-	_, ok := logger.(Logger)
-	assert.True(t, ok, "The logger doesn't conform to the core.Logger interface.")
-}
-
 func TestWritingToMultipleWriters(t *testing.T) {
 	buffer1 := new(bytes.Buffer)
 	buffer2 := new(bytes.Buffer)
