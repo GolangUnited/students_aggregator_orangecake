@@ -2,13 +2,14 @@ package sqlite
 
 import (
 	"fmt"
-	"github.com/indikator/aggregator_orange_cake/pkg/core"
-	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 	"io"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/indikator/aggregator_orange_cake/pkg/core"
+	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 var TEST_DB_DATA = []core.Article{
@@ -191,6 +192,8 @@ func TestSqliteStorage_WriteArticle_AlreadyExists(t *testing.T) {
 	}
 
 	lErr = lDb.WriteArticle(TEST_DB_DATA[0])
+	assert.NoError(t, lErr)
+
 	var gotArticles []core.ArticleDB
 	lDb.db.Find(&gotArticles)
 	assert.Equal(t, len(TEST_DB_DATA), len(gotArticles))
@@ -316,6 +319,8 @@ func TestSqliteStorage_WriteArticles_AlreadyExists(t *testing.T) {
 	}
 
 	lErr = lDb.WriteArticles(TEST_DB_DATA)
+	assert.NoError(t, lErr)
+
 	var gotArticles []core.ArticleDB
 	lDb.db.Find(&gotArticles)
 	assert.Equal(t, len(TEST_DB_DATA), len(gotArticles))
@@ -440,6 +445,7 @@ func TestSqliteStorage_UpdateArticle_NotExists(t *testing.T) {
 	}
 
 	lErr = lDb.UpdateArticle(99, core.Article{})
+	assert.NoError(t, lErr)
 
 	var gotArticles []core.ArticleDB
 	lDb.db.Find(&gotArticles)
@@ -478,6 +484,7 @@ func TestSqliteStorage_UpdateArticle_Error(t *testing.T) {
 
 	{
 		roDB, err := NewSqliteConnection(fmt.Sprintf("file:%s?mode=ro", file.Name()), logger)
+		assert.NoError(t, err)
 
 		expectedError := fmt.Errorf("attempt to write a readonly database")
 		gotError := roDB.UpdateArticle(1, core.Article{

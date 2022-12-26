@@ -3,12 +3,13 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/gocolly/colly"
-	"github.com/indikator/aggregator_orange_cake/pkg/core"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/gocolly/colly"
+	"github.com/indikator/aggregator_orange_cake/pkg/core"
 )
 
 const BITFIELD_URL = "https://bitfieldconsulting.com/golang"
@@ -149,7 +150,7 @@ func (b *BitfieldHandler) articlesSearching() error {
 			}
 		}
 		if lErr != nil {
-			strError := fmt.Sprintf(fmt.Sprintf("Error[%d]: %s", element.Index, lErr.Error()))
+			strError := fmt.Sprintf("Error[%d]: %s", element.Index, lErr.Error())
 			b.log.Warn(strError)
 			b.warnings = append(b.warnings, core.Warning(strError))
 		}
